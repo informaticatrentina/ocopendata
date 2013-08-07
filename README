@@ -1,0 +1,4 @@
+Prima di attivare l'estensione:
+
+cd lib;
+git clone https://github.com/Opencontent/Ckan_client-PHP.git;
