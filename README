@@ -1,4 +1,1 @@
-Prima di attivare l'estensione:
-
-cd lib;
-git clone https://github.com/Opencontent/Ckan_client-PHP.git;
+Installare il package opendata_dataset-1.0-1.ezpkg

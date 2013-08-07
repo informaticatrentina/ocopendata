@@ -122,7 +122,7 @@ class OCOpenDataTools extends Ckan_client
     {
         $return = array();
         $classes = eZContentClass::fetchList();
-        $classBlacklist = self::getClassBlacklist();
+        $classBlacklist = self::getClassBlacklist();        
         foreach( $classes as $class )
         {
             if ( !isset( $classBlacklist[$class->attribute('identifier')] ) )
