@@ -14,10 +14,10 @@
     
     {* DATA e ULTIMAMODIFICA *}
 	{include name = last_modified
-             node = $node             
+             node = $node
+             view_parameters = $view_parameters
              uri = 'design:parts/openpa/last_modified.tpl'}
-
-	
+             
     {* EDITOR TOOLS *}
 	{include name = editor_tools
              node = $node             

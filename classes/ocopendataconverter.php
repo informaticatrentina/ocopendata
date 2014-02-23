@@ -1,13 +1,22 @@
 <?php
 
 class OCOpenDataConverter
-{
+{    
+   
+    /**
+     * I dati del dataset in formato array compatibile con CKAN
+     * @var array
+     */
     private $data = array();
-    
+        
+    public static $remotePrefix = 'ckan_';
     protected $object;
     protected $dataMap;
     protected $resources;
     
+    /**
+     * Parametri del dataset ricavati dalle proprietà dell'oggetto
+     */
     public $datasetMetaAttributes = array(
         "id",
         "metadata_created",
@@ -17,6 +26,9 @@ class OCOpenDataConverter
         "version"
     );
     
+    /**
+     * Parametri del dataset ricavati dagli attributi dell'oggetto
+     */
     public $datasetAttributes = array(            
         "title",        
         "author",
@@ -28,14 +40,17 @@ class OCOpenDataConverter
         "notes",
         "tags",
         "state",
-        "from_time",
-        "to_time",
+        //"from_time",
+        //"to_time",
         "url_website",
         "extras",
         "categories",
-        "fields_description"
+        //"fields_description"
     );
     
+    /**
+     * Parametri del dataset ricavati dagli attributi delle risorse
+     */
     public $resourceAttributes = array(
         "url",
         "name",
@@ -53,7 +68,12 @@ class OCOpenDataConverter
         "package_id",
     );
         
-    
+    /**
+     * Costruttore
+     * @see OCOpenDataTools::parseResourcesFromObject
+     * @param eZContentObject $object
+     * @param array $resources
+     */
     public function __construct( eZContentObject $object, array $resources )
     {
         $this->object = $object;
@@ -61,21 +81,28 @@ class OCOpenDataConverter
         $this->resources = $resources;
     }
     
+    /**
+     * Converte l'oggetto popolando $data
+     */
     public function convert()
     {
         foreach( $this->datasetMetaAttributes as $datasetMetaAttribute )
         {
             switch( $datasetMetaAttribute )
             {
-                case 'id':
-                    $this->data[$datasetMetaAttribute] = OCOpenDataTools::generateUniqueId( $this->object->attribute( 'id' ) );
+                case 'id':                    
+                    if ( strpos( $this->object->attribute( 'remote_id' ), self::$remotePrefix ) !== false )
+                    {
+                        $this->data['id'] = str_replace( self::$remotePrefix, '', $this->object->attribute( 'remote_id' ) );
+                    }
+                    $this->data['package_unique_id'] = OCOpenDataTools::generateUniqueId( $this->object->attribute( 'id' ) );
                     break;
                 
                 case 'name':
                     $trans = eZCharTransform::instance();
                     $original = $this->object->attribute( 'name' );
                     $name = $trans->transformByGroup( $original, 'urlalias' );
-                    $this->data[$datasetMetaAttribute] = $name;
+                    $this->data[$datasetMetaAttribute] = strtolower( $name );
                     break;
                 
                 case 'metadata_created':
@@ -170,7 +197,12 @@ class OCOpenDataConverter
                     }
                     break;
                 
-                
+                case 'tags':
+                    if ( isset( $this->dataMap[$datasetAttribute] ) && $this->dataMap[$datasetAttribute]->attribute( 'has_content' ) )
+                    {
+                        $this->data[$datasetAttribute] = explode( ', ', $this->dataMap[$datasetAttribute]->toString() );
+                    }
+                    break;
                 default:
                     if ( isset( $this->dataMap[$datasetAttribute] ) && $this->dataMap[$datasetAttribute]->attribute( 'has_content' ) )
                     {
@@ -189,6 +221,11 @@ class OCOpenDataConverter
         return $this;
     }
     
+    /**
+     * Converte la singola risorsa
+     * @param array $resource
+     * @return array
+     */
     public function convertResource( array $resource )
     {
         $data = array();
@@ -239,11 +276,15 @@ class OCOpenDataConverter
             $data['resource_type'] = $resourceType;
         
         if ( !isset( $data['package_id'] ) )
-            $data['package_id'] = OCOpenDataTools::generateUniqueId( $this->object->attribute( 'id' ) );
+            $data['package_unique_id'] = OCOpenDataTools::generateUniqueId( $this->object->attribute( 'id' ) );
         
         return $data;
     }
     
+    /**
+     * Metodo pubblico per convertire e restitire il dataset convertito
+     * @return array
+     */
     public function getData()
     {        
         $this->convert();        
