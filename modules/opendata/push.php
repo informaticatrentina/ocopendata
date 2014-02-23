@@ -11,7 +11,20 @@ try
 catch( Exception $e )
 {
     $error = $e->getMessage();
-    echo $error;
+    echo "<h1>$error</h1>";
+    
+    try
+    {
+        $object = eZContentObject::fetch( $ObjectID );
+        $tools = new OCOpenDataTools();
+        $data = $tools->getDatasetFromObject( $ObjectID );
+        echo '<pre>';
+        print_r($data);
+    }
+    catch( Exception $e )
+    {        
+    }
+
     eZDisplayDebug();
     eZExecution::cleanExit();
 }
