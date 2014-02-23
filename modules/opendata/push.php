@@ -19,10 +19,12 @@ catch( Exception $e )
         $tools = new OCOpenDataTools();
         $data = $tools->getDatasetFromObject( $ObjectID );
         echo '<pre>';
-        print_r($data);
+        print_r( $data );
+        echo '</pre>';
     }
     catch( Exception $e )
-    {        
+    {
+        echo '<em>Conversione in dataset non riuscita</em>';
     }
 
     eZDisplayDebug();
