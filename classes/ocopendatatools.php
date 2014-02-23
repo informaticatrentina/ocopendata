@@ -156,22 +156,22 @@ class OCOpenDataTools extends Ckan_client
         }
         
         $unset = array();
-        foreach( $resources as $number => &$resource )
+        foreach( $resources as $number => $resource )
         {
-            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'has_content' ) )
+            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'content' ) != '' )
             {
-                unset( $resource['file'] );
-                unset( $resource['api'] );
+                unset( $resources[$number]['file'] );
+                unset( $resources[$number]['api'] );
             }
-            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
+            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'content' ) != '' )
             {
-                unset( $resource['url'] );
-                unset( $resource['api'] );
+                unset( $resources[$number]['url'] );
+                unset( $resources[$number]['api'] );
             }
-            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'has_content' ) )
+            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'content' ) != '' )
             {
-                unset( $resource['url'] );
-                unset( $resource['file'] );
+                unset( $resources[$number]['url'] );
+                unset( $resources[$number]['file'] );
             }
             else
             {
