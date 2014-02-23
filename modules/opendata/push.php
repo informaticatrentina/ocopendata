@@ -22,9 +22,9 @@ catch( Exception $e )
         print_r( $data );
         echo '</pre>';
     }
-    catch( Exception $e )
+    catch( Exception $error )
     {
-        echo '<em>Conversione in dataset non riuscita</em>';
+        echo "<em>Conversione in dataset non riuscita</em> ({$error->getMessage()})";
     }
 
     eZDisplayDebug();
