@@ -49,7 +49,11 @@
             <div class="border-ml"><div class="border-mr"><div class="border-mc">
             <div class="border-content">
             {foreach $resource_attributes as $attribute}
-            {if $attribute.has_content}
+            {def $attribute_has_content = $attribute.has_content}
+            {if $attribute.data_type_string|eq( 'ezurl' )}
+                {set $attribute_has_content = $attribute.content|ne('')}
+            {/if}
+            {if $attribute_has_content}
                 {if $style|eq('col-even')}{set $style='col-odd'}{else}{set $style='col-even'}{/if}
                 <div class="{$style} col float-break">
                     <div class="col-title"><span class="label">{$attribute.contentclass_attribute_name}</span></div>
@@ -58,6 +62,7 @@
                     </div></div>
                 </div>
             {/if}
+            {undef $attribute_has_content}
             {/foreach}
             </div>
             </div></div></div>

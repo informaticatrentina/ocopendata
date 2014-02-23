@@ -163,7 +163,7 @@ class OCOpenDataTools extends Ckan_client
                 unset( $resources[$number]['file'] );
                 unset( $resources[$number]['api'] );
             }
-            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'content' ) != '' )
+            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
             {
                 unset( $resources[$number]['url'] );
                 unset( $resources[$number]['api'] );
