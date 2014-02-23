@@ -17,7 +17,7 @@ catch( Exception $e )
     {
         $object = eZContentObject::fetch( $ObjectID );
         $tools = new OCOpenDataTools();
-        $data = $tools->getDatasetFromObject( $ObjectID );
+        $data = $tools->getDatasetFromObject( $object );
         echo '<pre>';
         print_r( $data );
         echo '</pre>';
