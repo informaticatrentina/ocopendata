@@ -229,7 +229,7 @@ class OCOpenDataController extends ezpRestContentController
         // Field data
         if ( $this->hasResponseGroup( self::VIEWFIELDS_RESPONSEGROUP_FIELDVALUES ) )
         {
-            $result->variables['fields'][$this->fieldIdentifier] = OCOpenDataContentModel::attributeOutputData( $content->fields->{$realFieldIdentifier} );
+            $result->variables['fields'][$this->fieldIdentifier] = OCOpenDataContentModel::attributeOutputData( $content->fields->{$realFieldIdentifier}, $this->request, $this->getRouter() );
         }
 
         // Handle object/node metadata
@@ -243,7 +243,6 @@ class OCOpenDataController extends ezpRestContentController
             }
             $result->variables['metadata'] = $objectMetadata;
         }
-
         return $result;
     }
     

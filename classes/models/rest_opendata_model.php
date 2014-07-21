@@ -69,6 +69,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
     
     public static function attributeOutputData( ezpContentField $field, ezpRestRequest $currentRequest = null, ezcMvcRouter $router = null )
     {
+        $attributeValue = $stringValue = array();
         switch( $field->data_type_string )
         {
             case 'ezxmltext':
@@ -119,8 +120,13 @@ class OCOpenDataContentModel extends ezpRestContentModel
                             {
                                 $content = ezpContent::fromObject( $object );
                                 $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
-                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
+                                $contentQueryString = $currentRequest->getContentQueryString( true );
+                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
                                 $attributeValue[] = $objectMetadata;
+                            }
+                            else
+                            {
+                                $attributeValue[] = "Access not alowed for content $id";
                             }
                         }
                     }
