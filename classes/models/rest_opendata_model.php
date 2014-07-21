@@ -69,6 +69,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
     
     public static function attributeOutputData( ezpContentField $field, ezpRestRequest $currentRequest = null, ezcMvcRouter $router = null )
     {
+        $attributeValue = $stringValue = null;
         switch( $field->data_type_string )
         {
             case 'ezxmltext':
@@ -115,7 +116,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                         {                            
                             $id = $relation['contentobject_id'];
                             $object = eZContentObject::fetch( $id );
-                            if ( $object->attribute( 'can_read' ) )
+                            if ( $object instanceof eZContentObject && $object->attribute( 'can_read' ) )
                             {
                                 $content = ezpContent::fromObject( $object );
                                 $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
@@ -152,7 +153,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                     $attributeValue = array( null );
                     $stringValue = array( null );
                 }
-                else
+                elseif ( $field->hasContent() )
                 {
                     $attributeValue = array( $field->toString() );
                     $stringValue = array( $field->toString() );
