@@ -244,6 +244,26 @@ class OCOpenDataTools extends Ckan_client
     }
     
     /**
+     * Restiuisce la lista delle classi effettivamente utilizzatr filtrate sulla BlackList
+     * @return eZContentClass[]
+     */
+    public function getUsedClassList()
+    {
+        $return = array();
+        $classes = eZContentClass::fetchList();
+        $classBlacklist = self::getClassBlacklist();        
+        foreach( $classes as $class )
+        {
+            if ( !isset( $classBlacklist[$class->attribute('identifier')] ) && $class->attribute( 'object_count' ) > 0 )
+            {
+                $return[$class->attribute('identifier')] = $class;
+            }
+        }
+        ksort( $return );
+        return $return;
+    }
+    
+    /**
      * Restituisce la classe filtrando su balck list
      * @param string $classIdentifier
      * @return eZContentClass or false

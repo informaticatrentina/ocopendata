@@ -27,7 +27,13 @@ class OCOpenDataController extends ezpRestContentController
                 'identifier' => 'classList',
                 'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListClasses' ),
                 'description' => 'Lista delle classi di contenuto accessibili'
-            ),            
+            ),
+            array(
+                'name' => 'Lista della classi utilizzate',
+                'identifier' => 'classList',
+                'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListUsedClasses' ),
+                'description' => 'Lista delle classi di contenuto accessibili utilizzate dall\'istanza corrente'
+            ), 
         );
         return $result;
     }
@@ -45,6 +51,31 @@ class OCOpenDataController extends ezpRestContentController
         $result = new ezpRestMvcResult();
         $openDataTools = new OCOpenDataTools();
         $result->variables = $openDataTools->getDataset( $this->datasetId );
+        return $result;
+    }
+    
+    public function doInstantiatedListClasses()
+    {
+        $openDataTools = new OCOpenDataTools();
+        $classes = $openDataTools->getUsedClassList();
+        $result = new ezpRestMvcResult();        
+        $result->variables['classes'] = array();
+        $result->variables['count'] = array( count( $classes ) );
+        foreach( $classes as $class )
+        {
+            
+            // @todo
+            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
+            $link = explode( '(', $link );
+            $link = $link[0];
+            
+            
+            $result->variables['classes'][] = array(
+                'identifier'  => $class->attribute( 'identifier' ),
+                'name'  => $class->attribute( 'name' ),
+                'link' => $link
+            );
+        }
         return $result;
     }
     

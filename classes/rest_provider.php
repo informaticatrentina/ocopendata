@@ -28,6 +28,7 @@ class OCOpenDataProvider extends ezpRestApiProvider
             ), 1 );
         
         $routes['ezpListClasses'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/classList', 'OCOpenDataController', 'listClasses' ), 1 );
+        $routes['ezpListUsedClasses'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/instantiatedClassList', 'OCOpenDataController', 'instantiatedListClasses' ), 1 );
         
         $routes['openDataHelp'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/', 'OCOpenDataController', 'help' ), 1 );
         $routes['openDataHelpList'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/help', 'OCOpenDataController', 'helpList' ), 1 );
