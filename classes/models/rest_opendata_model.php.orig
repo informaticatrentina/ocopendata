@@ -97,7 +97,11 @@ class OCOpenDataContentModel extends ezpRestContentModel
     
     public static function attributeOutputData( ezpContentField $field, ezpRestRequest $currentRequest = null, ezcMvcRouter $router = null )
     {
+<<<<<<< HEAD
+        $attributeValue = $stringValue = null;
+=======
         $attributeValue = $stringValue = array();
+>>>>>>> openpacodev
         switch( $field->data_type_string )
         {
             case 'ezxmltext':
@@ -148,7 +152,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                             {
                                 $content = ezpContent::fromObject( $object );
                                 $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
-                                $contentQueryString = $currentRequest->getContentQueryString( true );
+<<<<<<< HEAD
                                 try
                                 {
                                     $node = $content->main_node;
@@ -159,7 +163,11 @@ class OCOpenDataContentModel extends ezpRestContentModel
                                 {
                                     
                                 }
+                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
+=======
+                                $contentQueryString = $currentRequest->getContentQueryString( true );
                                 $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
+>>>>>>> openpacodev
                                 $attributeValue[] = $objectMetadata;
                             }
                             else
