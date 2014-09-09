@@ -1,0 +1,3 @@
+[submodule "lib/Ckan_client-PHP"]
+	path = lib/Ckan_client-PHP
+	url = https://github.com/Opencontent/Ckan_client-PHP.git
