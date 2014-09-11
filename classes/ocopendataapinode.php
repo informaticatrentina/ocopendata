@@ -140,7 +140,7 @@ class OCOpenDataApiNode implements ArrayAccess
         return $newObject;
     }
     
-    protected function getAttributesStringArray()
+    public function getAttributesStringArray()
     {
         $attributeList = array();
         foreach( $this->fields as $identifier => $fieldArray )
