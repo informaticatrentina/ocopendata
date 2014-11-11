@@ -184,7 +184,17 @@ class OCOpenDataController extends ezpRestContentController
         }
         else if ( isset( $this->objectId ) )
         {
-            $content = ezpContent::fromObjectId( $this->objectId );
+            $object = eZContentObject::fetch( $this->objectId );
+            
+            if ( !$object instanceof eZContentObject )
+            {
+                $object = eZContentObject::fetchByRemoteID( $this->objectId );
+            }
+            
+            if ( $object instanceof eZContentObject )
+                $content = ezpContent::fromObject( $object, true );
+            else
+                throw new ezpContentNotFoundException( "Unable to find an eZContentObject with ID {$this->objectRemoteId}" );
         }
 
         $result = new ezpRestMvcResult();
