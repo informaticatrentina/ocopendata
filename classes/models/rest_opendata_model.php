@@ -2,34 +2,6 @@
 
 class OCOpenDataContentModel extends ezpRestContentModel
 {    
-    public static function getMetadataByLocation( ezpContentLocation $location )
-    {
-        $url = $location->url_alias;
-        eZURI::transformURI( $url, false, 'full' ); // $url is passed as a reference
-        
-        $aMetadata = array(
-            'nodeId'        => (int)$location->node_id,
-            'nodeRemoteId'  => $location->remote_id,
-            'fullUrl'       => $url
-        );
-        
-        try
-        {
-            $node = eZContentObjectTreeNode::fetch( $location->node_id );
-            if ( $node instanceof eZContentObjectTreeNode )
-            {                
-                $pathNames = explode( '/', $node->attribute( 'path_with_names' ) );                
-                $aMetadata['path'] = $pathNames;
-            }
-        }
-        catch( Exception $e )
-        {
-            
-        }
-        
-        return $aMetadata;
-    }
-    
     public static function getChildrenList( ezpContentCriteria $c, ezpRestRequest $currentRequest, array $responseGroups = array(), ezcMvcRouter $router = null )
     {
         $aRetData = array();
@@ -97,7 +69,6 @@ class OCOpenDataContentModel extends ezpRestContentModel
     
     public static function attributeOutputData( ezpContentField $field, ezpRestRequest $currentRequest = null, ezcMvcRouter $router = null )
     {
-        $attributeValue = $stringValue = array();
         switch( $field->data_type_string )
         {
             case 'ezxmltext':
@@ -144,38 +115,12 @@ class OCOpenDataContentModel extends ezpRestContentModel
                         {                            
                             $id = $relation['contentobject_id'];
                             $object = eZContentObject::fetch( $id );
-                            
-                            if ( $object instanceof eZContentObject && $object->attribute( 'main_node' ) instanceof eZContentObjectTreeNode )
-                            {                                
-                                if ( $object->attribute( 'can_read' ) )                                    
-                                {
-                                    $content = ezpContent::fromObject( $object );
-                                    $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
-                                    $contentQueryString = $currentRequest->getContentQueryString( true );
-                                    try
-                                    {
-                                        if ( $content->main_node )
-                                        {
-                                            $node = $content->main_node;
-                                            $location = ezpContentLocation::fromNode( $node );
-                                            $objectMetadata = array_merge( $objectMetadata, self::getMetadataByLocation( $location ) );
-                                        }
-                                        else
-                                        {
-                                            throw new Exception( "Node not found for object id #$id" );
-                                        }
-                                    }
-                                    catch( Exception $e )
-                                    {
-                                        
-                                    }
-                                    $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
-                                    $attributeValue[] = $objectMetadata;
-                                }
-                                else
-                                {
-                                    $attributeValue[] = "Access not alowed for content $id";
-                                }
+                            if ( $object->attribute( 'can_read' ) )
+                            {
+                                $content = ezpContent::fromObject( $object );
+                                $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
+                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
+                                $attributeValue[] = $objectMetadata;
                             }
                         }
                     }
@@ -207,7 +152,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                     $attributeValue = array( null );
                     $stringValue = array( null );
                 }
-                elseif ( $field->hasContent() )
+                else
                 {
                     $attributeValue = array( $field->toString() );
                     $stringValue = array( $field->toString() );

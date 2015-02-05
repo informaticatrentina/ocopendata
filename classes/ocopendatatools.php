@@ -1,27 +1,11 @@
 <?php
-/**
- * Classe OCOpenDataTools
- * Tool per la gestione dei dataset e la loro esposizione
- * Estende la libreria Ckan_client
- */
+
 class OCOpenDataTools extends Ckan_client
 {
-    /**
-     * Separatore per il remote id
-     */
     const SEPARATOR = ':';
     
-    /**
-     * Id di installazione
-     * @see OCOpenDataTools::installationID()
-     * @var string
-     */
     static $InstallationID;
     
-    /**
-     * Risorse Api
-     * @see parent::resources
-     */
     protected $resources = array(
 		'package_register' => 'rest/dataset',
 		'package_entity' => 'rest/dataset',
@@ -37,16 +21,8 @@ class OCOpenDataTools extends Ckan_client
 		'package_search' => 'search/dataset'
 	);
     
-    /**
-     * Configurazioni ini
-     * @var eZINI
-     */
     public $openDataIni;
     
-    /**
-     * @see parent::__construct
-     * @var string $api_key
-     */
     public function __construct( $api_key = false )
     {
         $this->openDataIni = eZINI::instance( 'ocopendata.ini' );
@@ -59,57 +35,6 @@ class OCOpenDataTools extends Ckan_client
         parent::__construct( $api_key );
     }
     
-    /**
-     * Push di un oggetto (creazione o aggiornamento) in CKAN
-     * @param eZContentObject|integer $object
-     * @throws Exception
-     */
-    public function pushObject( $object )
-    {
-        if ( is_numeric( $object ) )
-        {
-            $object = eZContentObject::fetch( $object );
-        }
-        if ( $object instanceof eZContentObject )
-        {
-            try
-            {
-                $data = $this->getDatasetFromObject( $object );
-                $postData = json_encode( $data );
-                if ( isset( $data['id'] ) )
-                {
-                    $response = $this->post_package_update( $postData, $data['id'] );                
-                }
-                else
-                {
-                    $response = $this->post_package_register( $postData );                    
-                    if ( isset( $response->id ) )
-                    {
-                        $object->setAttribute( 'remote_id', OCOpenDataConverter::$remotePrefix . $response->id );
-                        $object->store();
-                    }
-                }
-                return $response;
-            }
-            catch( Exception $e )
-            {
-                eZDebug::writeError( $e->getMessage() . ' on object id #' . $object->attribute( 'id' ), __METHOD__ );
-                eZDebug::writeError( $data, __METHOD__ );
-                throw new Exception( $e->getMessage() );
-            }
-        }
-        else
-        {
-            throw new Exception( 'Object not found' );
-        }
-    }
-    
-    /**
-     * Api di aggrionamento
-     * @param array $data
-     * @param string $packageId
-     * @see parent::make_request
-     */
     public function post_package_update( $data, $packageId )
 	{
 		return $this->make_request( 'POST', 
@@ -117,31 +42,17 @@ class OCOpenDataTools extends Ckan_client
 			$data );
 	}
     
-    /**
-     * Costruisce il datatset a partire da un oggetto
-     * @param eZContentObject $object
-     * @throws Excepetion
-     */
     public function getDatasetFromObject( eZContentObject $object )
     {
-        if ( !$object instanceof eZContentObject )
-        {
-            throw new Exception( "Oggetto non trovato" );
-        }
         if ( $object->attribute( 'class_identifier' ) == $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' ) )
         {
             $resources = $this->parseResourcesFromObject( $object );
             $converter = new OCOpenDataConverter( $object, $resources );
-            return $converter->getData();
+            return $converter->convert()->getData();
         }
-        throw new Exception( "L'oggetto {$object->attribute( 'id' )} non è di classe {$this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' )}" );
+        return array();
     }
     
-    /**
-     * Parse le risorse di un oggetto dataset
-     * @param eZContentObject $object
-     * @return array
-     */
     public function parseResourcesFromObject( eZContentObject $object )
     {
         $dataMap = $object->attribute( 'data_map' );
@@ -156,22 +67,22 @@ class OCOpenDataTools extends Ckan_client
         }
         
         $unset = array();
-        foreach( $resources as $number => $resource )
+        foreach( $resources as $number => &$resource )
         {
-            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'content' ) != '' )
+            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'has_content' ) )
             {
-                unset( $resources[$number]['file'] );
-                unset( $resources[$number]['api'] );
+                unset( $resource['file'] );
+                unset( $resource['api'] );
             }
             elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
             {
-                unset( $resources[$number]['url'] );
-                unset( $resources[$number]['api'] );
+                unset( $resource['url'] );
+                unset( $resource['api'] );
             }
-            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'content' ) != '' )
+            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'has_content' ) )
             {
-                unset( $resources[$number]['url'] );
-                unset( $resources[$number]['file'] );
+                unset( $resource['url'] );
+                unset( $resource['file'] );
             }
             else
             {
@@ -185,29 +96,13 @@ class OCOpenDataTools extends Ckan_client
         return $resources;
     }
     
-    /**
-     * Genera id unico
-     * @see self::installationID()
-     * @param integer $objectId
-     * @return string
-     */
-    public static function generateUniqueId( $objectId )
+    public function generateUniqueId( $objectId )
     {
         return self::installationID() . self::SEPARATOR . $objectId;
     }
     
-    /**
-     * Restituisce un oggetto, dato il suo id unico
-     * @param string $id
-     * @return eZContentObject or false
-     */
     public function getObjectFromUniqueId( $id )
     {                
-        $fromRemote = eZContentObject::fetchRemoteID( $id );
-        if ( $fromRemote instanceof eZContentObject )
-        {
-            return $fromRemote;
-        }
         $parts = explode( self::SEPARATOR, $id );        
         if ( $parts[0] == self::installationID() )
         {
@@ -223,15 +118,11 @@ class OCOpenDataTools extends Ckan_client
         return false;
     }
     
-    /**
-     * Restiuisce la lista delle classi filtrate sulla BlackList
-     * @return eZContentClass[]
-     */
     public function getClassList()
     {
         $return = array();
         $classes = eZContentClass::fetchList();
-        $classBlacklist = self::getClassBlacklist();        
+        $classBlacklist = self::getClassBlacklist();
         foreach( $classes as $class )
         {
             if ( !isset( $classBlacklist[$class->attribute('identifier')] ) )
@@ -243,31 +134,6 @@ class OCOpenDataTools extends Ckan_client
         return $return;
     }
     
-    /**
-     * Restiuisce la lista delle classi effettivamente utilizzatr filtrate sulla BlackList
-     * @return eZContentClass[]
-     */
-    public function getUsedClassList()
-    {
-        $return = array();
-        $classes = eZContentClass::fetchList();
-        $classBlacklist = self::getClassBlacklist();        
-        foreach( $classes as $class )
-        {
-            if ( !isset( $classBlacklist[$class->attribute('identifier')] ) && $class->attribute( 'object_count' ) > 0 )
-            {
-                $return[$class->attribute('identifier')] = $class;
-            }
-        }
-        ksort( $return );
-        return $return;
-    }
-    
-    /**
-     * Restituisce la classe filtrando su balck list
-     * @param string $classIdentifier
-     * @return eZContentClass or false
-     */
     public function getClass( $classIdentifier )
     {
         $classBlacklist = self::getClassBlacklist();
@@ -279,33 +145,7 @@ class OCOpenDataTools extends Ckan_client
         return $class;
     }
         
-    /**
-     * Restituisce i nodi dataset nel sottoalbero dei contenuti
-     * @return eZContentObjectTreeNode[]
-     */
-    public function getDatasetNodes()
-    {
-        $nodes = array();
-        $classIdentifier = $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' );
-        $class = eZContentClass::fetchByIdentifier( $classIdentifier );
-        if ( $class instanceof eZContentClass )
-        {
-            $params = array(
-                'ClassFilterType' => 'include',
-                'ClassFilterArray' => array( $classIdentifier ),
-                'Depth' => 1,
-                'DepthOperator' => 'ge'
-            );
-            $nodes = eZContentObjectTreeNode::subTreeByNodeID( $params,
-                                                               eZINI::instance( 'content.ini' )->variable( 'NodeSettings', 'RootNode' ) );            
-        }
-        return $nodes;
-    }
     
-    /**
-     * Restituisce l'array degli id dataset nel sottoalbero dei contenuti
-     * @return array
-     */    
     public function getDatasetIdArray()
     {
         $dataset = array();
@@ -322,17 +162,12 @@ class OCOpenDataTools extends Ckan_client
             $nodes = eZContentObjectTreeNode::subTreeByNodeID( $params, eZINI::instance( 'content.ini' )->variable( 'NodeSettings', 'RootNode' ) );
             foreach( $nodes as $node )
             {
-               $dataset[] = self::generateUniqueId( $node->attribute( 'contentobject_id' ) );
+               $dataset[] = $this->generateUniqueId( $node->attribute( 'contentobject_id' ) );
             }
         }
         return $dataset;
     }
     
-    /**
-     * Restituisce il dataset
-     * @param string $datasetId
-     * @return array
-     */
     public function getDataset( $datasetId )
     {        
         $dataset = array();
@@ -344,11 +179,6 @@ class OCOpenDataTools extends Ckan_client
         return $dataset;
     }
     
-    /**
-     * Genera l'id di installazione
-     * @see eZSolr::installationID()
-     * @return string
-     */
     public static function installationID()
     {
         if ( class_exists( 'eZSolr' ) && method_exists( 'eZSolr', 'installationID' ) )
@@ -377,10 +207,6 @@ class OCOpenDataTools extends Ckan_client
         return self::$InstallationID;
     }
     
-    /**
-     * Restituice la lista dei datattype in black list
-     * @return array
-     */
     public static function getDatatypeBlackList()
     {
         $datatypeBlacklist = array();
@@ -394,10 +220,6 @@ class OCOpenDataTools extends Ckan_client
         return $datatypeBlacklist;
     }
     
-    /**
-     * Restituice la lista delle classi in black list
-     * @return array
-     */
     public static function getClassBlacklist()
     {
         $classBlacklist = array();
@@ -411,10 +233,6 @@ class OCOpenDataTools extends Ckan_client
         return $classBlacklist;
     }
     
-    /**
-     * Restituice la lista degli identificatori di attributo in black list
-     * @return array
-     */    
     public static function getFieldBlacklist()
     {
         $fieldBlacklist = array();
@@ -428,10 +246,6 @@ class OCOpenDataTools extends Ckan_client
         return $fieldBlacklist;
     }
     
-    /**
-     * Restituice la lista degli ovveride degli identificatori di attributo 
-     * @return array
-     */
     public static function getOverrideFieldIdentifier( $fieldName, $classIdentifier )
     {
         $list = array();
@@ -450,12 +264,6 @@ class OCOpenDataTools extends Ckan_client
         return $fieldName;
     }
     
-    /**
-     * Restituice l'identificatore di attributo sulla base del loto override di identificatore
-     * @param string $fieldName
-     * @param string $classIdentifier
-     * @return string
-     */    
     public static function getRealFieldIdentifier( $fieldName, $classIdentifier )
     {
         $list = array();

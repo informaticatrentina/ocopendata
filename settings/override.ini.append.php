@@ -1,11 +1,5 @@
 <?php /* #?ini charset="utf-8"?
 
-[full_opendata_dataset]
-Source=node/view/full.tpl
-MatchFile=full/opendata_dataset.tpl
-Subdir=templates
-Match[class_identifier]=opendata_dataset
-
 [edit_dataset]
 Source=content/edit.tpl
 MatchFile=edit/opendata_dataset.tpl
