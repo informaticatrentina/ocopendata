@@ -152,7 +152,10 @@ class OCOpenDataApiNode implements ArrayAccess
                     break;
                 case 'ezbinaryfile':
                 case 'ezimage':
-                    $attributeList[$identifier] = SQLIContentUtils::getRemoteFile( $fieldArray['value'] );
+                    if ( !empty( $fieldArray['value'] ) )
+                    {
+                        $attributeList[$identifier] = SQLIContentUtils::getRemoteFile( $fieldArray['value'] );
+                    }
                     break;
                 default:
                     $attributeList[$identifier] = $fieldArray['string_value'];
