@@ -39,10 +39,13 @@ class OCOpenDataConverter
         "categories",
         "notes",
         "tags",
-        "state",        
+        "state",
+        "from_time",
+        "to_time",
         "url_website",
         "extras",
-        "categories"        
+        "categories",
+        "fields_description"
     );
     
     /**
