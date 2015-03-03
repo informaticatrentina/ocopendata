@@ -97,7 +97,11 @@ class OCOpenDataContentModel extends ezpRestContentModel
     
     public static function attributeOutputData( ezpContentField $field, ezpRestRequest $currentRequest = null, ezcMvcRouter $router = null )
     {
+<<<<<<< HEAD
+        $attributeValue = $stringValue = null;
+=======
         $attributeValue = $stringValue = array();
+>>>>>>> openpacodev
         switch( $field->data_type_string )
         {
             case 'ezxmltext':
@@ -144,38 +148,31 @@ class OCOpenDataContentModel extends ezpRestContentModel
                         {                            
                             $id = $relation['contentobject_id'];
                             $object = eZContentObject::fetch( $id );
-                            
-                            if ( $object instanceof eZContentObject && $object->attribute( 'main_node' ) instanceof eZContentObjectTreeNode )
-                            {                                
-                                if ( $object->attribute( 'can_read' ) )                                    
+                            if ( $object instanceof eZContentObject && $object->attribute( 'can_read' ) )
+                            {
+                                $content = ezpContent::fromObject( $object );
+                                $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
+<<<<<<< HEAD
+                                try
                                 {
-                                    $content = ezpContent::fromObject( $object );
-                                    $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
-                                    $contentQueryString = $currentRequest->getContentQueryString( true );
-                                    try
-                                    {
-                                        if ( $content->main_node )
-                                        {
-                                            $node = $content->main_node;
-                                            $location = ezpContentLocation::fromNode( $node );
-                                            $objectMetadata = array_merge( $objectMetadata, self::getMetadataByLocation( $location ) );
-                                        }
-                                        else
-                                        {
-                                            throw new Exception( "Node not found for object id #$id" );
-                                        }
-                                    }
-                                    catch( Exception $e )
-                                    {
-                                        
-                                    }
-                                    $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
-                                    $attributeValue[] = $objectMetadata;
+                                    $node = $content->main_node;
+                                    $location = ezpContentLocation::fromNode( $node );
+                                    $objectMetadata = array_merge( $objectMetadata, self::getMetadataByLocation( $location ) );
                                 }
-                                else
+                                catch( Exception $e )
                                 {
-                                    $attributeValue[] = "Access not alowed for content $id";
+                                    
                                 }
+                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
+=======
+                                $contentQueryString = $currentRequest->getContentQueryString( true );
+                                $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
+>>>>>>> openpacodev
+                                $attributeValue[] = $objectMetadata;
+                            }
+                            else
+                            {
+                                $attributeValue[] = "Access not alowed for content $id";
                             }
                         }
                     }
