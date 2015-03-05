@@ -141,7 +141,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                 break;
             case 'ezobjectrelationlist':
                 $attributeValue = array();
-                $stringValue = array( $field->toString() );
+                $stringValueArray = array();
                 if ( $currentRequest && $router)
                 {
                     if ( $field->hasContent() )
@@ -166,6 +166,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                                             $node = $content->main_node;
                                             $location = ezpContentLocation::fromNode( $node );
                                             $objectMetadata = array_merge( $objectMetadata, self::getMetadataByLocation( $location ) );
+                                            $stringValueArray[] = $id;
                                         }
                                         else
                                         {
@@ -179,14 +180,15 @@ class OCOpenDataContentModel extends ezpRestContentModel
                                     $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
                                     $attributeValue[] = $objectMetadata;
                                 }
-                                else
-                                {
-                                    $attributeValue[] = "Access not alowed for content $id";
-                                }
+                                //else
+                                //{
+                                //    $attributeValue[] = "Access not allowed for content $id";
+                                //}
                             }
                         }
                     }
-                }                
+                }
+                $stringValue = array( implode( '-', $stringValueArray ) );
                 break;
             case 'ezobjectrelation':
                 $attributeValue = array();
