@@ -25,13 +25,13 @@ class OCOpenDataController extends ezpRestContentController
             array(
                 'name' => 'Lista della classi',
                 'identifier' => 'classList',
-                'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListClasses' ),
+                'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataClassList' ),
                 'description' => 'Lista delle classi di contenuto accessibili'
             ),
             array(
                 'name' => 'Lista della classi utilizzate',
                 'identifier' => 'classList',
-                'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListUsedClasses' ),
+                'link' => $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataInstantiatedClassList' ),
                 'description' => 'Lista delle classi di contenuto accessibili utilizzate dall\'istanza corrente'
             ), 
         );
@@ -65,7 +65,7 @@ class OCOpenDataController extends ezpRestContentController
         {
             
             // @todo
-            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
+            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
             $link = explode( '(', $link );
             $link = $link[0];
             
@@ -90,7 +90,7 @@ class OCOpenDataController extends ezpRestContentController
         {
             
             // @todo
-            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'ezpListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
+            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
             $link = explode( '(', $link );
             $link = $link[0];
             
@@ -176,6 +176,7 @@ class OCOpenDataController extends ezpRestContentController
         $this->setDefaultResponseGroups( array( self::VIEWCONTENT_RESPONSEGROUP_METADATA,
                                                 self::VIEWCONTENT_RESPONSEGROUP_FIELDS,
                                                 self::VIEWCONTENT_RESPONSEGROUP_LOCATIONS ) );
+        $content = false;
         $isNodeRequested = false;
         if ( isset( $this->nodeId ) )
         {
@@ -195,6 +196,11 @@ class OCOpenDataController extends ezpRestContentController
                 $content = ezpContent::fromObject( $object, true );
             else
                 throw new ezpContentNotFoundException( "Unable to find an eZContentObject with ID {$this->objectRemoteId}" );
+        }
+
+        if ( !$content instanceof ezpContent )
+        {
+            throw new ezpContentNotFoundException( "Unable to find content" );
         }
 
         $result = new ezpRestMvcResult();

@@ -33,6 +33,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
     public static function getChildrenList( ezpContentCriteria $c, ezpRestRequest $currentRequest, array $responseGroups = array(), ezcMvcRouter $router = null )
     {
         $aRetData = array();
+        /** @var ezpContent[] $aChildren */
         $aChildren = ezpContentRepository::query( $c );
 
         $fieldBlacklist = self::getFieldBlacklist();
@@ -65,11 +66,17 @@ class OCOpenDataContentModel extends ezpRestContentModel
     {
         $fieldBlacklist = self::getFieldBlacklist();
         $aReturnFields = array();
-        foreach ( $content->fields as $name => $field )
+        if ( $content->fields instanceof ezpContentFieldSet && $content->fields->valid() )
         {
-            if ( !isset( $fieldBlacklist[$name] ) && !isset( $fieldBlacklist[$content->classIdentifier . '/' . $name] ) )
+            foreach ( $content->fields as $name => $field )
             {
-                $aReturnFields[self::getOverrideFieldIdentifier( $name, $content->classIdentifier)] = self::attributeOutputData( $field, $currentRequest, $router );
+                if ( !isset( $fieldBlacklist[$name] ) && !isset( $fieldBlacklist[$content->classIdentifier . '/' . $name] ) )
+                {
+                    $aReturnFields[self::getOverrideFieldIdentifier(
+                        $name,
+                        $content->classIdentifier
+                    )] = self::attributeOutputData( $field, $currentRequest, $router );
+                }
             }
         }
 
@@ -256,7 +263,13 @@ class OCOpenDataContentModel extends ezpRestContentModel
     {
         return OCOpenDataTools::getFieldBlacklist();
     }
-    
+
+    /**
+     * @param string $fieldName
+     * @param string $classIdentifier
+     *
+     * @return string
+     */
     public static function getOverrideFieldIdentifier( $fieldName, $classIdentifier )
     {
         return OCOpenDataTools::getOverrideFieldIdentifier( $fieldName, $classIdentifier );

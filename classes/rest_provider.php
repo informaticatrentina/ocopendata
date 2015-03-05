@@ -3,7 +3,7 @@
 
 class OCOpenDataProvider extends ezpRestApiProvider
 {
-    
+
     public function getRoutes()
     {
         $routes = array(
@@ -18,24 +18,24 @@ class OCOpenDataProvider extends ezpRestApiProvider
             'ezpFieldsByObject'  => new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/object/:objectId/fields', 'OCOpenDataController', 'viewFields' ), 1 ),
             'ezpFieldByObject'   => new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/object/:objectId/field/:fieldIdentifier', 'OCOpenDataController', 'viewField' ), 1 )
         );
-        
-        $routes['ezpListByClass'] = new ezpRestVersionedRoute(
+
+        $routes['openDataListByClass'] = new ezpRestVersionedRoute(
             new ezpMvcRegexpRoute(
-                //'@^/content/class/(?P<classIdentifier>\w+)(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?(?:/sort/(?P<sortKey>\w+)(?:/(?P<sortType>asc|desc))?)?$@',
+            //'@^/content/class/(?P<classIdentifier>\w+)(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?(?:/sort/(?P<sortKey>\w+)(?:/(?P<sortType>asc|desc))?)?$@',
                 '@^/content/class/(?P<classIdentifier>\w+)(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?$@',
                 'OCOpenDataController',
                 'listByClass'
             ), 1 );
-        
-        $routes['ezpListClasses'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/classList', 'OCOpenDataController', 'listClasses' ), 1 );
-        $routes['ezpListUsedClasses'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/instantiatedClassList', 'OCOpenDataController', 'instantiatedListClasses' ), 1 );
-        
+
+        $routes['openDataClassList'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/classList', 'OCOpenDataController', 'listClasses' ), 1 );
+        $routes['openDataInstantiatedClassList'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/content/instantiatedClassList', 'OCOpenDataController', 'instantiatedListClasses' ), 1 );
+
         $routes['openDataHelp'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/', 'OCOpenDataController', 'help' ), 1 );
         $routes['openDataHelpList'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/help', 'OCOpenDataController', 'helpList' ), 1 );
-        
+
         $routes['openDataDataset'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/dataset', 'OCOpenDataController', 'datasetList' ), 1 );
         $routes['openDataDatasetView'] = new ezpRestVersionedRoute( new ezpMvcRailsRoute( '/dataset/:datasetId', 'OCOpenDataController', 'datasetView' ), 1 );
-        
+
         return $routes;
     }
 
