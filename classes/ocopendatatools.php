@@ -76,6 +76,7 @@ class OCOpenDataTools extends Ckan_client
             {
                 $data = $this->getDatasetFromObject( $object );
                 $postData = json_encode( $data );
+                $postData = str_replace( ';', ',', $postData );
                 if ( isset( $data['id'] ) )
                 {
                     $response = $this->post_package_update( $postData, $data['id'] );                
@@ -203,7 +204,7 @@ class OCOpenDataTools extends Ckan_client
      */
     public function getObjectFromUniqueId( $id )
     {                
-        $fromRemote = eZContentObject::fetchRemoteID( $id );
+        $fromRemote = eZContentObject::fetchByRemoteID( $id );
         if ( $fromRemote instanceof eZContentObject )
         {
             return $fromRemote;
