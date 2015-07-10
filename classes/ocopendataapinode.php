@@ -86,6 +86,11 @@ class OCOpenDataApiNode implements ArrayAccess
     
     public function createContentObject( $parentNodeID, $localRemoteIdPrefix = '' )
     {
+        if ( !eZContentClass::fetchByIdentifier( $this->metadata['classIdentifier'] ) )
+        {
+            throw new Exception( "La classe {$this->metadata['classIdentifier']} non esiste in questa installazione" );
+        }
+
         if ( eZContentObject::fetchByRemoteID( $this->metadata['objectRemoteId'] ) )
         {
             throw new Exception( "L'oggetto con remote \"{$this->metadata['objectRemoteId']}\" esiste già in questa installazione" );            
@@ -100,14 +105,14 @@ class OCOpenDataApiNode implements ArrayAccess
         $search = $searchEngine->search( '', $searchParams);
         if ( $search['SearchCount'] > 0 )
         {            
-            throw new Exception( "Sembra che esista già un oggetto con nome \"{$this->metadata['objectName']}\" in {$parentNodeID}" );              
+            throw new Exception( "Sembra che esista già un oggetto con nome \"{$this->metadata['objectName']}\" in {$parentNodeID}" );
         }        
         
         $params                     = array();        
         $params['class_identifier'] = $this->metadata['classIdentifier'];
         $params['remote_id']        = $localRemoteIdPrefix . $this->metadata['objectRemoteId'];
         $params['parent_node_id']   = $parentNodeID;
-        $params['attributes']       = $this->getAttributesStringArray();
+        $params['attributes']       = $this->getAttributesStringArray( $parentNodeID );
         return eZContentFunctions::createAndPublishObject( $params );
     }
     
@@ -140,7 +145,7 @@ class OCOpenDataApiNode implements ArrayAccess
         return $newObject;
     }
     
-    public function getAttributesStringArray()
+    public function getAttributesStringArray( $parentNodeID )
     {
         $attributeList = array();
         foreach( $this->fields as $identifier => $fieldArray )
@@ -157,12 +162,68 @@ class OCOpenDataApiNode implements ArrayAccess
                         $attributeList[$identifier] = SQLIContentUtils::getRemoteFile( $fieldArray['value'] );
                     }
                     break;
+                case 'ezobjectrelationlist':
+                    $parentNodeID = $this->findRelationObjectLocation( $identifier, $parentNodeID );
+                    $attributeList[$identifier] = $this->createRelationObjects( $fieldArray, $parentNodeID );
+                    break;
                 default:
                     $attributeList[$identifier] = $fieldArray['string_value'];
                     break;
             }            
         }
         return $attributeList;
+    }
+
+    protected function findRelationObjectLocation( $identifier, $parentNodeID )
+    {
+        $ini = eZINI::instance( 'ocopendata.ini' );
+        if ( $ini->hasVariable( 'CreateContentSettings', 'RelationCreateParentNode' ) )
+        {
+            $settings = $ini->variable( 'CreateContentSettings', 'RelationCreateParentNode' );
+            $key = $this->metadata['classIdentifier'] . '/' . $identifier;
+            if ( isset( $settings[$key] ) )
+            {
+                $customParentNodeID = $settings[$key];
+                if ( eZContentObjectTreeNode::fetch( $customParentNodeID ) )
+                {
+                    return $customParentNodeID;
+                }
+            }
+        }
+        return $parentNodeID;
+    }
+
+    protected function createRelationObjects( $fieldArray, $parentNodeID )
+    {
+        $data = array();
+        if ( is_array( $fieldArray['value'] ) )
+        {
+            foreach ( $fieldArray['value'] as $item )
+            {
+                try
+                {
+                    $remoteApiNode = OCOpenDataApiNode::fromLink( $item['link'] );
+                    if ( !$remoteApiNode instanceof OCOpenDataApiNode )
+                    {
+                        throw new Exception( "Api node not found" );
+                    }
+                    $newObject = $remoteApiNode->createContentObject( $parentNodeID );
+                    if ( $newObject instanceof eZContentObject )
+                    {
+                        $data[] = $newObject->attribute( 'id' );
+                    }
+                }
+                catch ( Exception $e )
+                {
+                    eZDebug::writeError(
+                        $e->getMessage() . ' ' . var_export( $item, 1 ),
+                        __METHOD__
+                    );
+                }
+            }
+        }
+        //eZDebug::writeNotice( var_export( $data, 1 ), __METHOD__ );
+        return implode( '-', $data );
     }
     
     public function offsetSet($offset, $value)

@@ -15,8 +15,16 @@ $ViewList['view'] = array(
     'params' => array( 'ObjectID' ),
     'unordered_params' => array()
 );
+$ViewList['import'] = array(
+    'functions' => array( 'import' ),
+    'script' => 'import.php',
+    'params' => array(),
+    'unordered_params' => array()
+);
+
 
 $FunctionList = array();
 $FunctionList['push'] = array();
 $FunctionList['view'] = array();
-?>
+$FunctionList['import'] = array();
+
