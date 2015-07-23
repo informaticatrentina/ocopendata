@@ -121,7 +121,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                     {
                         $strRepImage = substr( $strRepImage, 0, $delimPos );
                     }
-                    $attributeValue = array( $currentRequest->getHostURI() . '/' .$strRepImage );
+                    $attributeValue = array( self::getHostURIFromRequest( $currentRequest ) . '/' .$strRepImage );
                     $stringValue = array( $field->toString() );
                 }
                 break;
@@ -130,7 +130,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                 {
                     $file = $field->content();
                     $filePath = "content/download/{$field->attribute('contentobject_id')}/{$field->attribute('id')}/{$field->content()->attribute( 'original_filename' )}";
-                    $attributeValue = array( $currentRequest->getHostURI() . '/' . $filePath );
+                    $attributeValue = array( self::getHostURIFromRequest( $currentRequest ) . '/' . $filePath );
                     $stringValue = array( $field->toString() );
                 }
                 else
@@ -177,7 +177,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                                     {
                                         
                                     }
-                                    $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
+                                    $objectMetadata['link'] = self::getHostURIFromRequest( $currentRequest ) . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) ) . $contentQueryString;
                                     $attributeValue[] = $objectMetadata;
                                 }
                                 //else
@@ -203,7 +203,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
                             $id = $relation->attribute( 'id' );
                             $content = ezpContent::fromObject( $relation );
                             $objectMetadata = OCOpenDataContentModel::getMetadataByContent( $content );
-                            $objectMetadata['link'] = $currentRequest->getHostURI() . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
+                            $objectMetadata['link'] = self::getHostURIFromRequest( $currentRequest ) . $router->generateUrl( 'ezpObject', array( 'objectId' => $id ) );
                             $attributeValue[] = $objectMetadata;
                         }
                     }
@@ -280,6 +280,15 @@ class OCOpenDataContentModel extends ezpRestContentModel
     public static function getRealFieldIdentifier( $fieldName, $classIdentifier )
     {
         return OCOpenDataTools::getRealFieldIdentifier( $fieldName, $classIdentifier );
+    }
+
+    protected static function getHostURIFromRequest( ezpRestRequest $request )
+    {
+        $protocolIndex = strpos( $request->protocol, '-' );
+        $protocol = substr( $request->protocol, 0, $protocolIndex );
+        $protocol .= $request->isEncrypted ? 's' : '';
+        $hostUri = $protocol.'://'.$request->host;
+        return $hostUri;
     }
     
 }
