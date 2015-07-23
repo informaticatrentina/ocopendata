@@ -6,7 +6,6 @@ class OCOpenDataApiNode implements ArrayAccess
     public static function fromLink( $url )
     {
         $data = json_decode( eZHTTPTool::getDataByURL( $url ), true );
-
         if ( $data )
         {
             return new self( $data );
@@ -66,7 +65,7 @@ class OCOpenDataApiNode implements ArrayAccess
         return $object;
     }
     
-    public function compareWithContentObject( eZContentObject $object = null, $classTool = null )
+    public function compareWithContentObject( eZContentObject $object = null, $classTools = null )
     {
         if ( !$object instanceof eZContentObject )
         {
@@ -76,9 +75,9 @@ class OCOpenDataApiNode implements ArrayAccess
         {
             throw new Exception( "L'oggetto con remote id {$object->attribute( 'class_identifier' )} è di classe diversa rispetto all'oggetto remoto" );
         }
-        if ( is_object( $classTool ) && method_exists( $classTool, 'isValid' ) )
+        if ( is_object( $classTools ) && method_exists( $classTools, 'isValid' ) )
         {
-            if ( !$classTool->isValid() )
+            if ( !$classTools->isValid() )
             {
                 throw new Exception( "La classe {$object->attribute( 'class_identifier' )} non ha passato la validazione" );
             }
@@ -133,29 +132,32 @@ class OCOpenDataApiNode implements ArrayAccess
         return false;
     }
     
-    public function updateContentObject( eZContentObject $object = null, $classTools = null )
+    public function updateContentObject( eZContentObject $object = null, $classTools = null, $localRemoteIdPrefix = '' )
     {
+        if ( $object === null )
+        {
+            $object = eZContentObject::fetchByRemoteID( $localRemoteIdPrefix . $this->metadata['objectRemoteId'] );
+        }
         $this->compareWithContentObject( $object, $classTools );
         $params = array();        
-        $params['attributes'] = $this->getAttributesStringArray();
+        $params['attributes'] = $this->getAttributesStringArray( $object->attribute( 'main_parent_node_id' ), true );
         $newObject = eZContentFunctions::updateAndPublishObject( $object, $params );
         if ( !$newObject )
         {
             throw new Exception( "Errore sincronizzando l'oggetto" );
         }
-        return $newObject;
+        $objectId = $object->attribute( 'id' );
+        eZContentObject::clearCache( array( $objectId ) );
+        return eZContentObject::fetch( $objectId );
     }
     
-    public function getAttributesStringArray( $parentNodeID = null )
+    public function getAttributesStringArray( $parentNodeID, $isUpdate = false )
     {
-
-
         $attributeList = array();
-        foreach( $this->fields as $identifier => $fieldArray )
+        foreach( (array) $this->fields as $identifier => $fieldArray )
         {
             switch( $fieldArray['type'] )
             {
-
                 case 'ezxmltext':
                     $attributeList[$identifier] = SQLIContentUtils::getRichContent( $fieldArray['value'] );
                     break;
@@ -168,15 +170,13 @@ class OCOpenDataApiNode implements ArrayAccess
                     break;
                 case 'ezobjectrelationlist':
                     $parentNodeID = $this->findRelationObjectLocation( $identifier, $parentNodeID );
-                    $attributeList[$identifier] = $this->createRelationObjects( $fieldArray, $parentNodeID );
+                    $attributeList[$identifier] = $this->createRelationObjects( $fieldArray, $parentNodeID, $isUpdate );
                     break;
                 default:
                     $attributeList[$identifier] = $fieldArray['string_value'];
                     break;
-
-            }
+            }            
         }
-
         return $attributeList;
     }
 
@@ -199,7 +199,7 @@ class OCOpenDataApiNode implements ArrayAccess
         return $parentNodeID;
     }
 
-    protected function createRelationObjects( $fieldArray, $parentNodeID )
+    protected function createRelationObjects( $fieldArray, $parentNodeID, $isUpdate = false )
     {
         $data = array();
         if ( is_array( $fieldArray['value'] ) )
@@ -213,7 +213,14 @@ class OCOpenDataApiNode implements ArrayAccess
                     {
                         throw new Exception( "Api node not found" );
                     }
-                    $newObject = $remoteApiNode->createContentObject( $parentNodeID );
+                    if ( $isUpdate )
+                    {
+                        $newObject = $remoteApiNode->updateContentObject();
+                    }
+                    else
+                    {
+                        $newObject = $remoteApiNode->createContentObject( $parentNodeID );
+                    }
                     if ( $newObject instanceof eZContentObject )
                     {
                         $data[] = $newObject->attribute( 'id' );
