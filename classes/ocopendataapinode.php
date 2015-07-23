@@ -6,6 +6,7 @@ class OCOpenDataApiNode implements ArrayAccess
     public static function fromLink( $url )
     {
         $data = json_decode( eZHTTPTool::getDataByURL( $url ), true );
+
         if ( $data )
         {
             return new self( $data );
@@ -65,7 +66,7 @@ class OCOpenDataApiNode implements ArrayAccess
         return $object;
     }
     
-    public function compareWithContentObject( eZContentObject $object = null, $classTools = null )
+    public function compareWithContentObject( eZContentObject $object = null, $classTool = null )
     {
         if ( !$object instanceof eZContentObject )
         {
@@ -145,13 +146,16 @@ class OCOpenDataApiNode implements ArrayAccess
         return $newObject;
     }
     
-    public function getAttributesStringArray( $parentNodeID )
+    public function getAttributesStringArray( $parentNodeID = null )
     {
+
+
         $attributeList = array();
         foreach( $this->fields as $identifier => $fieldArray )
         {
             switch( $fieldArray['type'] )
             {
+
                 case 'ezxmltext':
                     $attributeList[$identifier] = SQLIContentUtils::getRichContent( $fieldArray['value'] );
                     break;
@@ -169,8 +173,10 @@ class OCOpenDataApiNode implements ArrayAccess
                 default:
                     $attributeList[$identifier] = $fieldArray['string_value'];
                     break;
-            }            
+
+            }
         }
+
         return $attributeList;
     }
 
