@@ -2,22 +2,18 @@
 
 namespace OpenContent\Opendata\Api;
 
-use OpenContent\Opendata\Api\Values\Content;
-use OpenContent\Opendata\Api\Values\Metadata;
 use eZContentObject;
-use eZContentObjectAttribute;
-use eZSection;
-use eZLocale;
+use Opencontent\Opendata\Api\Gateway\FileSystem;
+use Opencontent\Opendata\Api\Gateway\Database;
 
 class ContentRepository
 {
-    protected $currentLanguage;
-
     protected $currentEnvironmentSettings;
 
     public function __construct()
     {
-        $this->currentLanguage = eZLocale::currentLocaleCode();
+        $this->gateway = new Database();
+//        $this->gateway = new FileSystem();
     }
 
     public function setEnvironment( EnvironmentSettings $environmentSettings )
@@ -25,12 +21,14 @@ class ContentRepository
         $this->currentEnvironmentSettings = $environmentSettings;
     }
 
-    public function setLanguage( $currentLanguage )
+    public function read( $contentObjectIdentifier )
     {
-        $this->currentLanguage = $currentLanguage;
+        $contentObject = $this->findContent( $contentObjectIdentifier );
+        $this->checkAccess( $contentObject );
+        return $this->gateway->loadContent( $contentObject );
     }
 
-    public function read( $contentObjectIdentifier )
+    protected function findContent( $contentObjectIdentifier )
     {
         $contentObject = eZContentObject::fetch( intval( $contentObjectIdentifier ) );
         if ( !$contentObject instanceof eZContentObject )
@@ -41,9 +39,7 @@ class ContentRepository
         {
             throw new Exception\NotFoundException( $contentObjectIdentifier );
         }
-        $this->checkAccess( $contentObject );
-
-        return $this->loadContent( $contentObject );
+        return $contentObject;
     }
 
     protected function checkAccess( eZContentObject $contentObject )
@@ -52,48 +48,6 @@ class ContentRepository
         {
             throw new Exception\ForbiddenException( $contentObject->attribute( 'id' ), 'read' );
         }
-    }
-
-    protected function loadContent( eZContentObject $contentObject )
-    {
-        $content =  new Content();
-        $metadata = new Metadata();
-        $metadata->id = $contentObject->attribute( 'id' );
-        $metadata->name = $contentObject->name( false, $this->getCurrentLanguage() );
-        $metadata->remoteId = $contentObject->attribute( 'remote_id' );
-        $metadata->ownerId = $contentObject->attribute( 'owner_id' );
-        $metadata->classIdentifier = $contentObject->attribute( 'class_identifier' );
-        $metadata->nodeIds = array();
-        foreach( $contentObject->assignedNodes( false ) as $node )
-            $metadata->nodeIds[] = $node['node_id'];
-        $metadata->parentNodeIds = $contentObject->parentNodeIDArray();
-        $metadata->published = $contentObject->attribute( 'published' );
-        $metadata->modified = $contentObject->attribute( 'modified' );
-        $section = eZSection::fetch( $contentObject->attribute( 'section_id' ) );
-        if ( $section instanceof eZSection )
-            $metadata->sectionIdentifier = $section->attribute( 'identifier' );
-        $metadata->statusIdentifiers = $contentObject->stateIdentifierArray();
-        $metadata->language = $contentObject->attribute( 'current_language' );
-        $content->metadata = $metadata;
-
-        $content->data = array();
-        /** @var eZContentObjectAttribute[] $dataMap */
-        $dataMap = $contentObject->fetchDataMap( false, $this->getCurrentLanguage() );
-        foreach( $dataMap as $identifier => $attribute )
-        {
-            $converter = \Opencontent\Opendata\Api\AttributeConverterLoader::load(
-                $contentObject->attribute( 'class_identifier' ),
-                $identifier,
-                $attribute,
-                $this->currentEnvironmentSettings
-            );
-            if ( $converter->isPublic() )
-            {
-                $content->data[$converter->getIdentifier()] = $converter->getValue();
-            }
-        }
-
-        return $content;
     }
 
     public function create( $data )
@@ -109,10 +63,5 @@ class ContentRepository
     public function delete( $data )
     {
         return 'todo';
-    }
-
-    public function getCurrentLanguage()
-    {
-        return $this->currentLanguage;
     }
 }

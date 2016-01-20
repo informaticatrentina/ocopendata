@@ -18,17 +18,6 @@ class EnvironmentSettings
 
     protected $remoteIdPrefix;
 
-    protected $mapDataInMetadata = array();
-
-    protected $mapMetadataInData = array();
-
-    protected $attributeConverters = array(
-        'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User',
-        'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\BlackListed'
-    );
-
-    protected $relationsParentNodeIdMap = array();
-
     protected $validatorTolerance;
 
     public function __construct( array $properties = array() )

@@ -14,7 +14,6 @@ class AttributeConverterLoader
      * @param $classIdentifier
      * @param $identifier
      * @param eZContentObjectAttribute|eZContentClassAttribute $attribute
-     * @param EnvironmentSettings $environmentSettings
      *
      * @return Base
      * @throws EnvironmentMisconfigurationException
@@ -22,13 +21,12 @@ class AttributeConverterLoader
     final public static function load(
         $classIdentifier,
         $identifier,
-        $attribute,
-        EnvironmentSettings $environmentSettings
+        $attribute
     )
     {
         $className = '\Opencontent\Opendata\Api\AttributeConverter\Base';
         $dataTypeString = $attribute->attribute( 'data_type_string' );
-        $converters = (array)$environmentSettings->attributeConverters;
+        $converters = (array)self::attributeConverters();
         if ( isset( $converters["{$classIdentifier}/{$identifier}"] ) )
         {
             $className = $converters["{$classIdentifier}/{$identifier}"];
@@ -49,9 +47,14 @@ class AttributeConverterLoader
                 $attribute
             );
         }
-        throw new EnvironmentMisconfigurationException(
-            $environmentSettings->identifier,
-            "{$className} not found"
+        throw new \Exception( "{$className} not found" );
+    }
+
+    public static function attributeConverters()
+    {
+        return array(
+            'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User',
+            'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\BlackListed'
         );
     }
 

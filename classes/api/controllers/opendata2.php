@@ -54,7 +54,6 @@ class OCOpenDataController2 extends ezpRestContentController
 
     protected function doExceptionResult( Exception $exception )
     {
-
         $result = new ezcMvcResult;
         $result->variables['message'] = $exception->getMessage();
 
@@ -76,14 +75,20 @@ class OCOpenDataController2 extends ezpRestContentController
     public function doContentSearch()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->contentSearch->search( $this->request->variables['Query'], $this->request->variables['Page'] );
+        $search = $this->contentSearch->search( $this->request->variables['Query'], $this->request->variables['Page'] );
+        $result->variables['total'] = $search->total;
+        $result->variables['contents'] = $search->contents;
+        $result->variables['next_page'] = $search->nextPage;
         return $result;
     }
 
     public function doContentBrowse()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->contentBrowser->browse( $this->request->variables['ContentNodeIdentifier'] );
+        $browse = $this->contentBrowser->browse( $this->request->variables['ContentNodeIdentifier'] );
+        $result->variables['current'] = $browse->current;
+        $result->variables['children'] = $browse->children;
+        $result->variables['parent'] = $browse->parent;
         return $result;
     }
 
@@ -93,7 +98,7 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $result->variables = $this->contentRepository->create( $this->getPayload() );
+            $result->variables['result'] = $this->contentRepository->create( $this->getPayload() );
         }
         catch( Exception $e )
         {
@@ -118,7 +123,9 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $result->variables = $this->contentRepository->read( $this->request->variables['ContentObjectIdentifier'] );
+            $content = $this->contentRepository->read( $this->request->variables['ContentObjectIdentifier'] );
+            $result->variables['metadata'] = $content->metadata;
+            $result->variables['data'] = $content->data;
         }
         catch( Exception $e )
         {
@@ -133,7 +140,7 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $result->variables = $this->contentRepository->update( $this->getPayload() );
+            $result->variables['result'] = $this->contentRepository->update( $this->getPayload() );
         }
         catch( Exception $e )
         {
@@ -148,7 +155,7 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $result->variables = $this->contentRepository->delete( $this->getPayload() );
+            $result->variables['result'] = $this->contentRepository->delete( $this->getPayload() );
         }
         catch( Exception $e )
         {

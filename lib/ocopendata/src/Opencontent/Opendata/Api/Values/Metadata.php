@@ -8,13 +8,15 @@ class Metadata
 {
     public $id;
 
-    public $name;
-
     public $remoteId;
 
-    public $ownerId;
-
     public $classIdentifier;
+
+    public $languages;
+
+    public $name;
+
+    public $ownerId;
 
     public $nodeIds;
 
@@ -27,8 +29,6 @@ class Metadata
     public $published;
 
     public $modified;
-
-    public $language;
 
     public function __construct( array $properties = array() )
     {
