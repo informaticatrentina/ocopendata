@@ -1,12 +1,7 @@
 <?php
 
-namespace OpenContent\Opendata\Rest\Server\MVC\ezc;
 
-use ezcMvcRailsRoute;
-use ezcMvcRequest;
-use ezcMvcRoutingInformation;
-
-class Route extends ezcMvcRailsRoute
+class OcOpenDataRoute extends ezcMvcRailsRoute
 {
     /**
      * Holds protocol string.
@@ -19,6 +14,7 @@ class Route extends ezcMvcRailsRoute
      * Constructs a new SensorRailsRoute with $pattern for $protocol.
      *
      * Accepted protocol format: http-get, http-post, http-put, http-delete
+     *
      * @see ezcMvcHttpRequestParser::processProtocol();
      *
      * @param string $pattern
@@ -27,7 +23,13 @@ class Route extends ezcMvcRailsRoute
      * @param array $defaultValues
      * @param null|string $protocol Match specific protocol if string value, eg: 'http-get'
      */
-    public function __construct( $pattern, $controllerClassName, $action = null, array $defaultValues = array(), $protocol = null )
+    public function __construct(
+        $pattern,
+        $controllerClassName,
+        $action = null,
+        array $defaultValues = array(),
+        $protocol = null
+    )
     {
         $this->protocol = $protocol;
         parent::__construct( $pattern, $controllerClassName, $action, $defaultValues );
@@ -37,12 +39,15 @@ class Route extends ezcMvcRailsRoute
      * Evaluates the URI against this route and protocol.
      *
      * @param ezcMvcRequest $request
+     *
      * @return ezcMvcRoutingInformation|null
      */
     public function matches( ezcMvcRequest $request )
     {
         if ( $this->protocol === null || $request->protocol === $this->protocol )
+        {
             return parent::matches( $request );
+        }
 
         return null;
     }

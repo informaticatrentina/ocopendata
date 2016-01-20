@@ -28,3 +28,15 @@ $FunctionList['push'] = array();
 $FunctionList['view'] = array();
 $FunctionList['import'] = array();
 
+$presetList = array();
+foreach( \Opencontent\Opendata\Api\EnvironmentLoader::getAvailablePresetIdentifiers() as $preset )
+{
+    $presetList[$preset] = array( 'Name' => $preset, 'value' => $preset );
+}
+$FunctionList['environment'] = array(
+    'PresetList' => array(
+        'name' => 'PresetList',
+        'values' => $presetList
+    )
+);
+

@@ -21,21 +21,36 @@ class HttpClient
 
     protected $proxyAuthType;
 
+    protected $apiEnvironmentPreset;
+
     protected $apiEndPontBase;
 
     public static $connectionTimeout = 60;
 
     public static $processTimeout = 60;
 
-    public function __construct( $server, $login, $password, $apiEndPontBase = '/api/opendata/v2' )
+    public function __construct(
+        $server,
+        $login,
+        $password,
+        $apiEnvironmentPreset = 'content',
+        $apiEndPontBase = '/api/opendata/v2'
+    )
     {
         $this->server = rtrim( $server, '/' );
         $this->login = $login;
         $this->password = $password;
+        $this->apiEnvironmentPreset = $apiEnvironmentPreset;
         $this->apiEndPontBase = rtrim( $apiEndPontBase, '/' );
     }
 
-    public function setProxy( $proxy, $proxyPort, $proxyLogin = null, $proxyPassword = null, $proxyAuthType = 1 )
+    public function setProxy(
+        $proxy,
+        $proxyPort,
+        $proxyLogin = null,
+        $proxyPassword = null,
+        $proxyAuthType = 1
+    )
     {
         $this->proxy = $proxy;
         $this->proxyPort = $proxyPort;
@@ -51,18 +66,18 @@ class HttpClient
 
     public function update( $data )
     {
-        return $this->request( 'POST', '/update' , json_encode( $data ) );
+        return $this->request( 'POST', '/update', json_encode( $data ) );
     }
 
     public function delete( $data )
     {
-        return $this->request( 'POST', '/delete' , json_encode( $data ) );
+        return $this->request( 'POST', '/delete', json_encode( $data ) );
     }
 
     public function request( $method, $path, $data = null )
     {
         $credentials = "{$this->login}:{$this->password}";
-        $url = $this->server . $this->apiEndPontBase .  $path;
+        $url = $this->server . $this->apiEndPontBase . $path;
 
         $headers = array( "Authorization: Basic " . base64_encode( $credentials ) );
 
@@ -84,12 +99,16 @@ class HttpClient
         curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, self::$connectionTimeout );
         curl_setopt( $ch, CURLOPT_TIMEOUT, self::$processTimeout );
 
-        if( $this->proxy !== null )
+        if ( $this->proxy !== null )
         {
             curl_setopt( $ch, CURLOPT_PROXY, $this->proxy . ':' . $this->proxyPort );
-            if( $this->proxyLogin !== null )
+            if ( $this->proxyLogin !== null )
             {
-                curl_setopt( $ch, CURLOPT_PROXYUSERPWD, $this->proxyLogin . ':' . $this->proxyPassword );
+                curl_setopt(
+                    $ch,
+                    CURLOPT_PROXYUSERPWD,
+                    $this->proxyLogin . ':' . $this->proxyPassword
+                );
                 curl_setopt( $ch, CURLOPT_PROXYAUTH, $this->proxyAuthType );
             }
         }

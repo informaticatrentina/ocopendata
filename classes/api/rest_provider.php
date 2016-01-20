@@ -1,7 +1,6 @@
 <?php
 
-use OpenContent\Opendata\Rest\Server\MVC\ezc\Route;
-use OpenContent\Opendata\Rest\Server\MVC\ezc\Controller;
+use Opencontent\Opendata\Api\EnvironmentLoader;
 
 class OCOpenDataProvider extends ezpRestApiProvider
 {
@@ -17,55 +16,48 @@ class OCOpenDataProvider extends ezpRestApiProvider
     public function getVersion2Routes()
     {
         $routes = array(
-            'search' => new Route(
-                new ezpMvcRailsRoute(
+            'search' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
                     '/content/search/:Query/:Page',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
+                    'OCOpenDataController2',
                     'contentSearch',
-                    array(),
+                    array(
+                        'Page' => 1
+                    ),
                     'http-get'
                 ), 2
             ),
-            'browse' => new Route(
-                new ezpMvcRailsRoute(
-                    '/content/browse/:NodeId',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
+            'browse' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/content/browse/:ContentNodeIdentifier',
+                    'OCOpenDataController2',
                     'contentBrowse',
                     array(),
                     'http-get'
                 ), 2
             ),
-            'create' => new Route(
-                new ezpMvcRailsRoute(
-                    '/content/create',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
+            'create' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/:EnvironmentSettigs/create',
+                    'OCOpenDataController2',
                     'contentCreate',
                     array(),
                     'http-post'
                 ), 2
             ),
-            'read' => new Route(
-                new ezpMvcRailsRoute(
-                    '/content/read/:ContentObjectIdentifier',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
-                    'contentRead',
-                    array(),
-                    'http-get'
-                ), 2
-            ),
-            'update' => new Route(
-                new ezpMvcRailsRoute(
-                    '/content/update',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
+            'update' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/:EnvironmentSettigs/update',
+                    'OCOpenDataController2',
                     'contentUpdate',
                     array(),
                     'http-post'
                 ), 2
             ),
-            'delete' => new Route(
-                new ezpMvcRailsRoute(
-                    '/content/delete',
-                    'OpenContent\Opendata\Rest\Server\MVC\ezc\Controller',
+            'delete' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/:EnvironmentSettigs/delete',
+                    'OCOpenDataController2',
                     'contentDelete',
                     array(),
                     'http-post'
@@ -74,6 +66,37 @@ class OCOpenDataProvider extends ezpRestApiProvider
 
         );
 
+        foreach( EnvironmentLoader::getAvailablePresetIdentifiers() as $identifier )
+        {
+            if ( EnvironmentLoader::needAccess( $identifier ) )
+            {
+                $routes["{$identifier}Read"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        "/{$identifier}/read/:ContentObjectIdentifier",
+                        'OCOpenDataController2',
+                        'protectedRead',
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
+                        'http-get'
+                    ), 2
+                );
+            }
+            else
+            {
+                $routes["{$identifier}Read"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        "/{$identifier}/read/:ContentObjectIdentifier",
+                        'OCOpenDataController2',
+                        'anonymousRead',
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
+                        'http-get'
+                    ), 2
+                );
+            }
+        }
         return $routes;
     }
 

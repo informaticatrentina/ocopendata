@@ -6,11 +6,20 @@ ProviderClass[opendata]=OCOpenDataProvider
 [RouteSettings]
 SkipFilter[]=ezpRestContentController_*
 SkipFilter[]=OCOpenDataController_*
+SkipFilter[]=OCOpenDataController2_anonymousRead;2
+
+[OCOpenDataController2_CacheSettings]
+ApplicationCache=disabled
 
 [OCOpenDataController_datasetList_CacheSettings]
 ApplicationCache=disabled
 
 [OCOpenDataController_datasetView_CacheSettings]
 ApplicationCache=disabled
+
+[Authentication]
+RequireAuthentication=enabled
+AuthenticationStyle=ezpRestBasicAuthStyle
+DefaultUserID=
 
 */ ?>
