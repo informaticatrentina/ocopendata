@@ -1,9 +1,9 @@
 <?php
 
 namespace Opencontent\Opendata\Api\Gateway;
-use OpenContent\Opendata\Api\Values\Content;
+use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\Opendata\Api\Values\ContentData;
-use OpenContent\Opendata\Api\Values\Metadata;
+use Opencontent\Opendata\Api\Values\Metadata;
 use eZContentObject;
 use eZContentObjectAttribute;
 use eZSection;

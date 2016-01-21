@@ -1,10 +1,12 @@
 <?php
 
-namespace OpenContent\Opendata\Api;
+namespace Opencontent\Opendata\Api;
 
 use eZContentObject;
 use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\Gateway\Database;
+use Opencontent\Opendata\Api\Exception\NotFoundException;
+use Opencontent\Opendata\Api\Exception\ForbiddenException;
 
 class ContentRepository
 {

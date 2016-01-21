@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Opendata\Api\Exception;
+namespace Opencontent\Opendata\Api\Exception;
 
 use Opencontent\Opendata\Api\Exception\BaseException;
 

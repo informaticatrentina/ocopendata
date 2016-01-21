@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Opendata\Api\Values;
+namespace Opencontent\Opendata\Api\Values;
 
 use Opencontent\Opendata\Api\Exception\OutOfRangeException;
 

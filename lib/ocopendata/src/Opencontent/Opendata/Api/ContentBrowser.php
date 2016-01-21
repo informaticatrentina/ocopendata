@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Opendata\Api;
+namespace Opencontent\Opendata\Api;
 
 
 class ContentBrowser

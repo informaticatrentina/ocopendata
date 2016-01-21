@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Opendata\Rest\Client;
+namespace Opencontent\Opendata\Rest\Client;
 
 
 class HttpClient
