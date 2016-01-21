@@ -88,7 +88,7 @@ class OCOpenDataContentModel extends ezpRestContentModel
         $fieldBlacklist = self::getFieldBlacklist();
         $links = array();
 
-        $baseUri = $currentRequest->raw['SCRIPT_URI'];
+        $baseUri = isset($currentRequest->raw['SCRIPT_URI'])?$currentRequest->raw['SCRIPT_URI']:null;
         //$baseUri = $currentRequest->getBaseURI();
         $contentQueryString = $currentRequest->getContentQueryString( true );
 

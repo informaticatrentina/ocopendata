@@ -3,52 +3,66 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
-use eZContentClassAttribute;
 use eZUser;
+use eZMail;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
+use Opencontent\Opendata\Api\Values\ContentData;
 
 class User extends Base
 {
-    public function getValue()
+    public function get( eZContentObjectAttribute $attribute )
     {
-        if ( $this->attribute->attribute( 'data_type_string' ) == 'ezuser'
-             && $this->attribute instanceof eZContentObjectAttribute
-             && $this->attribute->hasContent() )
+        $content = parent::get( $attribute );
+        if ( $attribute->attribute( 'data_type_string' ) == 'ezuser'
+             && $attribute instanceof eZContentObjectAttribute
+             && $attribute->hasContent() )
         {
             /** @var eZUser $user */
-            $user = $this->attribute->content();
-            return array(
+            $user = $attribute->content();
+            $content['content'] = array(
                 'login' => $user->Login,
                 'email' => $user->Email
             );
         }
-        return null;
+        return $content;
     }
 
-    public function setValue( $data )
+    public function set( $data )
     {
-        if ( !isset( $data['login'] ) || !isset( $data['email'] ) )
-        {
-            throw new InvalidInputException( 'Invalid input format', $this->getIdentifier(), $data );
-        }
-        if ( $this->attribute->attribute( 'data_type_string' ) == 'ezuser' )
-        {
-            /** @var eZUser $user */
-            $user = eZUser::fetchByName( $data['login'] );
-            if ( $user instanceof eZUser )
-            {
-                throw new InvalidInputException( 'Duplicate user login', $this->getIdentifier(), $data );
-            }
+        return $data['login'] . '|' . $data['email'];
+    }
 
-            /** @var eZUser $user */
-            $user = eZUser::fetchByEmail( $data['email'] );
-            if ( $user instanceof eZUser )
-            {
-                throw new InvalidInputException( 'Duplicate user email', $this->getIdentifier(), $data );
-            }
-
-            return $data['login'] . '|' . $data['email'];
+    public function validate( $data )
+    {
+        if ( !is_array( $data ) || !isset( $data['login'] ) || !isset( $data['email'] ) )
+        {
+            throw new InvalidInputException( 'Invalid type', $this->getIdentifier(), $data );
         }
-        return null;
+
+        $user = eZUser::fetchByName( $data['login'] );
+        if ( $user instanceof eZUser )
+        {
+            throw new InvalidInputException( 'Duplicate user login', $this->getIdentifier(), $data );
+        }
+
+        $user = eZUser::fetchByEmail( $data['email'] );
+        if ( $user instanceof eZUser )
+        {
+            throw new InvalidInputException( 'Duplicate user email', $this->getIdentifier(), $data );
+        }
+
+        if ( !eZMail::validate( $data['email'] ) )
+            throw new InvalidInputException( 'Invalid email', $this->getIdentifier(), $data );
+    }
+
+    public function type()
+    {
+        return array(
+            'identifier' => 'user',
+            'format' => array(
+                'login' => 'string',
+                'email' => 'string'
+            )
+        );
     }
 }

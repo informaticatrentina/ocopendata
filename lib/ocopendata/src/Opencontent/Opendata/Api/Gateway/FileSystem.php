@@ -1,52 +1,49 @@
 <?php
 
-namespace OpenContent\Opendata\Api\Gateway;
+namespace Opencontent\Opendata\Api\Gateway;
 
-use Opencontent\Opendata\Api\Gateway\Database;
-use eZContentObject;
+use Opencontent\Opendata\Api\Gateway;
 use eZDir;
 use eZSys;
 use eZClusterFileHandler;
 
-class FileSystem
+class FileSystem extends Database
 {
 
-    public function loadContent( eZContentObject $contentObject )
+    public function loadContent( $contentObjectIdentifier )
     {
-        $contentObjectId = $contentObject->attribute( 'id' );
-        return $this->getCacheManager( $contentObjectId )->processCache(
+        return $this->getCacheManager( $contentObjectIdentifier, 'content' )->processCache(
             array( __CLASS__, 'retrieveCache' ),
             array( __CLASS__, 'generateCache' ),
             null,
             null,
-            $contentObjectId
+            $contentObjectIdentifier
         );
     }
 
-    protected static function getCacheManager( $contentObjectId )
+    protected static function getCacheManager( $contentObjectIdentifier, $type )
     {
-        $cacheFile = $contentObjectId . '.cache';
-        $extraPath = eZDir::filenamePath( $contentObjectId );
-        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', 'content', $extraPath, $cacheFile ) );
+        $cacheFile = $contentObjectIdentifier . '.cache';
+        $extraPath = eZDir::filenamePath( $contentObjectIdentifier );
+        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', $type, $extraPath, $cacheFile ) );
         return eZClusterFileHandler::instance( $cacheFilePath );
     }
 
-    public function clearCache( $contentObjectId )
+    public function clearCache( $contentObjectIdentifier, $type = 'content' )
     {
-        $this->getCacheManager( $contentObjectId )->purge();
+        $this->getCacheManager( $contentObjectIdentifier, $type )->purge();
     }
 
-    public static function retrieveCache( $file, $mtime, $contentObjectId )
+    public static function retrieveCache( $file, $mtime, $contentObjectIdentifier )
     {
         $content = include( $file );
         return $content;
     }
 
-    public static function generateCache( $file, $contentObjectId )
+    public static function generateCache( $file, $contentObjectIdentifier )
     {
-        $contentObject = eZContentObject::fetch( $contentObjectId );
-        $gateway = new Database();
-        $content = $gateway->loadContent( $contentObject );
+        $database = new Database();
+        $content = $database->loadContent( $contentObjectIdentifier );
         return array( 'content'  => $content,
                       'scope'    => 'ocopendata-cache',
                       'datatype' => 'php',

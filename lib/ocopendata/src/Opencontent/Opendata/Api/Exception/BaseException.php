@@ -4,7 +4,7 @@ namespace Opencontent\Opendata\Api\Exception;
 
 use Exception;
 
-abstract class BaseException extends Exception
+class BaseException extends Exception
 {
     public function getServerErrorCode()
     {
@@ -13,6 +13,6 @@ abstract class BaseException extends Exception
 
     public function getErrorCode()
     {
-        return 0;
+        return get_called_class();
     }
 }

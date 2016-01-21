@@ -4,6 +4,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
+use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
 class Base
 {
@@ -17,25 +18,14 @@ class Base
      */
     protected $classIdentifier;
 
-    /**
-     * @var eZContentObjectAttribute|\eZContentClassAttribute
-     */
-    protected $attribute;
 
     public function __construct(
         $classIdentifier,
-        $identifier,
-        $attribute
+        $identifier
     )
     {
         $this->classIdentifier = $classIdentifier;
         $this->identifier = $identifier;
-        $this->attribute = $attribute;
-    }
-
-    public function isPublic()
-    {
-        return true;
     }
 
     public function getIdentifier()
@@ -43,21 +33,42 @@ class Base
         return $this->identifier;
     }
 
-    public function getValue()
+    /**
+     * @param eZContentObjectAttribute $attribute
+     *
+     * @return array|string|int|null|\JsonSerializable
+     */
+    public function get( eZContentObjectAttribute $attribute )
     {
-        if ( $this->attribute instanceof eZContentObjectAttribute
-             && $this->attribute->hasContent() )
-            return $this->attribute->toString();
-        return null;
+        $data = array(
+            'id' => intval( $attribute->attribute( 'id' ) ),
+            'version' => intval( $attribute->attribute( 'version' ) ),
+            'identifier' => $this->classIdentifier . '/' . $this->identifier,
+            'datatype' => $attribute->attribute( 'data_type_string' ),
+            'content' => $attribute->hasContent() ? $attribute->toString() : null
+        );
+
+        return $data;
     }
 
-    public function setValue( $data )
+    public function set( $data )
     {
         return $data;
     }
 
-    public function help()
+    public function validate( $data )
     {
-        return null;
+        if ( !is_string( $data ) )
+            throw new InvalidInputException( 'Invalid type', $this->getIdentifier(), $data );
+    }
+
+    public function help( eZContentClassAttribute $attribute )
+    {
+        return $attribute->attribute( 'description' );
+    }
+
+    public function type()
+    {
+        return array( 'identifier' => 'string' );
     }
 }

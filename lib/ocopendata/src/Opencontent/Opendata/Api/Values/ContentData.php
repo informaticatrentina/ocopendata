@@ -2,25 +2,58 @@
 
 namespace Opencontent\Opendata\Api\Values;
 
-class ContentData
+class ContentData implements \IteratorAggregate, \ArrayAccess
 {
-    public function __construct( array $properties = array() )
+    protected $data = array();
+
+    public function __construct( array $array = array() )
     {
-        foreach ( $properties as $property => $value )
-        {
-            if ( is_array( $value ) )
-                $value = new static( $value );
-            $this->{$property} = $value;
-        }
+        $this->data = $array;
     }
 
-    public static function __set_state( array $properties )
+    public function getIterator()
     {
-        $data = array();
-        foreach ( $properties as $property => $value )
-        {
-            $data[$property] = $value;
-        }
-        return new static( $data );
+        return new \ArrayIterator( $this->data );
     }
+
+    public function count()
+    {
+        return count( $this->data );
+    }
+
+    public static function __set_state( array $array )
+    {
+        $object = new static();
+        foreach( $array as $key => $value )
+        {
+            $object->{$key} = $value;
+        }
+        return $object;
+    }
+
+    public function offsetExists( $offset )
+    {
+        return isset( $this->data[$offset] );
+    }
+
+    public function offsetGet( $offset )
+    {
+        return $this->data[$offset];
+    }
+
+    public function offsetSet( $offset, $value )
+    {
+        $this->data[$offset] = $value;
+    }
+
+    public function offsetUnset( $offset )
+    {
+        unset( $this->data[$offset] );
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->data;
+    }
+
 }

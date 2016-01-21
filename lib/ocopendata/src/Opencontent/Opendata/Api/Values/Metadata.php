@@ -45,4 +45,10 @@ class Metadata
     {
         return new static( $array );
     }
+
+    public function jsonSerialize()
+    {
+        return $this;
+    }
+
 }

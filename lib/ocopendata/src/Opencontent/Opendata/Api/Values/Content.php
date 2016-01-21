@@ -6,8 +6,14 @@ use Opencontent\Opendata\Api\Exception\OutOfRangeException;
 
 class Content
 {
+    /**
+     * @var Metadata
+     */
     public $metadata;
 
+    /**
+     * @var ContentData
+     */
     public $data;
 
     public function __construct( array $properties = array() )
@@ -24,5 +30,13 @@ class Content
     public static function __set_state( array $array )
     {
         return new static( $array );
+    }
+
+    public function jsonSerialize()
+    {
+        return array(
+            'metadata' => $this->metadata->jsonSerialize(),
+            'data' => $this->data->jsonSerialize()
+        );
     }
 }

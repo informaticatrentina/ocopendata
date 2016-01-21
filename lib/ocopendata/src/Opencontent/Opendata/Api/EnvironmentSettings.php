@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api;
 
 use Opencontent\Opendata\Api\Exception\OutOfRangeException;
+use Opencontent\Opendata\Api\Values\Content;
 
 class EnvironmentSettings
 {
@@ -59,5 +60,10 @@ class EnvironmentSettings
     public static function __set_state( array $array )
     {
         return new static( $array );
+    }
+
+    public function filterContent( Content $content )
+    {
+        return $content;
     }
 }

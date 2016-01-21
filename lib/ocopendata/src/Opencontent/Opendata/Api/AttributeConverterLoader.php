@@ -5,7 +5,6 @@ namespace Opencontent\Opendata\Api;
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use Opencontent\Opendata\Api\AttributeConverter\Base;
-use Opencontent\Opendata\Api\Exception\EnvironmentMisconfigurationException;
 
 class AttributeConverterLoader
 {
@@ -15,17 +14,16 @@ class AttributeConverterLoader
      * @param $identifier
      * @param eZContentObjectAttribute|eZContentClassAttribute $attribute
      *
-     * @return Base
-     * @throws EnvironmentMisconfigurationException
+     * @return \Opencontent\Opendata\Api\AttributeConverter\Base
+     * @throws \Exception
      */
     final public static function load(
         $classIdentifier,
         $identifier,
-        $attribute
+        $dataTypeString
     )
     {
-        $className = '\Opencontent\Opendata\Api\AttributeConverter\Base';
-        $dataTypeString = $attribute->attribute( 'data_type_string' );
+        $className = null;
         $converters = (array)self::attributeConverters();
         if ( isset( $converters["{$classIdentifier}/{$identifier}"] ) )
         {
@@ -39,22 +37,32 @@ class AttributeConverterLoader
         {
             $className = $converters[$dataTypeString];
         }
+        elseif ( isset( $converters['*'] ) )
+        {
+            $className = $converters['*'];
+        }
         if ( class_exists( $className ) )
         {
             return new $className(
                 $classIdentifier,
-                $identifier,
-                $attribute
+                $identifier
             );
         }
-        throw new \Exception( "{$className} not found" );
+        else
+        {
+            return new Base(
+                $classIdentifier,
+                $identifier
+            );
+        }
     }
 
     public static function attributeConverters()
     {
         return array(
-            'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User',
-            'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\BlackListed'
+            'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\Page',
+            'ezboolean' => '\Opencontent\Opendata\Api\AttributeConverter\Boolean',
+            'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User'
         );
     }
 

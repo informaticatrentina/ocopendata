@@ -5,17 +5,20 @@ namespace Opencontent\Opendata\Api;
 use eZContentObject;
 use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\Gateway\Database;
-use Opencontent\Opendata\Api\Exception\NotFoundException;
-use Opencontent\Opendata\Api\Exception\ForbiddenException;
+use Opencontent\Opendata\Api\Gateway\SolrStorage;
 
 class ContentRepository
 {
+    /**
+     * @var EnvironmentSettings
+     */
     protected $currentEnvironmentSettings;
 
     public function __construct()
     {
-        $this->gateway = new Database();
-//        $this->gateway = new FileSystem();
+//        $this->gateway = new Database();      // fallback per tutti
+//        $this->gateway = new SolrStorage();   // usa solr storage per restituire oggetti (sembra lento...)
+        $this->gateway = new FileSystem();      // scrive cache sul filesystem (cluster safe)
     }
 
     public function setEnvironment( EnvironmentSettings $environmentSettings )
@@ -25,31 +28,9 @@ class ContentRepository
 
     public function read( $contentObjectIdentifier )
     {
-        $contentObject = $this->findContent( $contentObjectIdentifier );
-        $this->checkAccess( $contentObject );
-        return $this->gateway->loadContent( $contentObject );
-    }
-
-    protected function findContent( $contentObjectIdentifier )
-    {
-        $contentObject = eZContentObject::fetch( intval( $contentObjectIdentifier ) );
-        if ( !$contentObject instanceof eZContentObject )
-        {
-            $contentObject = eZContentObject::fetchByRemoteID( $contentObjectIdentifier );
-        }
-        if ( !$contentObject instanceof eZContentObject )
-        {
-            throw new Exception\NotFoundException( $contentObjectIdentifier );
-        }
-        return $contentObject;
-    }
-
-    protected function checkAccess( eZContentObject $contentObject )
-    {
-        if ( !$contentObject->attribute( 'can_read' ) )
-        {
-            throw new Exception\ForbiddenException( $contentObject->attribute( 'id' ), 'read' );
-        }
+        $content = $this->gateway->loadContent( $contentObjectIdentifier );
+        $this->gateway->checkAccess( $contentObjectIdentifier );
+        return $this->currentEnvironmentSettings->filterContent( $content );
     }
 
     public function create( $data )

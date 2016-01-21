@@ -1,10 +1,10 @@
 <?php
 
 use Opencontent\Opendata\Api\EnvironmentLoader;
-use OpenContent\Opendata\Api\ContentBrowser;
-use OpenContent\Opendata\Api\ContentRepository;
-use OpenContent\Opendata\Api\ContentSearch;
-use OpenContent\Opendata\Api\Exception\BaseException;
+use Opencontent\Opendata\Api\ContentBrowser;
+use Opencontent\Opendata\Api\ContentRepository;
+use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\Exception\BaseException;
 use Opencontent\Opendata\Api\Exception\EnvironmentForbiddenException;
 
 class OCOpenDataController2 extends ezpRestContentController
@@ -125,7 +125,7 @@ class OCOpenDataController2 extends ezpRestContentController
             $result = new ezpRestMvcResult();
             $content = $this->contentRepository->read( $this->request->variables['ContentObjectIdentifier'] );
             $result->variables['metadata'] = $content->metadata;
-            $result->variables['data'] = $content->data;
+            $result->variables['data'] = $content->data->jsonSerialize(); // compat with php version<5.4
         }
         catch( Exception $e )
         {

@@ -2,7 +2,7 @@
 
 require '../src/Opencontent/Opendata/Rest/Client/HttpClient.php';
 
-use OpenContent\Opendata\Rest\Client\HttpClient;
+use Opencontent\Opendata\Rest\Client\HttpClient;
 
 try
 {
