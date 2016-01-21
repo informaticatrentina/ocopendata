@@ -2,8 +2,70 @@
 
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
+use eZContentObjectAttribute;
+use eZHTTPTool;
+use eZURI;
+use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
-class Image extends Base
+class Image extends File
 {
+    public function get( eZContentObjectAttribute $attribute )
+    {
+        $content = parent::get( $attribute );
+        if ( $attribute instanceof eZContentObjectAttribute
+             && $attribute->hasContent() )
+        {
+            /** @var \eZImageAliasHandler $attributeContent */
+            $attributeContent = $attribute->content();
+            $image = $attributeContent->attribute( 'original' );
+            $url = $image['full_path'];
+            eZURI::transformURI( $url, false, 'full' );
+
+            $content['content'] = array(
+                'filename' => $image['original_filename'],
+                'url' => $url,
+                'alt' => $image['alternative_text']
+            );
+        }
+
+        return $content;
+    }
+
+    public function set( $data )
+    {
+        $path = $this->getTemporaryFilePath( $data['filename'], $data['url'], $data['image'] );
+        if ( isset( $data['alt'] ) )
+        {
+            $path .= '|' . $data['alt'];
+        }
+
+        return $path;
+    }
+
+    public static function validate( $identifier, $data )
+    {
+        if ( is_array( $data ) && isset( $data['image'] ) )
+        {
+            $data['file'] = $data['image'];
+        }
+        parent::validate( $identifier, $data );
+        if ( isset( $data['alt'] ) && settype( $data['alt'], 'string' ) !== true )
+        {
+            throw new InvalidInputException( 'Invalid alt format', $identifier, $data );
+        }
+    }
+
+    public function type()
+    {
+        return array(
+            'identifier' => 'file',
+            'format' => array(
+                'image' => 'public http uri',
+                'file' => 'base64 encoded file (url alternative)',
+                'filename' => 'string',
+                'alt' => 'string'
+            )
+        );
+    }
 
 }

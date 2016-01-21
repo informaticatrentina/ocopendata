@@ -32,27 +32,27 @@ class User extends Base
         return $data['login'] . '|' . $data['email'];
     }
 
-    public function validate( $data )
+    public static function validate( $identifier, $data )
     {
         if ( !is_array( $data ) || !isset( $data['login'] ) || !isset( $data['email'] ) )
         {
-            throw new InvalidInputException( 'Invalid type', $this->getIdentifier(), $data );
+            throw new InvalidInputException( 'Invalid type',$identifier, $data );
         }
 
         $user = eZUser::fetchByName( $data['login'] );
         if ( $user instanceof eZUser )
         {
-            throw new InvalidInputException( 'Duplicate user login', $this->getIdentifier(), $data );
+            throw new InvalidInputException( 'Duplicate user login', $identifier, $data );
         }
 
         $user = eZUser::fetchByEmail( $data['email'] );
         if ( $user instanceof eZUser )
         {
-            throw new InvalidInputException( 'Duplicate user email', $this->getIdentifier(), $data );
+            throw new InvalidInputException( 'Duplicate user email', $identifier, $data );
         }
 
         if ( !eZMail::validate( $data['email'] ) )
-            throw new InvalidInputException( 'Invalid email', $this->getIdentifier(), $data );
+            throw new InvalidInputException( 'Invalid email', $identifier, $data );
     }
 
     public function type()

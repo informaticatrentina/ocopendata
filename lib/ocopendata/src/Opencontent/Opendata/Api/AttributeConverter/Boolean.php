@@ -12,6 +12,12 @@ class Boolean extends Base
         return $content;
     }
 
+    public function set( $data )
+    {
+        return (int) $data;
+    }
+
+
     public function type()
     {
         return array( 'identifier' => 'boolean' );

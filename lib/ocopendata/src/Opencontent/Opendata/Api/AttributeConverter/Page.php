@@ -47,11 +47,11 @@ class Page extends Base
         return null;
     }
 
-    public function validate( $data )
+    public static function validate( $identifier, $data )
     {
         if ( $data !== null )
         {
-            throw new InvalidInputException( "Readonly", $this->getIdentifier(), $data );
+            throw new InvalidInputException( "Readonly", $identifier, $data );
         }
     }
 

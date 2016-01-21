@@ -56,10 +56,10 @@ class Base
         return $data;
     }
 
-    public function validate( $data )
+    public static function validate( $identifier, $data )
     {
         if ( !is_string( $data ) )
-            throw new InvalidInputException( 'Invalid type', $this->getIdentifier(), $data );
+            throw new InvalidInputException( 'Invalid type', $identifier, $data );
     }
 
     public function help( eZContentClassAttribute $attribute )
@@ -70,5 +70,10 @@ class Base
     public function type()
     {
         return array( 'identifier' => 'string' );
+    }
+
+    public static function clean()
+    {
+
     }
 }

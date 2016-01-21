@@ -16,25 +16,25 @@ class OCOpenDataProvider extends ezpRestApiProvider
     public function getVersion2Routes()
     {
         $routes = array(
-            'search' => new ezpRestVersionedRoute(
+            'openData2search' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
-                    '/content/search/:Query',
+                    '/:EnvironmentSettigs/search/:Query',
                     'OCOpenDataController2',
                     'contentSearch',
                     array(),
                     'http-get'
                 ), 2
             ),
-            'browse' => new ezpRestVersionedRoute(
+            'openData2browse' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
-                    '/content/browse/:ContentNodeIdentifier',
+                    '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
                     'OCOpenDataController2',
                     'contentBrowse',
                     array(),
                     'http-get'
                 ), 2
             ),
-            'create' => new ezpRestVersionedRoute(
+            'openData2create' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
                     '/:EnvironmentSettigs/create',
                     'OCOpenDataController2',
@@ -43,7 +43,7 @@ class OCOpenDataProvider extends ezpRestApiProvider
                     'http-post'
                 ), 2
             ),
-            'update' => new ezpRestVersionedRoute(
+            'openData2update' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
                     '/:EnvironmentSettigs/update',
                     'OCOpenDataController2',
@@ -52,11 +52,20 @@ class OCOpenDataProvider extends ezpRestApiProvider
                     'http-post'
                 ), 2
             ),
-            'delete' => new ezpRestVersionedRoute(
+            'openData2delete' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
                     '/:EnvironmentSettigs/delete',
                     'OCOpenDataController2',
                     'contentDelete',
+                    array(),
+                    'http-post'
+                ), 2
+            ),
+            'openData2download' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/download/:ObjectId/:Id/:Version/:Filename',
+                    'OCOpenDataController2',
+                    'contentDownload',
                     array(),
                     'http-post'
                 ), 2

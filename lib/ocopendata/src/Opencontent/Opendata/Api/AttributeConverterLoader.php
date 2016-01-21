@@ -51,6 +51,8 @@ class AttributeConverterLoader
         }
         else
         {
+            if ( $className !== null )
+                \eZDebug::writeError( "$className not found", __METHOD__ );
             return new Base(
                 $classIdentifier,
                 $identifier
