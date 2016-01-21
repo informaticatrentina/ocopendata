@@ -9,7 +9,7 @@ use Opencontent\Opendata\Api\Exception\EnvironmentForbiddenException;
 
 class EnvironmentLoader
 {
-    protected static function ini()
+    public static function ini()
     {
         return eZINI::instance( 'ocopendata.ini' );
     }

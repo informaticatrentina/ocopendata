@@ -21,9 +21,16 @@ $ViewList['import'] = array(
     'params' => array(),
     'unordered_params' => array()
 );
+$ViewList['api'] = array(
+    'functions' => array( 'api' ),
+    'script' => 'api.php',
+    'params' => array( 'Environment', 'Action', 'Param' ),
+    'unordered_params' => array()
+);
 
 
 $FunctionList = array();
+$FunctionList['api'] = array();
 $FunctionList['push'] = array();
 $FunctionList['view'] = array();
 $FunctionList['import'] = array();

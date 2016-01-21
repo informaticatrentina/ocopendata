@@ -60,7 +60,8 @@ class Content
     public static function createFromEzContentObject( eZContentObject $contentObject )
     {
         $languages = eZContentLanguage::fetchLocaleList();
-        $availableLanguages = $contentObject->attribute( 'available_languages' );
+        /** @var eZContentLanguage[] $availableLanguages */
+        $availableLanguages = array_keys( $contentObject->allLanguages() );
         $content = new Content();
         $metadata = new Metadata();
         $metadata->id = (int)$contentObject->attribute( 'id' );
@@ -78,22 +79,26 @@ class Content
         $metadata->classIdentifier = $contentObject->attribute( 'class_identifier' );
         $metadata->classId = $contentObject->attribute( 'contentclass_id' );
         $metadata->mainNodeId = $contentObject->attribute( 'main_node_id' );
-        $metadata->nodeIds = array();
-        foreach ( $contentObject->assignedNodes( false ) as $node )
+        $metadata->parentNodes = array();
+        foreach( $contentObject->attribute( 'parent_nodes' ) as $node )
         {
-            $metadata->nodeIds[] = (int)$node['node_id'];
+            $parentNode = eZContentObjectTreeNode::fetch( $node, false, false );
+            $metadata->parentNodes[] = array(
+                'id' => (int)$parentNode['node_id'],
+                'depth' => (int)$parentNode['depth'],
+                'path_string' => $parentNode['path_string']
+            );
         }
-        $metadata->parentNodeIds = array_map( 'intval', $contentObject->parentNodeIDArray() );
-        $assignedNodes = array();
+        $metadata->assignedNodes = array();
         /** @var \eZContentObjectTreeNode $node */
         foreach( $contentObject->attribute( 'assigned_nodes' ) as $node )
         {
-            $assignedNodes[] = array(
-                'id' => $node->attribute( 'node_id' ),
-                'depth' => $node->attribute( 'depth' )
+            $metadata->assignedNodes[] = array(
+                'id' => (int)$node->attribute( 'node_id' ),
+                'depth' => (int)$node->attribute( 'depth' ),
+                'path_string' => $node->attribute( 'path_string' )
             );
         }
-        $metadata->assignedNodes = $assignedNodes;
         $metadata->published = (int)$contentObject->attribute( 'published' );
         $metadata->modified = (int)$contentObject->attribute( 'modified' );
         $section = eZSection::fetch( $contentObject->attribute( 'section_id' ) );
@@ -132,8 +137,10 @@ class Content
         return $content;
     }
 
-    public function checkAccess( eZUser $user )
+    public function canRead( eZUser $user = null )
     {
+        if ( $user == null )
+            $user = eZUser::currentUser();
         $userID = $user->attribute( 'contentobject_id' );
         $accessResult = $user->hasAccessTo( 'content', 'read' );
         $accessWord = $accessResult['accessWord'];
@@ -340,16 +347,16 @@ class Content
                         $mainNodeID = $this->metadata->mainNodeId;
                         foreach ( $limitationArray[$key] as $nodeID )
                         {
-                            $node = eZContentObjectTreeNode::fetch( $nodeID, false, false );
+                            $node = eZContentObjectTreeNode::fetch( $nodeID, false, false ); //@todo
                             $limitationNodeID = $node['main_node_id'];
-                            if ( $nodeID == $limitationNodeID )
+                            if ( $mainNodeID == $limitationNodeID )
                             {
                                 $access = 'allowed';
                                 $accessNode = true;
                                 break;
                             }
                         }
-                        if ( $access != 'allowed' && $checkedSubtree && !$accessSubtree )
+                        if ( $access != 'allowed' && $checkedSubtree && ( !isset( $accessSubtree ) || !$accessSubtree ) )
                         {
                             $access = 'denied';
                             // ??? TODO: if there is a limitation on Subtree, return two limitations?
@@ -374,7 +381,7 @@ class Content
                         {
                             foreach ( $assignedNodes as $assignedNode )
                             {
-                                $path = $assignedNode->attribute( 'path_string' );
+                                $path = $assignedNode['path_string'];
                                 $subtreeArray = $limitationArray[$key];
                                 foreach ( $subtreeArray as $subtreeString )
                                 {
@@ -389,14 +396,10 @@ class Content
                         }
                         else
                         {
-                            $parentNodes = $this->attribute( 'parent_nodes' );
+                            $parentNodes = $this->metadata->parentNodes;
                             if ( count( $parentNodes ) == 0 )
                             {
-                                if ( $this->attribute(
-                                        'owner_id'
-                                    ) == $userID
-                                     || $this->ID == $userID
-                                )
+                                if ( $this->metadata->id == $userID || $this->metadata->id == $userID )
                                 {
                                     $access = 'allowed';
                                     $accessSubtree = true;
@@ -406,11 +409,6 @@ class Content
                             {
                                 foreach ( $parentNodes as $parentNode )
                                 {
-                                    $parentNode = eZContentObjectTreeNode::fetch(
-                                        $parentNode,
-                                        false,
-                                        false
-                                    );
                                     $path = $parentNode['path_string'];
 
                                     $subtreeArray = $limitationArray[$key];
@@ -426,7 +424,7 @@ class Content
                                 }
                             }
                         }
-                        if ( $access != 'allowed' && $checkedNode && !$accessNode )
+                        if ( $access != 'allowed' && $checkedNode && ( !isset($accessNode) || !$accessNode ) )
                         {
                             $access = 'denied';
                             // ??? TODO: if there is a limitation on Node, return two limitations?
@@ -445,12 +443,12 @@ class Content
 
                     case 'User_Subtree':
                     {
-                        $assignedNodes = $this->attribute( 'assigned_nodes' );
+                        $assignedNodes = $this->metadata->assignedNodes;
                         if ( count( $assignedNodes ) != 0 )
                         {
                             foreach ( $assignedNodes as $assignedNode )
                             {
-                                $path = $assignedNode->attribute( 'path_string' );
+                                $path = $assignedNode['path_string'];
                                 $subtreeArray = $limitationArray[$key];
                                 foreach ( $subtreeArray as $subtreeString )
                                 {
@@ -463,14 +461,10 @@ class Content
                         }
                         else
                         {
-                            $parentNodes = $this->attribute( 'parent_nodes' );
+                            $parentNodes = $this->metadata->parentNodes;
                             if ( count( $parentNodes ) == 0 )
                             {
-                                if ( $this->attribute(
-                                        'owner_id'
-                                    ) == $userID
-                                     || $this->ID == $userID
-                                )
+                                if ( $this->metadata->id == $userID || $this->metadata->id == $userID )
                                 {
                                     $access = 'allowed';
                                 }
@@ -479,11 +473,6 @@ class Content
                             {
                                 foreach ( $parentNodes as $parentNode )
                                 {
-                                    $parentNode = eZContentObjectTreeNode::fetch(
-                                        $parentNode,
-                                        false,
-                                        false
-                                    );
                                     $path = $parentNode['path_string'];
 
                                     $subtreeArray = $limitationArray[$key];
@@ -513,13 +502,7 @@ class Content
                     {
                         if ( strncmp( $key, 'StateGroup_', 11 ) === 0 )
                         {
-                            if ( count(
-                                     array_intersect(
-                                         $limitationArray[$key],
-                                         $this->attribute( 'state_id_array' )
-                                     )
-                                 ) == 0
-                            )
+                            if ( count( array_intersect( $limitationArray[$key], $this->metadata->stateIds ) ) == 0 )
                             {
                                 $access = 'denied';
                                 $limitationList = array(

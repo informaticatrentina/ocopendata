@@ -4,7 +4,6 @@ namespace Opencontent\Opendata\Api\Gateway;
 use Opencontent\Opendata\Api\Gateway;
 use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
-use Opencontent\Opendata\Api\Exception\ForbiddenException;
 use eZContentObject;
 
 class Database implements Gateway
@@ -26,7 +25,6 @@ class Database implements Gateway
      * @param $contentObjectIdentifier
      *
      * @return eZContentObject|null
-     * @throws ForbiddenException
      * @throws NotFoundException
      */
     protected static function findContent( $contentObjectIdentifier )
@@ -41,14 +39,5 @@ class Database implements Gateway
             throw new NotFoundException( $contentObjectIdentifier );
         }
         return $contentObject;
-    }
-
-    public function checkAccess( $contentObjectIdentifier )
-    {
-        $contentObject = $this->findContent( $contentObjectIdentifier );
-        if ( !$contentObject->attribute( 'can_read' ) )
-        {
-            throw new ForbiddenException( $contentObject->attribute( 'id' ), 'read' );
-        }
     }
 }

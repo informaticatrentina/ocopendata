@@ -18,12 +18,10 @@ class OCOpenDataProvider extends ezpRestApiProvider
         $routes = array(
             'search' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
-                    '/content/search/:Query/:Page',
+                    '/content/search/:Query',
                     'OCOpenDataController2',
                     'contentSearch',
-                    array(
-                        'Page' => 1
-                    ),
+                    array(),
                     'http-get'
                 ), 2
             ),

@@ -5,14 +5,15 @@ namespace Opencontent\Opendata\Api;
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use Opencontent\Opendata\Api\AttributeConverter\Base;
+use Opencontent\Opendata\Api\EnvironmentLoader;
 
 class AttributeConverterLoader
 {
 
     /**
-     * @param $classIdentifier
-     * @param $identifier
-     * @param eZContentObjectAttribute|eZContentClassAttribute $attribute
+     * @param string $classIdentifier
+     * @param string $identifier
+     * @param string $dataTypeString
      *
      * @return \Opencontent\Opendata\Api\AttributeConverter\Base
      * @throws \Exception
@@ -57,13 +58,33 @@ class AttributeConverterLoader
         }
     }
 
+    /**
+     * @return array
+     */
     public static function attributeConverters()
     {
-        return array(
+        $converters = array(
+            'ezmatrix' => '\Opencontent\Opendata\Api\AttributeConverter\Matrix',
+            'ezxmltext' => '\Opencontent\Opendata\Api\AttributeConverter\EzXml',
+            'ezauthor' => '\Opencontent\Opendata\Api\AttributeConverter\Author',
+            'ezobjectrelation' => '\Opencontent\Opendata\Api\AttributeConverter\Relations',
+            'ezobjectrelationlist' => '\Opencontent\Opendata\Api\AttributeConverter\Relations',
+            'ezbinaryfile' => '\Opencontent\Opendata\Api\AttributeConverter\File',
+            'ezimage' => '\Opencontent\Opendata\Api\AttributeConverter\Image',
             'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\Page',
             'ezboolean' => '\Opencontent\Opendata\Api\AttributeConverter\Boolean',
             'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User'
         );
+
+        if ( EnvironmentLoader::ini()->hasVariable( 'AttributeConverters', 'Converters' ) )
+        {
+            $converters = array_merge(
+                $converters,
+                (array)EnvironmentLoader::ini()->variable( 'AttributeConverters', 'Converters' )
+            );
+        }
+
+        return $converters;
     }
 
 }

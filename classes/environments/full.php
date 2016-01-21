@@ -2,7 +2,7 @@
 
 use Opencontent\Opendata\Api\EnvironmentSettings;
 
-class DebugEnvironmentSettings extends EnvironmentSettings
+class FullEnvironmentSettings extends EnvironmentSettings
 {
 
 }

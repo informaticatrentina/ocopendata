@@ -6,6 +6,7 @@ use eZContentObject;
 use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\Gateway\Database;
 use Opencontent\Opendata\Api\Gateway\SolrStorage;
+use Opencontent\Opendata\Api\Exception\ForbiddenException;
 
 class ContentRepository
 {
@@ -29,7 +30,9 @@ class ContentRepository
     public function read( $contentObjectIdentifier )
     {
         $content = $this->gateway->loadContent( $contentObjectIdentifier );
-        $this->gateway->checkAccess( $contentObjectIdentifier );
+        if ( !$content->canRead() )
+            throw new ForbiddenException( $contentObjectIdentifier, 'read' );
+
         return $this->currentEnvironmentSettings->filterContent( $content );
     }
 

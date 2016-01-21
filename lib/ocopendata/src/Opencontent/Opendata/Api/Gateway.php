@@ -16,13 +16,4 @@ interface Gateway
      * @throws NotFoundException
      */
     public function loadContent( $contentObjectIdentifier );
-
-    /**
-     * @param $contentObjectIdentifier
-     *
-     * @return void
-     * @throws ForbiddenException
-     * @throws NotFoundException
-     */
-    public function checkAccess( $contentObjectIdentifier );
 }

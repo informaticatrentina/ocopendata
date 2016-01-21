@@ -5,7 +5,6 @@ use Opencontent\Opendata\Api\ContentBrowser;
 use Opencontent\Opendata\Api\ContentRepository;
 use Opencontent\Opendata\Api\ContentSearch;
 use Opencontent\Opendata\Api\Exception\BaseException;
-use Opencontent\Opendata\Api\Exception\EnvironmentForbiddenException;
 
 class OCOpenDataController2 extends ezpRestContentController
 {
@@ -75,10 +74,11 @@ class OCOpenDataController2 extends ezpRestContentController
     public function doContentSearch()
     {
         $result = new ezpRestMvcResult();
-        $search = $this->contentSearch->search( $this->request->variables['Query'], $this->request->variables['Page'] );
-        $result->variables['total'] = $search->total;
+        $search = $this->contentSearch->search( $this->request->variables['Query'] );
+        $result->variables['total'] = $search->count;
         $result->variables['contents'] = $search->contents;
-        $result->variables['next_page'] = $search->nextPage;
+        $result->variables['nextPage'] = $search->nextPage;
+        $result->variables['query'] = $search->query;
         return $result;
     }
 

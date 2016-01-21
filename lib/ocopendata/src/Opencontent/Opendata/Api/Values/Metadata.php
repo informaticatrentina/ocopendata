@@ -22,9 +22,7 @@ class Metadata
 
     public $mainNodeId;
 
-    public $nodeIds;
-
-    public $parentNodeIds;
+    public $parentNodes;
 
     public $assignedNodes;
 

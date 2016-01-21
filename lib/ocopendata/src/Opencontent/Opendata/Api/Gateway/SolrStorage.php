@@ -34,6 +34,7 @@ class SolrStorage implements Gateway
     public function loadContent( $contentObjectIdentifier )
     {
         $content = $this->findContent( $contentObjectIdentifier );
+
         return $content;
     }
 
@@ -42,25 +43,22 @@ class SolrStorage implements Gateway
         return $this->solrStorageTools->getSolrStorageFieldName( 'opendatastorage' );
     }
 
-    public function checkAccess( $contentObjectIdentifier )
+    protected function findContent( $contentObjectIdentifier )
     {
-        $this->findContent( $contentObjectIdentifier, true );
-    }
-
-    protected function findContent( $contentObjectIdentifier, $checkAccess = false )
-    {
-        $search = $this->solr->search( '',
+        $search = $this->solr->search(
+            '',
             array(
                 'Filter' => array(
-                    ezfSolrDocumentFieldBase::generateMetaFieldName( 'installation_id' ) . ':' . eZSolr::installationID(),
-                    array( 'or',
-                           ezfSolrDocumentFieldBase::generateMetaFieldName( 'id' ) . ':' . $contentObjectIdentifier,
-                           ezfSolrDocumentFieldBase::generateMetaFieldName( 'remote_id' ) . ':' . $contentObjectIdentifier
+                    ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID(),
+                    array(
+                        'or',
+                        ezfSolrDocumentFieldBase::generateMetaFieldName( 'id' ) . ':' . (int) $contentObjectIdentifier,
+                        ezfSolrDocumentFieldBase::generateMetaFieldName( 'remote_id' ) . ':' . $contentObjectIdentifier
                     )
                 ),
                 'AsObjects' => false,
                 'FieldsToReturn' => array( $this->getSolrIdentifier() ),
-                'Limitation' => $checkAccess ? null : array()
+                'Limitation' => array()
             )
         );
 
@@ -79,18 +77,12 @@ class SolrStorage implements Gateway
 
         if ( !$content instanceof Content )
         {
-            if ( !$checkAccess )
-            {
-                $gateway = new Database();
-                $content = $gateway->loadContent( $contentObjectIdentifier );
-                $id = $content->metadata->id;
-                eZDB::instance()->query(
-                    "INSERT INTO ezpending_actions( action, param ) VALUES ( 'index_object', $id )"
-                );
-                //throw new NotFoundException( $contentObjectIdentifier );
-            }
-            else
-                throw new ForbiddenException( $contentObjectIdentifier, 'read' );
+            $gateway = new Database();
+            $content = $gateway->loadContent( $contentObjectIdentifier );
+            $id = $content->metadata->id;
+            eZDB::instance()->query(
+                "INSERT INTO ezpending_actions( action, param ) VALUES ( 'index_object', $id )"
+            );
         }
 
         return $content;

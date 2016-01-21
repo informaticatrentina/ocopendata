@@ -2,6 +2,7 @@
 
 namespace Opencontent\Opendata\Api;
 
+use Opencontent\Opendata\Api\Values\SearchResults;
 
 class ContentSearch
 {
@@ -15,8 +16,8 @@ class ContentSearch
         $this->currentEnvironmentSettings = $environmentSettings;
     }
 
-    public function search( $query, $page )
+    public function search( $query )
     {
-        return 'todo';
+        return new SearchResults();
     }
 }
