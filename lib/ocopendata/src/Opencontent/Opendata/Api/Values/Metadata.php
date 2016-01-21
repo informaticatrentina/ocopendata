@@ -12,19 +12,29 @@ class Metadata
 
     public $classIdentifier;
 
+    public $classId;
+
     public $languages;
 
     public $name;
 
     public $ownerId;
 
+    public $mainNodeId;
+
     public $nodeIds;
 
     public $parentNodeIds;
 
+    public $assignedNodes;
+
     public $sectionIdentifier;
 
-    public $statusIdentifiers;
+    public $sectionId;
+
+    public $stateIdentifiers;
+
+    public $stateIds;
 
     public $published;
 

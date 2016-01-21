@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api\Gateway;
 
 use Opencontent\Opendata\Api\Gateway;
+use Opencontent\Opendata\Api\Values\Content;
 use eZDir;
 use eZSys;
 use eZClusterFileHandler;
@@ -42,8 +43,8 @@ class FileSystem extends Database
 
     public static function generateCache( $file, $contentObjectIdentifier )
     {
-        $database = new Database();
-        $content = $database->loadContent( $contentObjectIdentifier );
+        $contentObject = self::findContent( $contentObjectIdentifier );
+        $content = Content::createFromEzContentObject( $contentObject );;
         return array( 'content'  => $content,
                       'scope'    => 'ocopendata-cache',
                       'datatype' => 'php',
