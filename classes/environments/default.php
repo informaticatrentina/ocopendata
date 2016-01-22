@@ -35,6 +35,7 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                 'published' => $content->metadata->published,
                 'modified' => $content->metadata->modified,
                 'languages' => $content->metadata->languages,
+                'name' => $content->metadata->name,
                 'parentNodes' => $parentNodes
             )
         );
