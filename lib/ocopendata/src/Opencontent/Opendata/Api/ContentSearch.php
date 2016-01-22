@@ -90,8 +90,8 @@ class ContentSearch
                 {
                     $contentArray = $resultItem['data_map']['opendatastorage'];
                     $content = new Content();
-                    $content->metadata = new Metadata( $contentArray['metadata'] );
-                    $content->data = new ContentData( $contentArray['data'] );
+                    $content->metadata = new Metadata( (array)$contentArray['metadata'] );
+                    $content->data = new ContentData( (array)$contentArray['data'] );
                 }
                 else
                 {
