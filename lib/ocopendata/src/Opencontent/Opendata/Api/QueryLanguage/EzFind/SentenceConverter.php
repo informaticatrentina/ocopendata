@@ -116,12 +116,12 @@ class SentenceConverter
             $data = array();
             foreach( $value as $item )
             {
-                $data[] = trim( $item, "'" );
+                $data[] = str_replace( "'", "", $item );
             }
         }
         else
         {
-            $data = trim( $value, "'" );
+            $data = str_replace( "'", "", $value );
         }
         return $data;
     }
