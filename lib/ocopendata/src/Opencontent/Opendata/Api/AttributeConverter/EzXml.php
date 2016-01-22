@@ -1,7 +1,9 @@
 <?php
 
 namespace Opencontent\Opendata\Api\AttributeConverter;
+
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 use SQLIContentUtils;
 
 class EzXml extends Base
@@ -18,7 +20,7 @@ class EzXml extends Base
         return SQLIContentUtils::getRichContent( $data );
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array( 'identifier' => 'html' );
     }

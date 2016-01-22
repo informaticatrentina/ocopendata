@@ -21,6 +21,8 @@ class EnvironmentSettings
 
     protected $validatorTolerance;
 
+    protected $debug;
+
     public function __construct( array $properties = array() )
     {
         foreach ( $properties as $property => $value )

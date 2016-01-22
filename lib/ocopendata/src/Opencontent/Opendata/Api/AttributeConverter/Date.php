@@ -1,7 +1,9 @@
 <?php
 
 namespace Opencontent\Opendata\Api\AttributeConverter;
+
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 
 class Date extends Base
 {
@@ -17,7 +19,7 @@ class Date extends Base
         return (int) $data;
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array( 'identifier' => 'timestamp' );
     }

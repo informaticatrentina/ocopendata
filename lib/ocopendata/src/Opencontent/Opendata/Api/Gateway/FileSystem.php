@@ -13,10 +13,16 @@ use Opencontent\Opendata\Api\Exception\NotFoundException;
 class FileSystem extends Database
 {
 
+    /**
+     * @param $contentObjectIdentifier
+     *
+     * @return Content
+     * @throws NotFoundException
+     */
     public function loadContent( $contentObjectIdentifier )
     {
         $contentObjectId = self::findContent( $contentObjectIdentifier );
-        return $this->getCacheManager( $contentObjectId, 'content' )->processCache(
+        return $this->getCacheManager( $contentObjectId )->processCache(
             array( __CLASS__, 'retrieveCache' ),
             array( __CLASS__, 'generateCache' ),
             null,
@@ -51,17 +57,17 @@ class FileSystem extends Database
         }
     }
 
-    protected static function getCacheManager( $contentObjectId, $type )
+    protected static function getCacheManager( $contentObjectId )
     {
         $cacheFile = $contentObjectId . '.cache';
         $extraPath = eZDir::filenamePath( $contentObjectId );
-        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', $type, $extraPath, $cacheFile ) );
+        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata',  'content', $extraPath, $cacheFile ) );
         return eZClusterFileHandler::instance( $cacheFilePath );
     }
 
-    public function clearCache( $contentObjectId, $type = 'content' )
+    public function clearCache( $contentObjectId )
     {
-        $this->getCacheManager( $contentObjectId, $type )->purge();
+        $this->getCacheManager( $contentObjectId )->purge();
     }
 
     public static function retrieveCache( $file, $mtime, $contentObjectId )

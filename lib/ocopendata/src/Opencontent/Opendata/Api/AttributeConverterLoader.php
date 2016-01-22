@@ -66,6 +66,9 @@ class AttributeConverterLoader
     public static function attributeConverters()
     {
         $converters = array(
+            'ezdate' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
+            'ezdatetime' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
+            'eztime' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
             'ezmatrix' => '\Opencontent\Opendata\Api\AttributeConverter\Matrix',
             'ezxmltext' => '\Opencontent\Opendata\Api\AttributeConverter\EzXml',
             'ezauthor' => '\Opencontent\Opendata\Api\AttributeConverter\Author',

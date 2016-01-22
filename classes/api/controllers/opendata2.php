@@ -4,7 +4,9 @@ use Opencontent\Opendata\Api\EnvironmentLoader;
 use Opencontent\Opendata\Api\ContentBrowser;
 use Opencontent\Opendata\Api\ContentRepository;
 use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\Exception\BaseException;
+use Opencontent\Opendata\Api\Values\ContentClass;
 
 class OCOpenDataController2 extends ezpRestContentController
 {
@@ -24,6 +26,11 @@ class OCOpenDataController2 extends ezpRestContentController
     protected $contentSearch;
 
     /**
+     * @var ClassRepository
+     */
+    protected $classRepository;
+
+    /**
      * @var ezpRestRequest
      */
     protected $request;
@@ -34,6 +41,7 @@ class OCOpenDataController2 extends ezpRestContentController
         $this->contentRepository = new ContentRepository();
         $this->contentBrowser = new ContentBrowser();
         $this->contentSearch = new ContentSearch();
+        $this->classRepository = new ClassRepository();
     }
 
     protected function setEnvironment()
@@ -48,6 +56,7 @@ class OCOpenDataController2 extends ezpRestContentController
     protected function getPayload()
     {
         $data = json_decode( file_get_contents( "php://input" ), true );
+
         return $data;
     }
 
@@ -57,15 +66,17 @@ class OCOpenDataController2 extends ezpRestContentController
         $result->variables['message'] = $exception->getMessage();
 
         $serverErrorCode = ezpHttpResponseCodes::SERVER_ERROR;
+        $errorType = BaseException::cleanErrorCode( get_class( $exception ) );
         if ( $exception instanceof BaseException )
         {
             $serverErrorCode = $exception->getServerErrorCode();
+            $errorType = $exception->getErrorType();
         }
 
         $result->status = new OcOpenDataErrorResponse(
             $serverErrorCode,
             $exception->getMessage(),
-            $exception->getCode()
+            $errorType
         );
 
         return $result;
@@ -73,22 +84,34 @@ class OCOpenDataController2 extends ezpRestContentController
 
     public function doContentSearch()
     {
-        $result = new ezpRestMvcResult();
-        $search = $this->contentSearch->search( $this->request->variables['Query'] );
-        $result->variables['total'] = $search->count;
-        $result->variables['contents'] = $search->contents;
-        $result->variables['nextPage'] = $search->nextPage;
-        $result->variables['query'] = $search->query;
+        try
+        {
+            $this->setEnvironment();
+            $result = new ezpRestMvcResult();
+            $search = $this->contentSearch->search( $this->request->variables['Query'] );
+            $result->variables['totalCount'] = $search->count;
+            $result->variables['nextPage'] = $search->nextPageQuery;
+            $result->variables['searchHits'] = $search->contents;
+            $result->variables['query'] = $search->query;
+        }
+        catch ( Exception $e )
+        {
+            $result = $this->doExceptionResult( $e );
+        }
+
         return $result;
     }
 
     public function doContentBrowse()
     {
         $result = new ezpRestMvcResult();
-        $browse = $this->contentBrowser->browse( $this->request->variables['ContentNodeIdentifier'] );
+        $browse = $this->contentBrowser->browse(
+            $this->request->variables['ContentNodeIdentifier']
+        );
         $result->variables['current'] = $browse->current;
         $result->variables['children'] = $browse->children;
         $result->variables['parent'] = $browse->parent;
+
         return $result;
     }
 
@@ -100,10 +123,11 @@ class OCOpenDataController2 extends ezpRestContentController
             $result = new ezpRestMvcResult();
             $result->variables['result'] = $this->contentRepository->create( $this->getPayload() );
         }
-        catch( Exception $e )
+        catch ( Exception $e )
         {
             $result = $this->doExceptionResult( $e );
         }
+
         return $result;
     }
 
@@ -123,14 +147,18 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $content = $this->contentRepository->read( $this->request->variables['ContentObjectIdentifier'] );
+            $content = $this->contentRepository->read(
+                $this->request->variables['ContentObjectIdentifier']
+            );
             $result->variables['metadata'] = $content->metadata;
-            $result->variables['data'] = $content->data->jsonSerialize(); // compat with php version<5.4
+            $result->variables['data'] = $content->data->jsonSerialize(
+            ); // compat with php version<5.4
         }
-        catch( Exception $e )
+        catch ( Exception $e )
         {
             $result = $this->doExceptionResult( $e );
         }
+
         return $result;
     }
 
@@ -142,10 +170,11 @@ class OCOpenDataController2 extends ezpRestContentController
             $result = new ezpRestMvcResult();
             $result->variables['result'] = $this->contentRepository->update( $this->getPayload() );
         }
-        catch( Exception $e )
+        catch ( Exception $e )
         {
             $result = $this->doExceptionResult( $e );
         }
+
         return $result;
     }
 
@@ -157,10 +186,54 @@ class OCOpenDataController2 extends ezpRestContentController
             $result = new ezpRestMvcResult();
             $result->variables['result'] = $this->contentRepository->delete( $this->getPayload() );
         }
-        catch( Exception $e )
+        catch ( Exception $e )
         {
             $result = $this->doExceptionResult( $e );
         }
+
+        return $result;
+    }
+
+    public function doClassRead()
+    {
+        try
+        {
+            $result = new ezpRestMvcResult();
+            $result->variables['class'] = $this->classRepository->load(
+                $this->request->variables['Identifier']
+            );
+        }
+        catch ( Exception $e )
+        {
+            $result = $this->doExceptionResult( $e );
+        }
+
+        return $result;
+    }
+
+    public function doClassListRead()
+    {
+        try
+        {
+            $result = new ezpRestMvcResult();
+            $list = $this->classRepository->listAll();
+            $classes = array();
+            $baseUri = $this->request->getBaseURI();
+            $detailBaseUri = str_replace( 'classes', 'v2/classes', $baseUri ); //@todo
+            $searchBaseUri = str_replace( 'classes', 'v2/content/search', $baseUri ); //@todo
+            foreach ( $list as $item )
+            {
+                $item['link'] = $detailBaseUri . '/' . $item['identifier'];
+                $item['search'] = ContentClass::isSearchable( $item['identifier'] ) ? $searchBaseUri . '/' . urlencode( 'classes ' . $item['identifier'] ) : null;
+                $classes[] = $item;
+            }
+            $result->variables['classes'] = $classes;
+        }
+        catch ( Exception $e )
+        {
+            $result = $this->doExceptionResult( $e );
+        }
+
         return $result;
     }
 }

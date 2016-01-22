@@ -66,7 +66,11 @@ class EnvironmentLoader
         $settings = new $presetClassName();
         if ( $settings instanceof EnvironmentSettings )
         {
-            $settings->identifier = $presetIdentifier;
+            $settings->__set( 'identifier', $presetIdentifier );
+            if ( self::ini()->hasVariable( 'EnvironmentSettingsPresets_' . $presetIdentifier, 'Debug' ) )
+            {
+                $settings->__set( 'debug', (bool) self::ini()->variable( 'EnvironmentSettingsPresets_' . $presetIdentifier, 'Debug' ) == 'enabled' );
+            }
             return $settings;
         }
         throw new EnvironmentMisconfigurationException( $presetIdentifier );

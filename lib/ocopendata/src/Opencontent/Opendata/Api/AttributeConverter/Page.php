@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
 class Page extends Base
@@ -47,7 +48,7 @@ class Page extends Base
         return null;
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( $data !== null )
         {
@@ -55,11 +56,10 @@ class Page extends Base
         }
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array(
-            'type' => 'readonly',
-            'identifier' => 'undocumented'
+            'identifier' => 'readonly'
         );
     }
 }

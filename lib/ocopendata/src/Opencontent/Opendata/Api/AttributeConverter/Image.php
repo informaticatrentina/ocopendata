@@ -3,7 +3,7 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
-use eZHTTPTool;
+use eZContentClassAttribute;
 use eZURI;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
@@ -42,20 +42,20 @@ class Image extends File
         return $path;
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( is_array( $data ) && isset( $data['image'] ) )
         {
             $data['file'] = $data['image'];
         }
-        parent::validate( $identifier, $data );
+        parent::validate( $identifier, $data, $attribute );
         if ( isset( $data['alt'] ) && settype( $data['alt'], 'string' ) !== true )
         {
             throw new InvalidInputException( 'Invalid alt format', $identifier, $data );
         }
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array(
             'identifier' => 'file',

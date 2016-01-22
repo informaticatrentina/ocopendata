@@ -11,8 +11,15 @@ class BaseException extends Exception
         return 500;
     }
 
-    public function getErrorCode()
+    public function getErrorType()
     {
-        return get_called_class();
+        if ( $this->getPrevious() instanceof Exception )
+            return self::cleanErrorCode( get_class( $this->getPrevious() ) );
+        return self::cleanErrorCode( get_called_class() );
+    }
+
+    public static function cleanErrorCode( $code )
+    {
+        return str_replace( '\\', ".", $code );
     }
 }

@@ -56,19 +56,26 @@ class Base
         return $data;
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( !is_string( $data ) )
             throw new InvalidInputException( 'Invalid type', $identifier, $data );
     }
 
+    /**
+     * @param eZContentClassAttribute $attribute
+     *
+     * @return string|null
+     */
     public function help( eZContentClassAttribute $attribute )
     {
-        return $attribute->attribute( 'description' );
+        return null;
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
+        if ( $attribute->attribute( 'is_information_collector' ) )
+            return array( 'identifier' => 'readonly' );
         return array( 'identifier' => 'string' );
     }
 

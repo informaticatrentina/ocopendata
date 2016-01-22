@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 use eZUser;
 use eZMail;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
@@ -32,7 +33,7 @@ class User extends Base
         return $data['login'] . '|' . $data['email'];
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( !is_array( $data ) || !isset( $data['login'] ) || !isset( $data['email'] ) )
         {
@@ -55,7 +56,7 @@ class User extends Base
             throw new InvalidInputException( 'Invalid email', $identifier, $data );
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array(
             'identifier' => 'user',

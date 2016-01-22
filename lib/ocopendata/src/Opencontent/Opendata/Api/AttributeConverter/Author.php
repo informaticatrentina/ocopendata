@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 use eZMail;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
@@ -34,7 +35,7 @@ class Author extends Base
         return implode( '&', $stringItems );
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( !is_array( $data ) )
         {
@@ -54,10 +55,10 @@ class Author extends Base
         }
     }
 
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array(
-            'identifier' => 'authorList',
+            'identifier' => 'array of objects',
             'format' => array(
                 array(
                     'name' => 'string',

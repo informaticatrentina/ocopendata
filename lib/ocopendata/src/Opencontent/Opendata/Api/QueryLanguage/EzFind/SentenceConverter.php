@@ -1,0 +1,357 @@
+<?php
+
+namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
+
+use Opencontent\QueryLanguage\Parser\Sentence;
+use Opencontent\QueryLanguage\Converter\Exception;
+use ArrayObject;
+use eZINI;
+use eZSolr;
+use ezfSolrDocumentFieldName;
+use ezfSolrDocumentFieldBase;
+
+class SentenceConverter
+{
+    /**
+     * @var ArrayObject
+     */
+    protected $convertedQuery;
+
+    /**
+     * @var array[]
+     */
+    protected $availableFieldDefinitions;
+
+    /**
+     * @var ezfSolrDocumentFieldName
+     */
+    protected $documentFieldName;
+
+    /**
+     * @var array
+     */
+    protected $metaFields;
+
+    /**
+     * @var bool
+     */
+    private $availableFieldIsFiltered = false;
+
+    public function __construct( $availableFieldDefinitions, $metaFields )
+    {
+        $this->availableFieldDefinitions = $availableFieldDefinitions;
+        $this->metaFields = $metaFields;
+        $this->documentFieldName = new ezfSolrDocumentFieldName();
+    }
+
+    /**
+     * @param ArrayObject $convertedQuery
+     */
+    public function setCurrentConvertedQuery( ArrayObject $convertedQuery )
+    {
+        $this->convertedQuery = $convertedQuery;
+    }
+
+    /**
+     * @param Sentence $sentence
+     *
+     * @return array|string|null
+     * @throws Exception
+     */
+    public function convert( Sentence $sentence )
+    {
+        if ( !$this->availableFieldIsFiltered )
+        {
+            $this->filterAvailableFieldDefinitions();
+        }
+
+        $field = (string)$sentence->getField();
+        $operator = (string)$sentence->getOperator();
+        $value = $sentence->getValue();
+
+        if ( $field == 'q' )
+        {
+            $this->convertedQuery['_query'] = $sentence->stringValue();
+            return null;
+        }
+
+        $value = $this->cleanValue( $value );
+
+        switch ( $operator )
+        {
+            case 'contains':
+            case '!contains':
+            {
+                $data = $this->generateContainsFilter( $field, $value, $operator == '!contains' );
+            } break;
+
+            case 'in':
+            case '!in':
+            {
+                $data = $this->generateInFilter( $field, $value, $operator == '!in' );
+            } break;
+
+            case 'range':
+            case '!range':
+            {
+                $data = $this->generateRangeFilter( $field, $value, $operator == '!range' );
+            } break;
+
+            case '=':
+            case '!=':
+            {
+                $data = $this->generateEqFilter( $field, $value, $operator == '!=' );
+            } break;
+
+            default:
+                throw new Exception( "Operator $operator not handled" );
+        }
+        return $data;
+    }
+
+    protected function cleanValue( $value )
+    {
+        if ( is_array( $value ) )
+        {
+            $data = array();
+            foreach( $value as $item )
+            {
+                $data[] = trim( $item, "'" );
+            }
+        }
+        else
+        {
+            $data = trim( $value, "'" );
+        }
+        return $data;
+    }
+
+    protected function formatFilterValue( $value, $type )
+    {
+        switch( $type )
+        {
+            case 'string':
+                $value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
+                break;
+
+            case 'date':
+                $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( strtotime( $value ) ) . '"';
+                break;
+        }
+        return $value;
+    }
+
+    protected function generateContainsFilter( $field, $value, $negative )
+    {
+        if ( $negative ) $negative = '!';
+        $fieldNames = $this->getFieldName( $field );
+
+        $filter = array();
+        foreach( $fieldNames as $type => $fieldName )
+        {
+            if ( is_array( $value ) )
+            {
+                $data = array( 'and' );
+                foreach ( $value as $item )
+                {
+                    $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                }
+            }
+            else
+            {
+                $data = $negative . $fieldName . ':' . $this->formatFilterValue( $value, $type );
+            }
+            $filter[] = $data;
+        }
+
+        if ( count( $filter ) == 1 )
+            $filter = array_pop( $filter );
+        elseif ( count( $filter ) > 1 )
+            array_unshift( $filter, 'or' );
+
+        return $filter;
+    }
+
+    protected function generateInFilter( $field, $value, $negative )
+    {
+        if ( $negative ) $negative = '!';
+        $fieldNames = $this->getFieldName( $field );
+
+        $filter = array();
+        foreach( $fieldNames as $type => $fieldName )
+        {
+            if ( is_array( $value ) )
+            {
+                $data = array( 'or' );
+                foreach ( $value as $item )
+                {
+                    $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                }
+            }
+            else
+            {
+                $data = $negative . $fieldName . ':' . $this->formatFilterValue( $value, $type );
+            }
+            $filter[] = $data;
+        }
+
+        if ( count( $filter ) == 1 )
+            $filter = array_pop( $filter );
+        elseif ( count( $filter ) > 1 )
+            array_unshift( $filter, 'or' );
+
+        return $filter;
+    }
+
+    protected function generateRangeFilter( $field, $value, $negative )
+    {
+        if ( !is_array( $value ) )
+            throw new Exception( "Range require an array value" );
+
+        if ( $negative ) $negative = '!';
+        $fieldNames = $this->getFieldName( $field );
+
+        $filter = array();
+        foreach( $fieldNames as $type => $fieldName )
+        {
+            $filter[] = $negative . $fieldName . ':[' . $this->formatFilterValue( $value[0], $type ) . ' TO ' . $this->formatFilterValue( $value[1], $type ) . ']';
+        }
+
+        if ( count( $filter ) == 1 )
+            $filter = array_pop( $filter );
+        elseif ( count( $filter ) > 1 )
+            array_unshift( $filter, 'or' );
+
+        return $filter;
+    }
+
+    protected function generateEqFilter( $field, $value, $negative )
+    {
+        return $this->generateInFilter( $field, $value, $negative );
+    }
+
+    /**
+     * Se è presente un parametro di classe restringe il campo degli attributi a disposizione
+     */
+    protected function filterAvailableFieldDefinitions()
+    {
+        if ( isset( $this->convertedQuery['SearchContentClassID'] ) )
+        {
+            $filteredAvailableFieldDefinitions = array();
+            foreach ( $this->availableFieldDefinitions as $identifier => $fieldDefinition )
+            {
+                foreach ( $fieldDefinition as $dataType => $classes )
+                {
+                    $filteredClasses = array_intersect(
+                        $this->convertedQuery['SearchContentClassID'],
+                        $classes
+                    );
+                    if ( !empty( $filteredClasses ) )
+                    {
+                        $filteredAvailableFieldDefinitions[$identifier][$dataType] = $filteredClasses;
+                    }
+                }
+            }
+            $this->availableFieldDefinitions = $filteredAvailableFieldDefinitions;
+        }
+    }
+
+    /**
+     * Mutuato da ezfSolrDocumentFieldBase restituisce il campo solr senza usare la classe eZContentClassAttribute
+     *
+     * @param $field
+     * @param $context
+     *
+     * @return array
+     */
+    protected function getFieldName( $field, $context = 'search' )
+    {
+        $data = array();
+        if ( isset( $this->availableFieldDefinitions[$field] ) )
+        {
+            foreach ( $this->availableFieldDefinitions[$field] as $dataType => $classes )
+            {
+                $type = $this->getSolrType( $dataType, $context );
+                if ( $dataType == 'ezobjectrelationlist' || $dataType == 'ezobjectrelation' )
+                {
+                    $data[$type] = $this->generateSolrSubFieldName(
+                        $field,
+                        $type
+                    );
+                }
+                else
+                {
+                    $data[$type] = $this->generateSolrFieldName(
+                        $field,
+                        $type
+                    );
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @see SentenceConverter::getFieldName
+     *
+     * @param $datatypeString
+     * @param string $context
+     *
+     * @return string
+     */
+    protected function getSolrType( $datatypeString, $context = 'search' )
+    {
+        $eZFindINI = eZINI::instance( 'ezfind.ini' );
+        $datatypeMapList = $eZFindINI->variable(
+            'SolrFieldMapSettings',
+            eZSolr::$fieldTypeContexts[$context]
+        );
+        if ( !empty( $datatypeMapList[$datatypeString] ) )
+        {
+            return $datatypeMapList[$datatypeString];
+        }
+        $datatypeMapList = $eZFindINI->variable( 'SolrFieldMapSettings', 'DatatypeMap' );
+        if ( !empty( $datatypeMapList[$datatypeString] ) )
+        {
+            return $datatypeMapList[$datatypeString];
+        }
+
+        return $eZFindINI->variable( 'SolrFieldMapSettings', 'Default' );
+    }
+
+    /**
+     * @see SentenceConverter::getFieldName
+     *
+     * @param $identifier
+     * @param $type
+     *
+     * @return string
+     */
+    protected function generateSolrFieldName( $identifier, $type )
+    {
+        return $this->documentFieldName->lookupSchemaName(
+            ezfSolrDocumentFieldBase::ATTR_FIELD_PREFIX . $identifier,
+            $type
+        );
+    }
+
+    /**
+     * @see SentenceConverter::getFieldName
+     *
+     * @param $identifier
+     * @param $type
+     * @param $subIdentifier
+     *
+     * @return string
+     */
+    protected function generateSolrSubFieldName( $identifier, $type, $subIdentifier = 'name' )
+    {
+        return $this->documentFieldName->lookupSchemaName(
+            ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $identifier
+            . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . $subIdentifier . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
+            $type
+        );
+    }
+
+}

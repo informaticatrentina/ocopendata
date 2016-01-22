@@ -16,6 +16,24 @@ class OCOpenDataProvider extends ezpRestApiProvider
     public function getVersion2Routes()
     {
         $routes = array(
+            'openData2class' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/classes/:Identifier',
+                    'OCOpenDataController2',
+                    'classRead',
+                    array(),
+                    'http-get'
+                ), 2
+            ),
+            'openData2classes' => new ezpRestVersionedRoute(
+                new OcOpenDataRoute(
+                    '/classes',
+                    'OCOpenDataController2',
+                    'classListRead',
+                    array(),
+                    'http-get'
+                ), 2
+            ),
             'openData2search' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
                     '/:EnvironmentSettigs/search/:Query',

@@ -1,7 +1,9 @@
 <?php
 
 namespace Opencontent\Opendata\Api\AttributeConverter;
+
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 
 class Boolean extends Base
 {
@@ -17,8 +19,7 @@ class Boolean extends Base
         return (int) $data;
     }
 
-
-    public function type()
+    public function type( eZContentClassAttribute $attribute )
     {
         return array( 'identifier' => 'boolean' );
     }

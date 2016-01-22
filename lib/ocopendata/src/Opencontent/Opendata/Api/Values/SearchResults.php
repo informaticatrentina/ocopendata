@@ -11,6 +11,11 @@ class SearchResults
     public $query;
 
     /**
+     * @var array
+     */
+    public $ezFindQuery;
+
+    /**
      * @var int
      */
     public $count;
@@ -23,5 +28,6 @@ class SearchResults
     /**
      * @var string
      */
-    public $nextPage;
+    public $nextPageQuery;
+
 }

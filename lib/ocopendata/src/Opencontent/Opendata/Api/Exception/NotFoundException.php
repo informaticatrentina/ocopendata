@@ -6,9 +6,9 @@ use Opencontent\Opendata\Api\Exception\BaseException;
 
 class NotFoundException extends BaseException
 {
-    public function __construct( $contentObjectIdentifier )
+    public function __construct( $identifier, $type = 'Content' )
     {
-        parent::__construct( "Content {$contentObjectIdentifier} not found" );
+        parent::__construct( "{$type} {$identifier} not found" );
     }
 
     public function getServerErrorCode()

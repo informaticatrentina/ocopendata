@@ -3,6 +3,7 @@
 namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
+use eZContentClassAttribute;
 use eZSys;
 use eZFile;
 use eZHTTPTool;
@@ -59,7 +60,7 @@ class File extends Base
         return $this->getTemporaryFilePath( $data['filename'], $data['url'], $data['file'] );
     }
 
-    public static function validate( $identifier, $data )
+    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
         if ( is_array( $data ) )
         {
@@ -94,7 +95,7 @@ class File extends Base
         throw new InvalidInputException( 'Invalid data format', $identifier, $data );
     }
 
-    public function type()
+    public function type( \eZContentClassAttribute $attribute )
     {
         return array(
             'identifier' => 'file',
