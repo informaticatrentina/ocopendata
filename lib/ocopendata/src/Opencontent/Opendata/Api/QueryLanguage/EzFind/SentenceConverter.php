@@ -130,6 +130,7 @@ class SentenceConverter
     {
         switch( $type )
         {
+            case 'meta_id';
             case 'tint':
             case 'sint':
             case 'int':
@@ -151,6 +152,8 @@ class SentenceConverter
                 $value = '"' . $value . '"';
                 break;
 
+            case 'meta_published':
+            case 'meta_modified':
             case 'date':
                 $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( strtotime( $value ) ) . '"';
                 break;
