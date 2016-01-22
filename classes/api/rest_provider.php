@@ -77,7 +77,7 @@ class OCOpenDataProvider extends ezpRestApiProvider
         {
             if ( EnvironmentLoader::needAccess( $identifier ) )
             {
-                $routes["{$identifier}Read"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Read"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
                         "/{$identifier}/read/:ContentObjectIdentifier",
                         'OCOpenDataController2',
@@ -88,28 +88,32 @@ class OCOpenDataProvider extends ezpRestApiProvider
                         'http-get'
                     ), 2
                 );
-                $routes["{$identifier}openData2search"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Search"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
-                        '/:EnvironmentSettigs/search/:Query',
+                        "/{$identifier}/search/:Query",
                         'OCOpenDataController2',
                         'protectedSearch',
-                        array(),
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
                         'http-get'
                     ), 2
                 );
-                $routes["{$identifier}openData2browse"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Browse"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
-                        '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
+                        "/{$identifier}/browse/:ContentNodeIdentifier",
                         'OCOpenDataController2',
                         'protectBrowse',
-                        array(),
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
                         'http-get'
                     ), 2
                 );
             }
             else
             {
-                $routes["{$identifier}Read"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Read"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
                         "/{$identifier}/read/:ContentObjectIdentifier",
                         'OCOpenDataController2',
@@ -120,21 +124,25 @@ class OCOpenDataProvider extends ezpRestApiProvider
                         'http-get'
                     ), 2
                 );
-                $routes["{$identifier}openData2search"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Search"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
-                        '/:EnvironmentSettigs/search/:Query',
+                        "/{$identifier}/search/:Query",
                         'OCOpenDataController2',
                         'anonymousSearch',
-                        array(),
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
                         'http-get'
                     ), 2
                 );
-                $routes["{$identifier}openData2browse"] = new ezpRestVersionedRoute(
+                $routes["openData2{$identifier}Browse"] = new ezpRestVersionedRoute(
                     new OcOpenDataRoute(
-                        '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
+                        "/{$identifier}/browse/:ContentNodeIdentifier",
                         'OCOpenDataController2',
                         'anonymousBrowse',
-                        array(),
+                        array(
+                            'EnvironmentSettigs' => $identifier
+                        ),
                         'http-get'
                     ), 2
                 );

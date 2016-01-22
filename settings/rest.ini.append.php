@@ -9,6 +9,8 @@ SkipFilter[]=OCOpenDataController_*
 SkipFilter[]=OCOpenDataController2_anonymousRead;2
 SkipFilter[]=OCOpenDataController2_anonymousSearch;2
 SkipFilter[]=OCOpenDataController2_anonymousBrowse;2
+SkipFilter[]=OCOpenDataController2_classListRead;2
+SkipFilter[]=OCOpenDataController2_classRead;2
 
 [OCOpenDataController2_CacheSettings]
 ApplicationCache=disabled

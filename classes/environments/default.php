@@ -19,7 +19,24 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
 
     protected function filterMetaData( Content $content )
     {
-        $content->metadata = new ContentData();
+        $parentNodes = array();
+        foreach( $content->metadata->parentNodes as $parentNode )
+        {
+            $parentNodes[] = $parentNode['id'];
+        }
+
+        $content->metadata = new ContentData(
+            array(
+                'id' => $content->metadata->id,
+                'remoteId' => $content->metadata->remoteId,
+                'classIdentifier' => $content->metadata->classIdentifier,
+                'sectionIdentifier' => $content->metadata->sectionIdentifier,
+                'stateIdentifiers' => $content->metadata->stateIdentifiers,
+                'published' => $content->metadata->published,
+                'modified' => $content->metadata->modified,
+                'parentNodes' => $parentNodes
+            )
+        );
         return $content;
     }
 
