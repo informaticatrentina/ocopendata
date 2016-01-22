@@ -47,8 +47,8 @@ class Content
     public function jsonSerialize()
     {
         return array(
-            'metadata' => $this->metadata->jsonSerialize(),
-            'data' => $this->data->jsonSerialize()
+            'metadata' => $this->metadata instanceof Metadata ? $this->metadata->jsonSerialize() : array(),
+            'data' => $this->data instanceof ContentData ? $this->data->jsonSerialize() : array()
         );
     }
 
