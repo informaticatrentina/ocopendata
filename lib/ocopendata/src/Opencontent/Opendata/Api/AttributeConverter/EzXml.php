@@ -10,6 +10,9 @@ class EzXml extends Base
 {
     public function get( eZContentObjectAttribute $attribute )
     {
+        // avoid php notice in kernel/common/ezmoduleparamsoperator.php on line 71
+        if ( !isset( $GLOBALS['eZRequestedModuleParams'] ) )
+            $GLOBALS['eZRequestedModuleParams'] = array();
         $content = parent::get( $attribute );
         $content['content'] = str_replace( '&nbsp;', ' ', $attribute->content()->attribute( 'output' )->attribute( 'output_text' ) );
         return $content;
