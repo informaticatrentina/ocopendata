@@ -16,18 +16,12 @@ use Opencontent\Opendata\Api\Exception\ForbiddenException;
 class SolrStorage implements Gateway
 {
     /**
-     * @var ezfSolrStorage
-     */
-    protected $solrStorageTools;
-
-    /**
      * @var eZSolr
      */
     protected $solr;
 
     public function __construct()
     {
-        $this->solrStorageTools = new ezfSolrStorage();
         $this->solr = new eZSolr();
     }
 
@@ -38,9 +32,10 @@ class SolrStorage implements Gateway
         return $content;
     }
 
-    protected function getSolrIdentifier()
+    public static function getSolrIdentifier()
     {
-        return $this->solrStorageTools->getSolrStorageFieldName( 'opendatastorage' );
+        $solrStorageTools = new ezfSolrStorage();
+        return $solrStorageTools->getSolrStorageFieldName( 'opendatastorage' );
     }
 
     protected function findContent( $contentObjectIdentifier )
@@ -57,7 +52,7 @@ class SolrStorage implements Gateway
                     )
                 ),
                 'AsObjects' => false,
-                'FieldsToReturn' => array( $this->getSolrIdentifier() ),
+                'FieldsToReturn' => array( self::getSolrIdentifier() ),
                 'Limitation' => array()
             )
         );

@@ -566,4 +566,9 @@ class Content
 
         return $access;
     }
+
+    public function __toString()
+    {
+        return (string) $this->metadata->id;
+    }
 }

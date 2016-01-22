@@ -6,10 +6,6 @@ use Opencontent\QueryLanguage\Converter\QueryConverter as QueryConverterInterfac
 use Opencontent\QueryLanguage\Query;
 use Opencontent\QueryLanguage\Parser\Item;
 use Opencontent\QueryLanguage\Parser\Parameter;
-use Opencontent\QueryLanguage\Parser\Sentence;
-use Opencontent\QueryLanguage\Converter\Exception;
-use ezfSolrDocumentFieldBase;
-use eZSolr;
 use ArrayObject;
 
 
@@ -48,11 +44,16 @@ class QueryConverter implements QueryConverterInterface
         $this->query = $query;
     }
 
+    /**
+     * @return ArrayObject
+     */
     public function convert()
     {
         if ( $this->query instanceof Query )
         {
-            $this->convertedQuery = new ArrayObject();
+            $this->convertedQuery = new ArrayObject(
+                array( '_query' => null )
+            );
             $this->parameterConverter->setCurrentConvertedQuery( $this->convertedQuery );
             $this->sentenceConverter->setCurrentConvertedQuery( $this->convertedQuery );
 

@@ -13,7 +13,14 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
         $content = $this->removeBlackListedAttributes( $content );
         $content = $this->overrideIdentifier( $content );
         $content = $this->flatData( $content );
+        $content = $this->filterMetaData( $content );
         return parent::filterContent( $content );
+    }
+
+    protected function filterMetaData( Content $content )
+    {
+        $content->metadata = new ContentData();
+        return $content;
     }
 
     protected function flatData( Content $content )

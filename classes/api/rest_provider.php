@@ -34,24 +34,6 @@ class OCOpenDataProvider extends ezpRestApiProvider
                     'http-get'
                 ), 2
             ),
-            'openData2search' => new ezpRestVersionedRoute(
-                new OcOpenDataRoute(
-                    '/:EnvironmentSettigs/search/:Query',
-                    'OCOpenDataController2',
-                    'contentSearch',
-                    array(),
-                    'http-get'
-                ), 2
-            ),
-            'openData2browse' => new ezpRestVersionedRoute(
-                new OcOpenDataRoute(
-                    '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
-                    'OCOpenDataController2',
-                    'contentBrowse',
-                    array(),
-                    'http-get'
-                ), 2
-            ),
             'openData2create' => new ezpRestVersionedRoute(
                 new OcOpenDataRoute(
                     '/:EnvironmentSettigs/create',
@@ -106,6 +88,24 @@ class OCOpenDataProvider extends ezpRestApiProvider
                         'http-get'
                     ), 2
                 );
+                $routes["{$identifier}openData2search"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        '/:EnvironmentSettigs/search/:Query',
+                        'OCOpenDataController2',
+                        'protectedSearch',
+                        array(),
+                        'http-get'
+                    ), 2
+                );
+                $routes["{$identifier}openData2browse"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
+                        'OCOpenDataController2',
+                        'protectBrowse',
+                        array(),
+                        'http-get'
+                    ), 2
+                );
             }
             else
             {
@@ -117,6 +117,24 @@ class OCOpenDataProvider extends ezpRestApiProvider
                         array(
                             'EnvironmentSettigs' => $identifier
                         ),
+                        'http-get'
+                    ), 2
+                );
+                $routes["{$identifier}openData2search"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        '/:EnvironmentSettigs/search/:Query',
+                        'OCOpenDataController2',
+                        'anonymousSearch',
+                        array(),
+                        'http-get'
+                    ), 2
+                );
+                $routes["{$identifier}openData2browse"] = new ezpRestVersionedRoute(
+                    new OcOpenDataRoute(
+                        '/:EnvironmentSettigs/browse/:ContentNodeIdentifier',
+                        'OCOpenDataController2',
+                        'anonymousBrowse',
+                        array(),
                         'http-get'
                     ), 2
                 );

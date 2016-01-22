@@ -18,12 +18,12 @@ class SearchResults
     /**
      * @var int
      */
-    public $count;
+    public $totalCount;
 
     /**
      * @var Content[]
      */
-    public $contents;
+    public $searchHits = array();
 
     /**
      * @var string

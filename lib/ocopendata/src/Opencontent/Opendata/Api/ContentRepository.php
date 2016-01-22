@@ -7,6 +7,7 @@ use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\Gateway\Database;
 use Opencontent\Opendata\Api\Gateway\SolrStorage;
 use Opencontent\Opendata\Api\Exception\ForbiddenException;
+use Opencontent\Opendata\Api\Values\Content;
 
 class ContentRepository
 {
@@ -27,11 +28,13 @@ class ContentRepository
         $this->currentEnvironmentSettings = $environmentSettings;
     }
 
-    public function read( $contentObjectIdentifier )
+    public function read( $content )
     {
-        $content = $this->gateway->loadContent( $contentObjectIdentifier );
+        if ( !$content instanceof Content )
+            $content = $this->gateway->loadContent( $content );
+
         if ( !$content->canRead() )
-            throw new ForbiddenException( $contentObjectIdentifier, 'read' );
+            throw new ForbiddenException( $content, 'read' );
 
         return $this->currentEnvironmentSettings->filterContent( $content );
     }

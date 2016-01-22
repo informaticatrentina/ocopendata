@@ -82,17 +82,27 @@ class OCOpenDataController2 extends ezpRestContentController
         return $result;
     }
 
-    public function doContentSearch()
+    public function doProtectedSearch()
+    {
+        return $this->doContentSearch();
+    }
+
+    public function doAnonymousSearch()
+    {
+        return $this->doContentSearch();
+    }
+
+    protected function doContentSearch()
     {
         try
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
             $search = $this->contentSearch->search( $this->request->variables['Query'] );
-            $result->variables['totalCount'] = $search->count;
-            $result->variables['nextPage'] = $search->nextPageQuery;
-            $result->variables['searchHits'] = $search->contents;
             $result->variables['query'] = $search->query;
+            $result->variables['nextPage'] = $search->nextPageQuery;
+            $result->variables['totalCount'] = $search->totalCount;
+            $result->variables['searchHits'] = $search->searchHits;
         }
         catch ( Exception $e )
         {
@@ -102,7 +112,17 @@ class OCOpenDataController2 extends ezpRestContentController
         return $result;
     }
 
-    public function doContentBrowse()
+    public function doProtectedBrowse()
+    {
+        return $this->doContentBrowse();
+    }
+
+    public function doAnonymousBrowse()
+    {
+        return $this->doContentBrowse();
+    }
+
+    protected function doContentBrowse()
     {
         $result = new ezpRestMvcResult();
         $browse = $this->contentBrowser->browse(

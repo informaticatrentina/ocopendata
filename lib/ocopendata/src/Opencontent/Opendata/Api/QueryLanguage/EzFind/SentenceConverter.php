@@ -134,6 +134,10 @@ class SentenceConverter
                 $value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
                 break;
 
+            case 'sub_string':
+                $value = '"' . $value . '"';
+                break;
+
             case 'date':
                 $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( strtotime( $value ) ) . '"';
                 break;
@@ -144,7 +148,7 @@ class SentenceConverter
     protected function generateContainsFilter( $field, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->getFieldName( $field );
+        $fieldNames = $this->generateFieldName( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -175,7 +179,7 @@ class SentenceConverter
     protected function generateInFilter( $field, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->getFieldName( $field );
+        $fieldNames = $this->generateFieldName( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -209,7 +213,7 @@ class SentenceConverter
             throw new Exception( "Range require an array value" );
 
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->getFieldName( $field );
+        $fieldNames = $this->generateFieldName( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -256,6 +260,19 @@ class SentenceConverter
         }
     }
 
+    protected function generateFieldName( $field )
+    {
+        if ( in_array( $field, $this->metaFields ) )
+        {
+            return array( 'meta_' . $field => eZSolr::getMetaFieldName( $field, 'search' ) );
+        }
+        elseif ( isset( $this->availableFieldDefinitions[$field] ) )
+        {
+            return $this->getFieldName( $field, 'search' );
+        }
+        throw new Exception( "Can not convert field $field" );
+    }
+
     /**
      * Mutuato da ezfSolrDocumentFieldBase restituisce il campo solr senza usare la classe eZContentClassAttribute
      *
@@ -264,7 +281,7 @@ class SentenceConverter
      *
      * @return array
      */
-    protected function getFieldName( $field, $context = 'search' )
+    protected function getFieldName( $field, $context )
     {
         $data = array();
         if ( isset( $this->availableFieldDefinitions[$field] ) )
@@ -274,7 +291,7 @@ class SentenceConverter
                 $type = $this->getSolrType( $dataType, $context );
                 if ( $dataType == 'ezobjectrelationlist' || $dataType == 'ezobjectrelation' )
                 {
-                    $data[$type] = $this->generateSolrSubFieldName(
+                    $data['sub_' . $type] = $this->generateSolrSubFieldName(
                         $field,
                         $type
                     );
