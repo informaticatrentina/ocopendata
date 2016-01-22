@@ -30,6 +30,10 @@ try
     {
         $data = $contentRepository->read( $Param )->jsonSerialize();
     }
+    elseif ( $Action == 'search' )
+    {
+        $data = $contentSearch->search( $Param );
+    }
 }
 catch( Exception $e )
 {
