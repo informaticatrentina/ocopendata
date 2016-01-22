@@ -130,6 +130,19 @@ class SentenceConverter
     {
         switch( $type )
         {
+            case 'tint':
+            case 'sint':
+            case 'int':
+                $value = (int) $value;
+                break;
+
+            case 'float':
+            case 'double':
+            case 'sfloat':
+            case 'tfloat':
+                $value = (float) $value;
+                break;
+
             case 'string':
                 $value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
                 break;
