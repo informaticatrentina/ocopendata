@@ -170,9 +170,8 @@ class OCOpenDataController2 extends ezpRestContentController
             $content = $this->contentRepository->read(
                 $this->request->variables['ContentObjectIdentifier']
             );
-            $result->variables['metadata'] = $content->metadata;
-            $result->variables['data'] = $content->data->jsonSerialize(
-            ); // compat with php version<5.4
+            $result->variables['metadata'] = $content->metadata->jsonSerialize(); // compat with php version<5.4
+            $result->variables['data'] = $content->data->jsonSerialize(); // compat with php version<5.4
         }
         catch ( Exception $e )
         {
