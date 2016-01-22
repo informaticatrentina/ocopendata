@@ -52,7 +52,9 @@ class ContentSearch
         {
             if ( $rawResults['SearchExtras']->attribute( 'hasError' ) )
             {
-                throw new \RuntimeException( $rawResults['SearchExtras']->attribute( 'error' ) );
+                $error = $rawResults['SearchExtras']->attribute( 'error' );
+                if ( is_array( $error ) ) $error = (string)$error['msg'];
+                throw new \RuntimeException( $error );
             }
         }
 
