@@ -98,13 +98,17 @@ class ContentSearch
                     $id = isset( $resultItem['meta_id_si'] ) ? $resultItem['meta_id_si'] : isset( $resultItem['id_si'] ) ? $resultItem['id_si'] : $resultItem['id'];
                     $content = $fileSystemGateway->loadContent( $id );
                 }
+
                 $content = $contentRepository->read( $content );
-                $searchResults->searchHits[] = $content->jsonSerialize();
             }
             catch( Exception $e )
             {
-                \eZDebug::writeError( $e->getMessage(), __METHOD__ );
+                $content = new Content();
+                $content->metadata = new Metadata( array( 'id' => $e->getMessage() ) );
+                $content->data = new ContentData( array() );
             }
+
+            $searchResults->searchHits[] = $content->jsonSerialize();
         }
 
         return $searchResults;
