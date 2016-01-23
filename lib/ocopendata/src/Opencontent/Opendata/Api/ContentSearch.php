@@ -105,7 +105,7 @@ class ContentSearch
             {
                 $content = new Content();
                 $content->metadata = new Metadata( array( 'id' => $e->getMessage() ) );
-                $content->data = new ContentData( array() );
+                $content->data = new ContentData( array( 'rawresult' => $resultItem ) );
             }
 
             $searchResults->searchHits[] = $content->jsonSerialize();
