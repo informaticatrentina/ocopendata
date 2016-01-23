@@ -46,9 +46,35 @@ class Content
 
     public function jsonSerialize()
     {
+        if ( is_object( $this->metadata ) && method_exists( $this->metadata, 'jsonSerialize' ) )
+        {
+            $metadata = $this->metadata->jsonSerialize();
+        }
+        elseif ( is_array( $this->metadata ) )
+        {
+            $metadata = $this->metadata;
+        }
+        else
+        {
+            $metadata = array();
+        }
+
+        if ( is_object( $this->data ) && method_exists( $this->data, 'jsonSerialize' ) )
+        {
+            $data = $this->data->jsonSerialize();
+        }
+        elseif ( is_array( $this->data ) )
+        {
+            $data = $this->data;
+        }
+        else
+        {
+            $data = array();
+        }
+
         return array(
-            'metadata' => $this->metadata instanceof Metadata ? $this->metadata->jsonSerialize() : array(),
-            'data' => $this->data instanceof ContentData ? $this->data->jsonSerialize() : array()
+            'metadata' => $metadata,
+            'data' => $data
         );
     }
 
