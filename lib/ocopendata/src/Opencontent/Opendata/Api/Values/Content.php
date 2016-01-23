@@ -125,8 +125,8 @@ class Content
                 'path_string' => $node->attribute( 'path_string' )
             );
         }
-        $metadata->published = (int)$contentObject->attribute( 'published' );
-        $metadata->modified = (int)$contentObject->attribute( 'modified' );
+        $metadata->published = date( 'c', $contentObject->attribute( 'published' ) );
+        $metadata->modified = date( 'c', $contentObject->attribute( 'modified' ) );
         $section = eZSection::fetch( $contentObject->attribute( 'section_id' ) );
         if ( $section instanceof eZSection )
         {

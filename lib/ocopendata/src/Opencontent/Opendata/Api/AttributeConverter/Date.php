@@ -10,17 +10,18 @@ class Date extends Base
     public function get( eZContentObjectAttribute $attribute )
     {
         $content = parent::get( $attribute );
-        $content['content'] = (int)$content['content'];
+        $date = $content['content'];
+        $content['content'] = ( (int)$date > 0 ) ? date( 'c', $date ) : null;
         return $content;
     }
 
     public function set( $data )
     {
-        return (int) $data;
+        return date( "U", strtotime( $data ) );
     }
 
     public function type( eZContentClassAttribute $attribute )
     {
-        return array( 'identifier' => 'timestamp' );
+        return array( 'identifier' => 'ISO 8601 date' );
     }
 }
