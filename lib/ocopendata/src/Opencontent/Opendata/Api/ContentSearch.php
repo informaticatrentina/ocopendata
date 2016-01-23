@@ -43,6 +43,11 @@ class ContentSearch
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
 
+        if ( isset( $ezFindQuery['SearchLimit'] ) && $ezFindQuery['SearchLimit'] > $this->currentEnvironmentSettings->__get( 'maxSearchLimit' ) )
+        {
+            $ezFindQuery['SearchLimit'] = $this->currentEnvironmentSettings->__get( 'maxSearchLimit' );
+        }
+
         $ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
         $ezFindQuery['FieldsToReturn'] = array( SolrStorage::getSolrIdentifier() );

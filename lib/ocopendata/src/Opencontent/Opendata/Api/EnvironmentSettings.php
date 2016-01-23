@@ -23,6 +23,8 @@ class EnvironmentSettings
 
     protected $debug;
 
+    protected $maxSearchLimit = 100;
+
     public function __construct( array $properties = array() )
     {
         foreach ( $properties as $property => $value )
