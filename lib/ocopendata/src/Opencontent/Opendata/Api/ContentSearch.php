@@ -34,9 +34,13 @@ class ContentSearch
         $ezFindQuery = $queryObject->convert();
 
         if ( $ezFindQuery instanceof \ArrayObject )
+        {
             $ezFindQuery = $ezFindQuery->getArrayCopy();
+        }
         else
+        {
             throw new \RuntimeException( "Query builder did not return a valid query" );
+        }
 
         //$ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
@@ -53,7 +57,10 @@ class ContentSearch
             if ( $rawResults['SearchExtras']->attribute( 'hasError' ) )
             {
                 $error = $rawResults['SearchExtras']->attribute( 'error' );
-                if ( is_array( $error ) ) $error = (string)$error['msg'];
+                if ( is_array( $error ) )
+                {
+                    $error = (string)$error['msg'];
+                }
                 throw new \RuntimeException( $error );
             }
         }
@@ -68,7 +75,9 @@ class ContentSearch
 
             if ( $rawResults['SearchExtras'] instanceof ezfSearchResultInfo )
             {
-                $searchResults->query['responseHeader'] = $rawResults['SearchExtras']->attribute( 'responseHeader' );
+                $searchResults->query['responseHeader'] = $rawResults['SearchExtras']->attribute(
+                    'responseHeader'
+                );
             }
         }
         else
@@ -76,14 +85,15 @@ class ContentSearch
             $searchResults->query = (string)$queryObject;
         }
 
-        $searchResults->totalCount = (int) $rawResults['SearchCount'];
+        $searchResults->totalCount = (int)$rawResults['SearchCount'];
 
         $fileSystemGateway = new FileSystem();
         $contentRepository = new ContentRepository();
         $contentRepository->setEnvironment( $this->currentEnvironmentSettings );
 
-        foreach( $rawResults['SearchResult'] as $resultItem )
+        foreach ( $rawResults['SearchResult'] as $resultItem )
         {
+            $id = isset( $resultItem['meta_id_si'] ) ? $resultItem['meta_id_si'] : isset( $resultItem['id_si'] ) ? $resultItem['id_si'] : $resultItem['id'];
             try
             {
                 if ( isset( $resultItem['data_map']['opendatastorage'] ) )
@@ -95,17 +105,21 @@ class ContentSearch
                 }
                 else
                 {
-                    $id = isset( $resultItem['meta_id_si'] ) ? $resultItem['meta_id_si'] : isset( $resultItem['id_si'] ) ? $resultItem['id_si'] : $resultItem['id'];
-                    $content = $fileSystemGateway->loadContent( $id );
+                    $content = $fileSystemGateway->loadContent( (int)$id );
                 }
 
                 $content = $contentRepository->read( $content );
             }
-            catch( Exception $e )
+            catch ( Exception $e )
             {
                 $content = new Content();
-                $content->metadata = new Metadata( array( 'id' => $e->getMessage() ) );
-                $content->data = new ContentData( array( 'rawresult' => $resultItem ) );
+                $content->metadata = new Metadata( array( 'id' => $id ) );
+                $content->data = new ContentData(
+                    array(
+                        '_error' => $e->getMessage(),
+                        '_rawresult' => $resultItem
+                    )
+                );
             }
 
             $searchResults->searchHits[] = $content->jsonSerialize();
