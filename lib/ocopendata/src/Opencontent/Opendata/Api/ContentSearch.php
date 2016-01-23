@@ -95,18 +95,16 @@ class ContentSearch
                 }
                 else
                 {
-                    $id = isset( $resultItem['id_si'] ) ? $resultItem['id_si'] : $resultItem['id'];
+                    $id = isset( $resultItem['meta_id_si'] ) ? $resultItem['meta_id_si'] : isset( $resultItem['id_si'] ) ? $resultItem['id_si'] : $resultItem['id'];
                     $content = $fileSystemGateway->loadContent( $id );
                 }
-
                 $content = $contentRepository->read( $content );
+                $searchResults->searchHits[] = $content->jsonSerialize();
             }
             catch( Exception $e )
             {
-                $content = new Content();
+                \eZDebug::writeError( $e->getMessage(), __METHOD__ );
             }
-
-            $searchResults->searchHits[] = $content->jsonSerialize();
         }
 
         return $searchResults;
