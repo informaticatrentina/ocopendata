@@ -12,6 +12,7 @@ use Opencontent\Opendata\Api\Values\SearchResults;
 use Exception;
 use eZSolr;
 use ezfSearchResultInfo;
+use ezfSolrDocumentFieldBase;
 
 class ContentSearch
 {
@@ -42,7 +43,7 @@ class ContentSearch
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
 
-        //$ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
+        $ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
         $ezFindQuery['FieldsToReturn'] = array( SolrStorage::getSolrIdentifier() );
 
