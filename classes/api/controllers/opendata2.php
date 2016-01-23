@@ -35,6 +35,11 @@ class OCOpenDataController2 extends ezpRestContentController
      */
     protected $request;
 
+    /**
+     * @var \Opencontent\Opendata\Api\EnvironmentSettings
+     */
+    protected $currentEnvironment;
+
     public function __construct( $action, ezcMvcRequest $request )
     {
         parent::__construct( $action, $request );
@@ -47,10 +52,10 @@ class OCOpenDataController2 extends ezpRestContentController
     protected function setEnvironment()
     {
         $environmentIdentifier = $this->request->variables['EnvironmentSettigs'];
-        $currentEnvironment = EnvironmentLoader::loadPreset( $environmentIdentifier );
-        $this->contentRepository->setEnvironment( $currentEnvironment );
-        $this->contentBrowser->setEnvironment( $currentEnvironment );
-        $this->contentSearch->setEnvironment( $currentEnvironment );
+        $this->currentEnvironment = EnvironmentLoader::loadPreset( $environmentIdentifier );
+        $this->contentRepository->setEnvironment( $this->currentEnvironment );
+        $this->contentBrowser->setEnvironment( $this->currentEnvironment );
+        $this->contentSearch->setEnvironment( $this->currentEnvironment );
     }
 
     protected function getPayload()
@@ -92,6 +97,20 @@ class OCOpenDataController2 extends ezpRestContentController
         return $this->doContentSearch();
     }
 
+    protected function getBaseUri()
+    {
+        $hostUri = $this->request->getHostURI();
+        $apiName = ezpRestPrefixFilterInterface::getApiProviderName();
+        $apiPrefix = eZINI::instance( 'rest.ini' )->variable( 'System', 'ApiPrefix');
+        $uri =  $hostUri
+               . $apiPrefix . '/'
+               . $apiName . '/v2/';
+        if ( $this->currentEnvironment instanceof \Opencontent\Opendata\Api\EnvironmentSettings)
+            $uri .= $this->currentEnvironment->__get( 'identifier' ) . '/';
+        return $uri;
+    }
+
+
     protected function doContentSearch()
     {
         try
@@ -99,8 +118,19 @@ class OCOpenDataController2 extends ezpRestContentController
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
             $search = $this->contentSearch->search( $this->request->variables['Query'] );
+
+            $hostUri = $this->request->getHostURI();
+            $apiName = ezpRestPrefixFilterInterface::getApiProviderName();
+            $apiPrefix = eZINI::instance( 'rest.ini' )->variable( 'System', 'ApiPrefix');
+
+            $nextPageQuery = null;
+            if ( $search->nextPageQuery != null )
+            {
+                $nextPageQuery = $this->getBaseUri() . 'search/' . urlencode( $search->nextPageQuery );
+            }
+
             $result->variables['query'] = $search->query;
-            $result->variables['nextPage'] = $search->nextPageQuery;
+            $result->variables['nextPage'] = $nextPageQuery;
             $result->variables['totalCount'] = $search->totalCount;
             $result->variables['searchHits'] = $search->searchHits;
         }
@@ -237,9 +267,9 @@ class OCOpenDataController2 extends ezpRestContentController
             $result = new ezpRestMvcResult();
             $list = $this->classRepository->listAll();
             $classes = array();
-            $baseUri = $this->request->getBaseURI();
-            $detailBaseUri = str_replace( 'classes', 'v2/classes', $baseUri ); //@todo
-            $searchBaseUri = str_replace( 'classes', 'v2/content/search', $baseUri ); //@todo
+
+            $detailBaseUri = $this->getBaseUri() . 'classes'; //@todo
+            $searchBaseUri = $this->getBaseUri() . 'content/search'; //@todo
             foreach ( $list as $item )
             {
                 $item['link'] = $detailBaseUri . '/' . $item['identifier'];

@@ -43,9 +43,18 @@ class ContentSearch
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
 
-        if ( isset( $ezFindQuery['SearchLimit'] ) && $ezFindQuery['SearchLimit'] > $this->currentEnvironmentSettings->__get( 'maxSearchLimit' ) )
+        $limit = 10; //default ezfind
+        if ( isset( $ezFindQuery['SearchLimit'] ) )
         {
-            $ezFindQuery['SearchLimit'] = $this->currentEnvironmentSettings->__get( 'maxSearchLimit' );
+            if ( $ezFindQuery['SearchLimit'] > $this->currentEnvironmentSettings->__get( 'maxSearchLimit' ) )
+                $ezFindQuery['SearchLimit'] = $this->currentEnvironmentSettings->__get( 'maxSearchLimit' );
+
+            $limit = $ezFindQuery['SearchLimit'];
+        }
+        $offset = 0;
+        if ( isset( $ezFindQuery['SearchOffset'] ) )
+        {
+            $offset = $ezFindQuery['SearchOffset'];
         }
 
         $ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
@@ -92,6 +101,13 @@ class ContentSearch
         }
 
         $searchResults->totalCount = (int)$rawResults['SearchCount'];
+
+        if ( ( $limit + $offset ) < $searchResults->totalCount )
+        {
+            $nextPageQuery = clone $queryObject;
+            $nextPageQuery->setParameter( 'offset', $limit + $offset );
+            $searchResults->nextPageQuery = (string)$nextPageQuery;
+        }
 
         $fileSystemGateway = new FileSystem();
         $contentRepository = new ContentRepository();
