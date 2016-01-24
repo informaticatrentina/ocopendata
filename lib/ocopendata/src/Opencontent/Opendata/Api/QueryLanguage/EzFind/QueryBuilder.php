@@ -9,6 +9,39 @@ use Opencontent\QueryLanguage\QueryBuilder as BaseQueryBuilder;
 
 class QueryBuilder extends BaseQueryBuilder
 {
+    public $fields = array(
+        'q'
+    );
+
+    public $metaFields = array(
+        'id',
+        'remote_id',
+        'name',
+        'published',
+        'modified',
+        'section',
+        'state',
+    );
+
+    public $parameters = array(
+        'sort',
+        'limit',
+        'offset',
+        'classes',
+        'subtree'
+    );
+
+    public $operators = array(
+        '=',
+        '!=',
+        'in',
+        '!in',
+        'contains',
+        '!contains',
+        'range',
+        '!range'
+    );
+
     public function __construct()
     {
         $classRepository = new ClassRepository();
