@@ -133,7 +133,11 @@ class Content
             $metadata->sectionIdentifier = $section->attribute( 'identifier' );
             $metadata->sectionId = $section->attribute( 'id' );
         }
-        $metadata->stateIdentifiers = $contentObject->stateIdentifierArray();
+        $metadata->stateIdentifiers = array();
+        foreach ( $contentObject->stateIdentifierArray() as $identifier )
+        {
+            $metadata->stateIdentifiers[] = str_replace( '/', '.', $identifier );
+        }
         $metadata->stateIds = $contentObject->stateIDArray();
         $metadata->languages = $availableLanguages;
         $content->metadata = $metadata;

@@ -273,7 +273,7 @@ class OCOpenDataController2 extends ezpRestContentController
             foreach ( $list as $item )
             {
                 $item['link'] = $detailBaseUri . '/' . $item['identifier'];
-                $item['search'] = ContentClass::isSearchable( $item['identifier'] ) ? $searchBaseUri . '/' . urlencode( 'classes ' . $item['identifier'] ) : null;
+                $item['search'] = ContentClass::isSearchable( $item['identifier'] ) ? $searchBaseUri . '/' . urlencode( "classes '{$item['identifier']}'" ) : null;
                 $classes[] = $item;
             }
             $result->variables['classes'] = $classes;

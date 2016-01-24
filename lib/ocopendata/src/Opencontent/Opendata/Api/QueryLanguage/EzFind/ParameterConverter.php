@@ -61,7 +61,10 @@ class ParameterConverter extends SentenceConverter
         {
             $value = array( $value );
         }
-        $this->convertedQuery['SearchContentClassID'] = $value;
+        $list = array();
+        foreach( $value as $item )
+            $list[] = trim( $item, "'" );
+        $this->convertedQuery['SearchContentClassID'] = $list;
     }
 
     protected function convertSortBy( $value )
@@ -118,7 +121,12 @@ class ParameterConverter extends SentenceConverter
 
     protected function convertSubtree( $value )
     {
-        //todo
+        if ( !is_array( $value ) )
+        {
+            $value = array( $value );
+        }
+        $value = array_map( 'intval', $value );
+        $this->convertedQuery['SearchSubTreeArray'] = $value;
     }
 
     protected function generateSortName( $field )

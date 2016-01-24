@@ -2,6 +2,8 @@
 
 namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
 
+use Opencontent\Opendata\Api\StateRepository;
+use Opencontent\Opendata\Api\SectionRepository;
 use Opencontent\QueryLanguage\Parser\Sentence;
 use Opencontent\QueryLanguage\Converter\Exception;
 use ArrayObject;
@@ -33,6 +35,16 @@ class SentenceConverter
     protected $metaFields;
 
     /**
+     * @var StateRepository
+     */
+    protected $stateRepository;
+
+    /**
+     * @var SectionRepository
+     */
+    protected $sectionRepository;
+
+    /**
      * @var bool
      */
     private $availableFieldIsFiltered = false;
@@ -42,6 +54,8 @@ class SentenceConverter
         $this->availableFieldDefinitions = $availableFieldDefinitions;
         $this->metaFields = $metaFields;
         $this->documentFieldName = new ezfSolrDocumentFieldName();
+        $this->stateRepository = new StateRepository();
+        $this->sectionRepository = new SectionRepository();
     }
 
     /**
@@ -130,6 +144,8 @@ class SentenceConverter
     {
         switch( $type )
         {
+            case 'meta_section';
+            case 'meta_state';
             case 'meta_id';
             case 'tint':
             case 'sint':
@@ -157,6 +173,24 @@ class SentenceConverter
             case 'date':
                 $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( strtotime( $value ) ) . '"';
                 break;
+
+            case 'meta_section_id':
+            {
+                $section = $this->sectionRepository->load( $value );
+                if ( is_array( $section ) )
+                {
+                    $value = (int) $section['id'];
+                }
+            } break;
+
+            case 'meta_object_states':
+            {
+                $state = $this->stateRepository->load( $value );
+                if ( is_array( $state ) )
+                {
+                    $value = (int) $state['id'];
+                }
+            } break;
         }
         return $value;
     }
@@ -280,6 +314,14 @@ class SentenceConverter
     {
         if ( in_array( $field, $this->metaFields ) )
         {
+            if ( $field == 'section' )
+            {
+                $field = 'section_id';
+            }
+            elseif ( $field == 'state' )
+            {
+                $field = 'object_states';
+            }
             return array( 'meta_' . $field => eZSolr::getMetaFieldName( $field, 'search' ) );
         }
         elseif ( isset( $this->availableFieldDefinitions[$field] ) )
