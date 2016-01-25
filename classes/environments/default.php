@@ -30,7 +30,7 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                 'id' => $content->metadata->id,
                 'remoteId' => $content->metadata->remoteId,
                 'classIdentifier' => $content->metadata->classIdentifier,
-                'class' => str_replace( 'content', 'classes', $this->requestBaseUri ) . $content->metadata->classIdentifier,
+                'class' => str_replace( '/content', '/classes', $this->requestBaseUri ) . $content->metadata->classIdentifier,
                 'sectionIdentifier' => $content->metadata->sectionIdentifier,
                 'stateIdentifiers' => $content->metadata->stateIdentifiers,
                 'published' => $content->metadata->published,
@@ -70,7 +70,7 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                                 'id' => $item->id,
                                 'remoteId' => $item->remoteId,
                                 'classIdentifier' => $item->classIdentifier,
-                                'class' => str_replace( 'content', 'classes', $this->requestBaseUri ) . $item->classIdentifier,
+                                'class' => str_replace( '/content', '/classes', $this->requestBaseUri ) . $item->classIdentifier,
                                 'languages' => $item->languages,
                                 'name' => $item->name,
                                 'link' => $this->requestBaseUri . 'read/' . $item->id
