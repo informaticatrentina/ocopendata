@@ -30,7 +30,7 @@ class FileSystem extends Database
             $contentObjectId
         );
     }
-
+    
     /**
      * @param $contentObjectIdentifier
      *

@@ -4,12 +4,14 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
+use eZContentObject;
 use Opencontent\Opendata\Api\ContentRepository;
 use Opencontent\Opendata\Api\EnvironmentSettings;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\PublicationProcess;
 use Opencontent\Opendata\Api\Values\Content;
+use Opencontent\Opendata\Api\Values\Metadata;
 
 class Relations extends Base
 {
@@ -36,8 +38,9 @@ class Relations extends Base
         {
             try
             {
-                $apiContent = self::gateway()->loadContent( $id );
-                $contents[] = $apiContent->metadata;
+                $contentObject = eZContentObject::fetch( $id );
+                if ( $contentObject instanceof eZContentObject )
+                    $contents[] = Metadata::createFromEzContentObject( $contentObject );
             }
             catch( \Exception $e )
             {
