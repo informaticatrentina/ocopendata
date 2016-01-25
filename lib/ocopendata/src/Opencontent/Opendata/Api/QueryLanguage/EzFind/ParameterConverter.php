@@ -64,6 +64,13 @@ class ParameterConverter extends SentenceConverter
         $list = array();
         foreach( $value as $item )
             $list[] = trim( $item, "'" );
+
+        foreach( $list as $class )
+        {
+            if ( !in_array( $class, $this->classRepository->listClassIdentifiers() ) )
+                throw new Exception( "Class $class not found" );
+        }
+
         $this->convertedQuery['SearchContentClassID'] = $list;
     }
 

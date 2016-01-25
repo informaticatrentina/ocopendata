@@ -2,6 +2,7 @@
 
 namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
 
+use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\StateRepository;
 use Opencontent\Opendata\Api\SectionRepository;
 use Opencontent\QueryLanguage\Parser\Sentence;
@@ -45,6 +46,11 @@ class SentenceConverter
     protected $sectionRepository;
 
     /**
+     * @var ClassRepository
+     */
+    protected $classRepository;
+
+    /**
      * @var bool
      */
     private $availableFieldIsFiltered = false;
@@ -56,6 +62,7 @@ class SentenceConverter
         $this->documentFieldName = new ezfSolrDocumentFieldName();
         $this->stateRepository = new StateRepository();
         $this->sectionRepository = new SectionRepository();
+        $this->classRepository = new ClassRepository();
     }
 
     /**

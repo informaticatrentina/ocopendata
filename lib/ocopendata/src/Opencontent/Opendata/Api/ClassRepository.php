@@ -100,6 +100,12 @@ class ClassRepository
         return $classes;
     }
 
+    public function listClassIdentifiers()
+    {
+        $classList = self::classIdentifiersHash();
+        return array_keys( $classList );
+    }
+
     /**
      * @return array
      */

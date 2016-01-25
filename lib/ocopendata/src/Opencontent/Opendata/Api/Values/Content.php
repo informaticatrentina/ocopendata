@@ -177,12 +177,19 @@ class Content
         $properties = array();
 
         if ( isset( $this->data[$defaultLanguage] ) )
+        {
             $data = $this->data[$defaultLanguage];
-        else
+            $name = $this->metadata->name[$defaultLanguage];
+        }else
         {
             $dataArray = $this->data->jsonSerialize();
+            $nameArray = $this->metadata->name;
             $data = array_shift( $dataArray );
+            $name = array_shift( $nameArray );
         }
+
+        $properties['name'] = $name;
+        $properties['class_identifier'] = $this->metadata->classIdentifier;
 
         foreach ( $data as $identifier => $attribute )
         {
@@ -200,7 +207,7 @@ class Content
             }
             else
             {
-                if ( $attribute['content'] )
+                if ( $attribute['content'] && !isset( $properties[$identifier] ))
                 {
                     if ( is_scalar( $attribute['content'] ) )
                     {
