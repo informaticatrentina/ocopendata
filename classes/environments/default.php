@@ -36,7 +36,8 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                 'modified' => $content->metadata->modified,
                 'languages' => $content->metadata->languages,
                 'name' => $content->metadata->name,
-                'parentNodes' => $parentNodes
+                'parentNodes' => $parentNodes,
+                'link' => $this->requestBaseUri . 'read/' . $content->metadata->id
             )
         );
         return $content;
@@ -49,7 +50,35 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
         {
             foreach( $data as $identifier => $value )
             {
-                $flatData[$language][$identifier] = $value['content'];
+                $valueContent = $value['content'];
+                if ( $value['datatype'] == 'ezobjectrelationlist'
+                     || $value['datatype'] == 'ezobjectrelation' )
+                {
+                    $valueContent = array();
+                    foreach( $value['content'] as $item )
+                    {
+
+                        $parentNodes = array();
+                        foreach( $item->parentNodes as $parentNode )
+                        {
+                            $parentNodes[] = $parentNode['id'];
+                        }
+                        $subContent = array(
+                            'id' => $item->id,
+                            'remoteId' => $item->remoteId,
+                            'classIdentifier' => $item->classIdentifier,
+                            'languages' => $item->languages,
+                            'name' => $item->name,
+                            'link' => $this->requestBaseUri . 'read/' . $item->id
+                        );
+                        $valueContent[] = $subContent;
+                    }
+                }
+                else
+                {
+                    $valueContent = $value['content'];
+                }
+                $flatData[$language][$identifier] = $valueContent;
             }
         }
         $content->data = new ContentData( $flatData );

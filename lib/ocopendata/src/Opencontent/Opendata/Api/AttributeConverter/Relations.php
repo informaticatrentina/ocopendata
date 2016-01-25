@@ -37,7 +37,7 @@ class Relations extends Base
             try
             {
                 $apiContent = self::gateway()->loadContent( $id );
-                $contents[] = $this->filterSubContent( $apiContent );
+                $contents[] = $apiContent->metadata;
             }
             catch( \Exception $e )
             {
@@ -48,29 +48,11 @@ class Relations extends Base
         return $content;
     }
 
-    protected function filterSubContent( Content $content )
-    {
-        $data = array();
-        $parentNodes = array();
-        foreach( $content->metadata->parentNodes as $parentNode )
-        {
-            $parentNodes[] = $parentNode['id'];
-        }
-
-        $data['metadata'] = array(
-            'id' => $content->metadata->id,
-            'remoteId' => $content->metadata->remoteId,
-            'classIdentifier' => $content->metadata->classIdentifier,
-            'languages' => $content->metadata->languages,
-            'name' => $content->metadata->name
-        );
-        return $data;
-    }
-
     public function set( $data, PublicationProcess $process )
     {
-        return null; //@todo
-        return parent::set( $data, $process );
+        $data = self::findContents( $data );
+        //@todo handle image and files
+        return implode( '-', $data['ids'] );
     }
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
