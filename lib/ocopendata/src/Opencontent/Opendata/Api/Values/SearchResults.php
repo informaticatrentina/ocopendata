@@ -3,6 +3,9 @@
 namespace Opencontent\Opendata\Api\Values;
 
 
+use Opencontent\Opendata\GeoJson\Feature;
+use Opencontent\Opendata\GeoJson\FeatureCollection;
+
 class SearchResults
 {
     /**
@@ -21,9 +24,19 @@ class SearchResults
     public $totalCount;
 
     /**
-     * @var Content[]
+     * @var Content[]|Feature[]
      */
     public $searchHits = array();
+
+    public function geoJsonSerialize()
+    {
+        $collection = new FeatureCollection();
+        foreach( $this->searchHits as $content )
+        {
+            $collection->add( $content );
+        }
+        return $collection;
+    }
 
 
 }

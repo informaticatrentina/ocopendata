@@ -129,7 +129,7 @@ class ContentSearch
                 );
             }
 
-            $searchResults->searchHits[] = $content->jsonSerialize();
+            $searchResults->searchHits[] = $content;
         }
 
         return $this->currentEnvironmentSettings->filterSearchResult( $searchResults );

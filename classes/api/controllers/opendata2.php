@@ -54,7 +54,10 @@ class OCOpenDataController2 extends ezpRestContentController
         $environmentIdentifier = $this->request->variables['EnvironmentSettigs'];
         $this->currentEnvironment = EnvironmentLoader::loadPreset( $environmentIdentifier );
         $this->currentEnvironment->__set( 'requestBaseUri', $this->getBaseUri() );
+        $this->currentEnvironment->__set( 'request', $this->request );
+
         $this->request->variables['EnvironmentSettigs'] = $this->currentEnvironment;
+
         $this->contentRepository->setEnvironment( $this->currentEnvironment );
         $this->contentBrowser->setEnvironment( $this->currentEnvironment );
         $this->contentSearch->setEnvironment( $this->currentEnvironment );

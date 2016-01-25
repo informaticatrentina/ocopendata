@@ -15,8 +15,8 @@ class Geo extends Base
         /** @var \eZGmapLocation $attributeContent */
         $attributeContent = $attribute->content();
         $content['content'] = array(
-            'latitude' => $attributeContent->attribute( 'latitude' ),
-            'longitude' => $attributeContent->attribute( 'longitude' ),
+            'latitude' => (float)$attributeContent->attribute( 'latitude' ),
+            'longitude' => (float)$attributeContent->attribute( 'longitude' ),
             'address' => $attributeContent->attribute( 'address' )
         );
         return $content;

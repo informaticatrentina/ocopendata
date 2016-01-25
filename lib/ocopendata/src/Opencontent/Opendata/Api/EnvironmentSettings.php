@@ -26,11 +26,13 @@ class EnvironmentSettings
 
     protected $debug;
 
-    protected $maxSearchLimit = 100;
+    protected $maxSearchLimit = 300;
 
     protected $defaultSearchLimit = 100;
 
     protected $requestBaseUri;
+
+    protected $request;
 
     public function __construct( array $properties = array() )
     {
@@ -76,17 +78,17 @@ class EnvironmentSettings
     /**
      * @param Content $content
      *
-     * @return Content
+     * @return array or array cast object
      */
     public function filterContent( Content $content )
     {
-        return $content;
+        return $content->jsonSerialize();
     }
 
     /**
      * @param SearchResults $searchResults
      *
-     * @return SearchResults
+     * @return \ArrayAccess
      */
     public function filterSearchResult( SearchResults $searchResults )
     {

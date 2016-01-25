@@ -11,6 +11,9 @@ use Opencontent\Opendata\Api\AttributeConverterLoader;
 use eZUser;
 use eZPreferences;
 use eZContentObjectTreeNode;
+use Opencontent\Opendata\GeoJson\Feature;
+use Opencontent\Opendata\GeoJson\Geometry;
+use Opencontent\Opendata\GeoJson\Properties;
 
 class Content
 {
@@ -165,6 +168,57 @@ class Content
         $content->data = new ContentData( $attributes );
 
         return $content;
+    }
+
+    public function geoJsonSerialize( $defaultLanguage = null )
+    {
+        $defaultLanguage = !$defaultLanguage ? eZContentObject::defaultLanguage() : $defaultLanguage;
+        $geometry = new Geometry();
+        $properties = array();
+
+        if ( isset( $this->data[$defaultLanguage] ) )
+            $data = $this->data[$defaultLanguage];
+        else
+        {
+            $dataArray = $this->data->jsonSerialize();
+            $data = array_shift( $dataArray );
+        }
+
+        foreach ( $data as $identifier => $attribute )
+        {
+            if ( $attribute['datatype'] == 'ezgmaplocation' )
+            {
+                $geometry->type = 'Point';
+                $geometry->coordinates = array(
+                    isset( $attribute['content']['latitude'] ) ? $attribute['content']['latitude'] : 0,
+                    isset( $attribute['content']['longitude'] ) ? $attribute['content']['longitude'] : 0
+                );
+                if ( !empty( $attribute['content']['address'] ) )
+                {
+                    $properties[$identifier] = $attribute['content']['address'];
+                }
+            }
+            else
+            {
+                if ( $attribute['content'] )
+                {
+                    if ( is_scalar( $attribute['content'] ) )
+                    {
+                        $content = $attribute['content'];
+                    }
+                    elseif ( is_array( $attribute['content'] ) && isset( $attribute['content']['url'] ) )
+                    {
+                        $content = $attribute['content']['url'];
+                    }
+                    else
+                    {
+                        $content = $attribute['content']; //@todo
+                    }
+                    $properties[$identifier] = $content;
+                }
+            }
+        }
+        return new Feature( $this->metadata->id, $geometry, new Properties( $properties ) );
     }
 
     public function canRead( eZUser $user = null )

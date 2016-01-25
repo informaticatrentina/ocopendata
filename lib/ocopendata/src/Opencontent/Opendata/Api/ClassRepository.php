@@ -138,6 +138,44 @@ class ClassRepository
         return $attributes;
     }
 
+    /**
+     * @return array
+     */
+    public function listAttributesGroupedByDatatype()
+    {
+        $attributes = array();
+        $classList = self::classIdentifiersHash();
+        foreach ( $classList as $identifier => $id )
+        {
+            if ( ContentClass::isSearchable( $identifier ) )
+            {
+                $class = $this->internalLoadClass( $identifier );
+                if ( $class instanceof ContentClass )
+                {
+                    foreach ( $class->fields as $field )
+                    {
+                        if ( $field['isSearchable'] )
+                        {
+                            if ( !isset( $attributes[$field['dataType']] ) )
+                            {
+                                $attributes[$field['dataType']] = array();
+                            }
+
+                            if ( !array_key_exists( $field['identifier'], $attributes[$field['dataType']] ) )
+                            {
+                                $attributes[$field['dataType']][$field['identifier']] = array();
+                            }
+
+                            $attributes[$field['dataType']][$field['identifier']][] = $class->identifier;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $attributes;
+    }
+
     protected static function getCacheManager( $identifier )
     {
         $cacheFile = $identifier . '.cache';
