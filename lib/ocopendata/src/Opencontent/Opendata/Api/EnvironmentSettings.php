@@ -4,6 +4,9 @@ namespace Opencontent\Opendata\Api;
 
 use Opencontent\Opendata\Api\Exception\OutOfRangeException;
 use Opencontent\Opendata\Api\Values\Content;
+use Opencontent\Opendata\Api\Values\ContentClass;
+use Opencontent\Opendata\Api\Values\SearchResults;
+
 
 class EnvironmentSettings
 {
@@ -24,6 +27,10 @@ class EnvironmentSettings
     protected $debug;
 
     protected $maxSearchLimit = 100;
+
+    protected $defaultSearchLimit = 100;
+
+    protected $requestBaseUri;
 
     public function __construct( array $properties = array() )
     {
@@ -66,8 +73,51 @@ class EnvironmentSettings
         return new static( $array );
     }
 
+    /**
+     * @param Content $content
+     *
+     * @return Content
+     */
     public function filterContent( Content $content )
     {
         return $content;
     }
+
+    /**
+     * @param SearchResults $searchResults
+     *
+     * @return SearchResults
+     */
+    public function filterSearchResult( SearchResults $searchResults )
+    {
+        if ( $searchResults->nextPageQuery != null )
+        {
+            $searchResults->nextPageQuery = $this->requestBaseUri . 'search/' . urlencode( $searchResults->nextPageQuery );
+        }
+        return $searchResults;
+    }
+
+    /**
+     * @param \ArrayObject $query
+     *
+     * @return \ArrayObject
+     */
+    public function filterQuery( \ArrayObject $query )
+    {
+        if ( isset( $query['SearchLimit'] ) )
+        {
+            if ( $query['SearchLimit'] > $this->maxSearchLimit )
+                $query['SearchLimit'] = $this->maxSearchLimit;
+        }else
+        {
+            $query['SearchLimit'] = $this->defaultSearchLimit;
+        }
+
+        if ( !isset( $query['SearchOffset'] ) )
+        {
+            $query['SearchOffset'] = 0;
+        }
+        return $query;
+    }
+
 }

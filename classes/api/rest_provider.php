@@ -255,4 +255,14 @@ class OCOpenDataProvider extends ezpRestApiProvider
         return $routes;
     }
 
+    /**
+     * Returns associated with provider view controller
+     *
+     * @return ezpRestViewControllerInterface
+     */
+    public function getViewController()
+    {
+        return new OCOpenDataViewController();
+    }
+
 }

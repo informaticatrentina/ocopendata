@@ -34,28 +34,13 @@ class ContentSearch
         $queryObject = $builder->instanceQuery( $query );
         $ezFindQuery = $queryObject->convert();
 
-        if ( $ezFindQuery instanceof \ArrayObject )
-        {
-            $ezFindQuery = $ezFindQuery->getArrayCopy();
-        }
-        else
+        if ( !$ezFindQuery instanceof \ArrayObject )
         {
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
 
-        $limit = 10; //default ezfind
-        if ( isset( $ezFindQuery['SearchLimit'] ) )
-        {
-            if ( $ezFindQuery['SearchLimit'] > $this->currentEnvironmentSettings->__get( 'maxSearchLimit' ) )
-                $ezFindQuery['SearchLimit'] = $this->currentEnvironmentSettings->__get( 'maxSearchLimit' );
-
-            $limit = $ezFindQuery['SearchLimit'];
-        }
-        $offset = 0;
-        if ( isset( $ezFindQuery['SearchOffset'] ) )
-        {
-            $offset = $ezFindQuery['SearchOffset'];
-        }
+        $ezFindQuery = $this->currentEnvironmentSettings->filterQuery( $ezFindQuery );
+        $ezFindQuery = $ezFindQuery->getArrayCopy();
 
         $ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
@@ -102,10 +87,10 @@ class ContentSearch
 
         $searchResults->totalCount = (int)$rawResults['SearchCount'];
 
-        if ( ( $limit + $offset ) < $searchResults->totalCount )
+        if ( ( $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] ) < $searchResults->totalCount )
         {
             $nextPageQuery = clone $queryObject;
-            $nextPageQuery->setParameter( 'offset', $limit + $offset );
+            $nextPageQuery->setParameter( 'offset', $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] );
             $searchResults->nextPageQuery = (string)$nextPageQuery;
         }
 
@@ -147,6 +132,6 @@ class ContentSearch
             $searchResults->searchHits[] = $content->jsonSerialize();
         }
 
-        return $searchResults;
+        return $this->currentEnvironmentSettings->filterSearchResult( $searchResults );
     }
 }

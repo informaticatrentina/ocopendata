@@ -53,6 +53,8 @@ class OCOpenDataController2 extends ezpRestContentController
     {
         $environmentIdentifier = $this->request->variables['EnvironmentSettigs'];
         $this->currentEnvironment = EnvironmentLoader::loadPreset( $environmentIdentifier );
+        $this->currentEnvironment->__set( 'requestBaseUri', $this->getBaseUri() );
+        $this->request->variables['EnvironmentSettigs'] = $this->currentEnvironment;
         $this->contentRepository->setEnvironment( $this->currentEnvironment );
         $this->contentBrowser->setEnvironment( $this->currentEnvironment );
         $this->contentSearch->setEnvironment( $this->currentEnvironment );
@@ -118,21 +120,7 @@ class OCOpenDataController2 extends ezpRestContentController
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
             $search = $this->contentSearch->search( $this->request->variables['Query'] );
-
-            $hostUri = $this->request->getHostURI();
-            $apiName = ezpRestPrefixFilterInterface::getApiProviderName();
-            $apiPrefix = eZINI::instance( 'rest.ini' )->variable( 'System', 'ApiPrefix');
-
-            $nextPageQuery = null;
-            if ( $search->nextPageQuery != null )
-            {
-                $nextPageQuery = $this->getBaseUri() . 'search/' . urlencode( $search->nextPageQuery );
-            }
-
-            $result->variables['query'] = $search->query;
-            $result->variables['nextPage'] = $nextPageQuery;
-            $result->variables['totalCount'] = $search->totalCount;
-            $result->variables['searchHits'] = $search->searchHits;
+            $result->variables = (array) $search;
         }
         catch ( Exception $e )
         {
@@ -200,8 +188,7 @@ class OCOpenDataController2 extends ezpRestContentController
             $content = $this->contentRepository->read(
                 $this->request->variables['ContentObjectIdentifier']
             );
-            $result->variables['metadata'] = $content->metadata->jsonSerialize(); // compat with php version<5.4
-            $result->variables['data'] = $content->data->jsonSerialize(); // compat with php version<5.4
+            $result->variables = (array) $content;
         }
         catch ( Exception $e )
         {
@@ -248,7 +235,7 @@ class OCOpenDataController2 extends ezpRestContentController
         try
         {
             $result = new ezpRestMvcResult();
-            $result->variables['class'] = $this->classRepository->load(
+            $result->variables = (array) $this->classRepository->load(
                 $this->request->variables['Identifier']
             );
         }

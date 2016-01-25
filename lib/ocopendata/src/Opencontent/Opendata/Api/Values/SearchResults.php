@@ -11,9 +11,9 @@ class SearchResults
     public $query;
 
     /**
-     * @var array
+     * @var string
      */
-    public $ezFindQuery;
+    public $nextPageQuery;
 
     /**
      * @var int
@@ -25,9 +25,5 @@ class SearchResults
      */
     public $searchHits = array();
 
-    /**
-     * @var string
-     */
-    public $nextPageQuery;
 
 }

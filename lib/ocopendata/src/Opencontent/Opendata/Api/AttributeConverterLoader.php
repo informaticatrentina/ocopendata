@@ -66,6 +66,9 @@ class AttributeConverterLoader
     public static function attributeConverters()
     {
         $converters = array(
+            'ezkeyword' => '\Opencontent\Opendata\Api\AttributeConverter\Keywords',
+            'eztags' => '\Opencontent\Opendata\Api\AttributeConverter\Tags',
+            'ezgmaplocation' => '\Opencontent\Opendata\Api\AttributeConverter\Geo',
             'ezdate' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
             'ezdatetime' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
             'eztime' => '\Opencontent\Opendata\Api\AttributeConverter\Date',
