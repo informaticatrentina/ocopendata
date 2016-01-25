@@ -55,23 +55,26 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                      || $value['datatype'] == 'ezobjectrelation' )
                 {
                     $valueContent = array();
-                    foreach( $value['content'] as $item )
+                    if ( is_array( $value['content'] ) )
                     {
-
-                        $parentNodes = array();
-                        foreach( $item->parentNodes as $parentNode )
+                        foreach ( $value['content'] as $item )
                         {
-                            $parentNodes[] = $parentNode['id'];
+
+                            $parentNodes = array();
+                            foreach ( $item->parentNodes as $parentNode )
+                            {
+                                $parentNodes[] = $parentNode['id'];
+                            }
+                            $subContent = array(
+                                'id' => $item->id,
+                                'remoteId' => $item->remoteId,
+                                'classIdentifier' => $item->classIdentifier,
+                                'languages' => $item->languages,
+                                'name' => $item->name,
+                                'link' => $this->requestBaseUri . 'read/' . $item->id
+                            );
+                            $valueContent[] = $subContent;
                         }
-                        $subContent = array(
-                            'id' => $item->id,
-                            'remoteId' => $item->remoteId,
-                            'classIdentifier' => $item->classIdentifier,
-                            'languages' => $item->languages,
-                            'name' => $item->name,
-                            'link' => $this->requestBaseUri . 'read/' . $item->id
-                        );
-                        $valueContent[] = $subContent;
                     }
                 }
                 else
