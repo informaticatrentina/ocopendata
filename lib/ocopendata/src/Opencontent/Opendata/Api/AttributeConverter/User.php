@@ -7,6 +7,7 @@ use eZContentClassAttribute;
 use eZUser;
 use eZMail;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
+use Opencontent\Opendata\Api\PublicationProcess;
 use Opencontent\Opendata\Api\Values\ContentData;
 
 class User extends Base
@@ -28,7 +29,7 @@ class User extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         return $data['login'] . '|' . $data['email'];
     }

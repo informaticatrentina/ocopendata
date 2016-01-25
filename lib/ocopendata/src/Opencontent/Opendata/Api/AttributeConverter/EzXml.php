@@ -4,6 +4,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
+use Opencontent\Opendata\Api\PublicationProcess;
 use SQLIContentUtils;
 
 class EzXml extends Base
@@ -18,7 +19,7 @@ class EzXml extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         return SQLIContentUtils::getRichContent( $data );
     }

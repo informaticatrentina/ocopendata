@@ -4,6 +4,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
+use Opencontent\Opendata\Api\PublicationProcess;
 
 class Date extends Base
 {
@@ -15,7 +16,7 @@ class Date extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         return date( "U", strtotime( $data ) );
     }

@@ -28,6 +28,12 @@ class ContentRepository
         $this->currentEnvironmentSettings = $environmentSettings;
     }
 
+    /**
+     * @param $content
+     *
+     * @return array
+     * @throws ForbiddenException
+     */
     public function read( $content )
     {
         if ( !$content instanceof Content )

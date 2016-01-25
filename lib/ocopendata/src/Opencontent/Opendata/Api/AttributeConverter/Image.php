@@ -6,6 +6,7 @@ use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use eZURI;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
+use Opencontent\Opendata\Api\PublicationProcess;
 
 class Image extends File
 {
@@ -31,7 +32,7 @@ class Image extends File
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         $path = $this->getTemporaryFilePath( $data['filename'], $data['url'], $data['image'] );
         if ( isset( $data['alt'] ) )

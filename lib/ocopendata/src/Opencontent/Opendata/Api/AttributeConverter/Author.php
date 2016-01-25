@@ -6,6 +6,7 @@ use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use eZMail;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
+use Opencontent\Opendata\Api\PublicationProcess;
 
 
 class Author extends Base
@@ -25,7 +26,7 @@ class Author extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         $stringItems = array();
         foreach( $data as $author )

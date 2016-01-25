@@ -10,6 +10,7 @@ use eZHTTPTool;
 use eZURI;
 use eZDir;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
+use Opencontent\Opendata\Api\PublicationProcess;
 
 class File extends Base
 {
@@ -23,27 +24,10 @@ class File extends Base
             /** @var \eZBinaryFile $file */
             $file = $attribute->content();
 
-            $provider = new \OCOpenDataProvider();
-            /** @var \ezcMvcReversibleRoute[] $routes */
-            $routes = $provider->getRoutes();
-//            if ( isset( $routes['openData2download'] ) )
-//            {
-//                $url = $routes['openData2download']->generateUrl(
-//                    array(
-//                        'ObjectId' => $attribute->attribute( 'contentobject_id' ),
-//                        'Id' => $attribute->attribute( 'id' ),
-//                        'Version' => $attribute->attribute( 'version' ),
-//                        'Filename' => $file->attribute( 'original_filename' )
-//                    )
-//                );
-//            }
-//            else
-//            {
-                $url = 'content/download/' . $attribute->attribute( 'contentobject_id' )
-                       . '/' . $attribute->attribute( 'id' )
-                       . '/' . $attribute->attribute( 'version' )
-                       . '/' . $file->attribute( 'original_filename' );
-//            }
+            $url = 'content/download/' . $attribute->attribute( 'contentobject_id' )
+                   . '/' . $attribute->attribute( 'id' )
+                   . '/' . $attribute->attribute( 'version' )
+                   . '/' . $file->attribute( 'original_filename' );
             eZURI::transformURI( $url, false, 'full' );
 
             $content['content'] = array(
@@ -55,7 +39,7 @@ class File extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         return $this->getTemporaryFilePath( $data['filename'], $data['url'], $data['file'] );
     }

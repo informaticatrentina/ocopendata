@@ -4,6 +4,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
+use Opencontent\Opendata\Api\PublicationProcess;
 
 class Boolean extends Base
 {
@@ -14,7 +15,7 @@ class Boolean extends Base
         return $content;
     }
 
-    public function set( $data )
+    public function set( $data, PublicationProcess $process )
     {
         return (int) $data;
     }
