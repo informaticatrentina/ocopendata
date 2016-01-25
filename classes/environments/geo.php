@@ -19,20 +19,6 @@ class GeoEnvironmentSettings extends EnvironmentSettings
         return $content->geoJsonSerialize( $language );
     }
 
-    protected function filterAttributes( Content $content )
-    {
-        $flatData = array();
-        foreach( $content->data as $language => $data )
-        {
-            foreach( $data as $identifier => $attribute )
-            {
-                $flatData[$language][$identifier] = $attribute;
-            }
-        }
-        $content->data = new ContentData( $flatData );
-        return $content;
-    }
-
     public function filterSearchResult( \Opencontent\Opendata\Api\Values\SearchResults $searchResults )
     {
         return $searchResults->geoJsonSerialize();
@@ -47,10 +33,6 @@ class GeoEnvironmentSettings extends EnvironmentSettings
             $filters = array();
             foreach ( $attributes['ezgmaplocation'] as $identifier => $classes )
             {
-//                $filters[] = array(
-//                    "subattr_{$identifier}___longitude____f:[* TO *]",
-//                    "!subattr_{$identifier}___longitude____f:0"
-//                );
                 $filters[] = "subattr_{$identifier}___longitude____f:[* TO *]";
             }
             if ( !isset( $query['Filter'] ) )
