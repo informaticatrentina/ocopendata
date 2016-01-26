@@ -107,7 +107,7 @@
                 }
             });
             $.get(analyzer, {query:searchQuery}, function(data){
-                var content = '';
+                var content = '<h4>Analisi della query</h4>';
                 var writeFilter = function(item){
                     content += '<span class="field label label-success" data-toggle="tooltip" data-placement="top" title="Campo">'+item.field+'</span> ';
                     content += '<span class="operator label label-default" data-toggle="tooltip" data-placement="top" title="Operatore">'+item.operator+'</span> ';
@@ -141,7 +141,7 @@
         var loadSearchResults = function(data){
             $icon.removeClass('fa-cog fa-spin');
             var results = data.searchHits;
-            //$string.html( '<pre>'+data.query+'</pre>' );
+            $string.html( '<h4>Query eseguita</h4><pre>'+data.query+'</pre>' );
             var content = '<h2>Trovati '+data.totalCount+ ' risultati</h2>';
             if ( results.length > 0 ) {
                 content += '<h3>Visualizzati ' + results.length + ' risultati ';
