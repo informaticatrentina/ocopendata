@@ -21,9 +21,9 @@
 
 <div class="container">
 
-    <h1>OCQL Console
+    <h2>OCQL Console
         <small>beta version</small>
-    </h1>
+    </h2>
 
     <form id="search" action="{'opendata/console'|ezurl(no)}" method="GET">
         <div class="row">
@@ -48,18 +48,45 @@
 
     <div id="query-string" style="margin: 20px 0"></div>
     <div id="query-analysis" style="margin: 20px 0"></div>
-    <div id="results" style="margin: 20px 0"></div>
+    <div id="search-results" style="margin: 20px 0"></div>
+
+    <hr />
+    <h2>Classi</h2>
+    <form id="class" action="{'opendata/console'|ezurl(no)}" method="GET">
+        <div class="row">
+            <div class="col-xs-11">
+                <select class="form-control input-lg" name="class">
+                    {foreach $classes as $class}
+                        <option value="{$class|wash()}">{$class|wash()}</option>
+                    {/foreach}
+                </select>
+
+            </div>
+            <div class="col-xs-1">
+                <button class="btn btn-success btn-lg" type="submit">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div id="class-result" style="margin: 20px 0"></div>
+
     <script>
     $(function() {ldelim}
         var analyzer = "{'opendata/analyzer'|ezurl(no,full)}/";
         var endpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
+        var classEndpoint = "{'api/opendata/v2/classes'|ezurl(no,full)}/";
         var availableTokens = [{foreach $tokens as $token}'{$token}'{delimiter},{/delimiter}{/foreach}];
         {literal}
-        var $container = $('#results');
+        var $container = $('#search-results');
         var $analysis = $('#query-analysis');
         var $string = $('#query-string');
         var $form = $('form#search');
+        var $classForm = $('form#class');
         var $icon = $form.find('button > i');
+        var $classFormIcon = $form.find('button > i');
+        var $classContainer = $('#class-result');
         var search = function( url ){
             var searchQuery = url.replace(endpoint,'');
             $icon.addClass('fa-cog fa-spin');
@@ -70,13 +97,13 @@
                 dataType: "json",
                 success: function(data) {
                     if( 'error_message' in data )
-                        loadError(data);
+                        loadError(data,$container);
                     else
                         loadSearchResults(data);
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error);
+                    loadError(error,$container);
                 }
             });
             $.get(analyzer, {query:searchQuery}, function(data){
@@ -105,10 +132,11 @@
                 $analysis.html( content );
             });
         };
-        var loadError = function(data){
+        var loadError = function(data,container){
             $icon.removeClass('fa-cog fa-spin');
+            $classFormIcon.removeClass('fa-cog fa-spin');
             var content = '<div class="alert alert-warning">'+data.error_message+'</div>';
-            $container.html(content);
+            container.html(content);
         };
         var loadSearchResults = function(data){
             $icon.removeClass('fa-cog fa-spin');
@@ -142,6 +170,28 @@
             $container.html(content);
             $('[data-toggle="tooltip"]').tooltip();
         };
+        var loadClass = function(data){
+            var content = '<table class="table table-striped">';
+            content += '<tr>';
+            content += '<th>Identificatore</th>';
+            content += '<th>Nome</th>';
+            content += '<th>Descrizione</th>';
+            content += '<th>Datatype</th>';
+            content += '</tr>';
+            $.each(data.fields, function(){
+                if ( this.isSearchable ) {
+                    content += '<tr>';
+                    content += '<td>' + this.identifier + '</td>';
+                    content += '<td>' + $.map(this.name, function(val,index) {return val;}).join(", ") + '</td>';
+                    content += '<td>' + $.map(this.description, function(val,index) {return val;}).join(", ") + '</td>';
+                    content += '<td>' + this.dataType + '</td>';
+                    content += '</tr>';
+                }
+            });
+            content += '</table>';
+            $classContainer.html(content);
+            $classFormIcon.removeClass('fa-cog fa-spin');
+        };
         $(document).on( 'click', 'a.search', function(e){
             search($(e.currentTarget).data('query'));
             e.preventDefault();
@@ -149,6 +199,30 @@
         $form.submit( function(e){
             var query = $form.find('input').val();
             search(endpoint+query);
+            e.preventDefault();
+        });
+        var searchClass = function( url ) {
+            $classFormIcon.addClass('fa-cog fa-spin');
+            $.ajax({
+                type: "GET",
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    if ('error_message' in data)
+                        loadError(data,$classContainer);
+                    else
+                        loadClass(data);
+                },
+                error: function (data) {
+                    var error = data.responseJSON;
+                    loadError(error,$classContainer);
+                }
+            });
+        };
+        $classForm.submit( function(e){
+            var identifier = $classForm.find('select option:selected').val();
+            searchClass(classEndpoint+identifier);
             e.preventDefault();
         });
 

@@ -7,6 +7,9 @@ $http = eZHTTPTool::instance();
 $query = null;
 $error = null;
 $tokens = array();
+$classRepository = new \Opencontent\Opendata\Api\ClassRepository();
+$classes = $classRepository->listClassIdentifiers();
+sort($classes);
 
 if ( $http->hasGetVariable( 'query' ) )
 {
@@ -33,6 +36,7 @@ catch ( Exception $e )
 $tpl->setVariable( 'error', $error );
 $tpl->setVariable( 'query', $query );
 $tpl->setVariable( 'tokens', $tokens );
+$tpl->setVariable( 'classes', $classes );
 
 echo $tpl->fetch( 'design:opendata/console.tpl' );
 eZDisplayDebug();
