@@ -34,7 +34,7 @@ $ViewList['console'] = array(
     'unordered_params' => array()
 );
 $ViewList['analyzer'] = array(
-    'functions' => array( 'console' ),
+    'functions' => array( 'analyzer' ),
     'script' => 'analyzer.php',
     'params' => array(),
     'unordered_params' => array()
@@ -43,6 +43,7 @@ $ViewList['analyzer'] = array(
 $FunctionList = array();
 $FunctionList['api'] = array();
 $FunctionList['console'] = array();
+$FunctionList['analyzer'] = array();
 $FunctionList['push'] = array();
 $FunctionList['view'] = array();
 $FunctionList['import'] = array();
