@@ -91,7 +91,7 @@ class ContentSearch
         if ( ( $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] ) < $searchResults->totalCount )
         {
             $nextPageQuery = clone $queryObject;
-            $nextPageQuery->setParameter( 'offset', $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] );
+            $nextPageQuery->setParameter( 'offset', ( $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] ) );
             $searchResults->nextPageQuery = (string)$nextPageQuery;
         }
 

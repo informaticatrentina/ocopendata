@@ -61,22 +61,28 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                     {
                         foreach ( $value['content'] as $item )
                         {
-
-                            $parentNodes = array();
-                            foreach ( $item->parentNodes as $parentNode )
+                            if( is_object( $item ) )
                             {
-                                $parentNodes[] = $parentNode['id'];
+                                $parentNodes = array();
+                                foreach ( $item->parentNodes as $parentNode )
+                                {
+                                    $parentNodes[] = $parentNode['id'];
+                                }
+                                $subContent = array(
+                                    'id' => $item->id,
+                                    'remoteId' => $item->remoteId,
+                                    'classIdentifier' => $item->classIdentifier,
+                                    'class' => str_replace(
+                                                   '/content',
+                                                   '/classes',
+                                                   $this->requestBaseUri
+                                               ) . $item->classIdentifier,
+                                    'languages' => $item->languages,
+                                    'name' => $item->name,
+                                    'link' => $this->requestBaseUri . 'read/' . $item->id
+                                );
+                                $valueContent[] = $subContent;
                             }
-                            $subContent = array(
-                                'id' => $item->id,
-                                'remoteId' => $item->remoteId,
-                                'classIdentifier' => $item->classIdentifier,
-                                'class' => str_replace( '/content', '/classes', $this->requestBaseUri ) . $item->classIdentifier,
-                                'languages' => $item->languages,
-                                'name' => $item->name,
-                                'link' => $this->requestBaseUri . 'read/' . $item->id
-                            );
-                            $valueContent[] = $subContent;
                         }
                     }
                 }
