@@ -7,7 +7,7 @@ $data = null;
 
 if ( $http->hasGetVariable( 'query' ) )
 {
-    $query = $http->getVariable( 'query' );
+    $query = urldecode( $http->getVariable( 'query' ) );
 
     try
     {
