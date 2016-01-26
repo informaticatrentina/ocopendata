@@ -7,6 +7,7 @@ use Opencontent\Opendata\Api\Values\Content;
 use eZDir;
 use eZSys;
 use eZClusterFileHandler;
+use eZClusterFileFailure;
 use eZDB;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
 
@@ -21,13 +22,13 @@ class FileSystem extends Database
      */
     public function loadContent( $contentObjectIdentifier )
     {
-        $contentObjectId = self::findContent( $contentObjectIdentifier );
-        return $this->getCacheManager( $contentObjectId )->processCache(
+        $result = self::findContent( $contentObjectIdentifier );
+        return $this->getCacheManager( $result['id'] )->processCache(
             array( __CLASS__, 'retrieveCache' ),
             array( __CLASS__, 'generateCache' ),
             null,
             null,
-            $contentObjectId
+            array( $result['id'], $result['modified'] )
         );
     }
     
@@ -40,7 +41,7 @@ class FileSystem extends Database
     protected static function findContent( $contentObjectIdentifier )
     {
         $contentObjectIdentifierAsInt = (int) $contentObjectIdentifier;
-        $fetchSQLString = "SELECT ezcontentobject.id
+        $fetchSQLString = "SELECT ezcontentobject.id, ezcontentobject.modified
                            FROM
                                ezcontentobject
                            WHERE
@@ -49,7 +50,7 @@ class FileSystem extends Database
         $resArray = eZDB::instance()->arrayQuery( $fetchSQLString );
         if ( count( $resArray ) == 1 && $resArray !== false )
         {
-            return $resArray[0]['id'];
+            return $resArray[0];
         }
         else
         {
@@ -70,15 +71,20 @@ class FileSystem extends Database
         $this->getCacheManager( $contentObjectId )->purge();
     }
 
-    public static function retrieveCache( $file, $mtime, $contentObjectId )
+    public static function retrieveCache( $file, $mtime, $extraData )
     {
-        $content = include( $file );
-        return $content;
+        if ( $mtime >= $extraData[1] )
+        {
+            $content = include( $file );
+            return $content;
+        }
+        else
+            return new eZClusterFileFailure( 1, "Modified timestamp greater then fime mtime" );
     }
 
-    public static function generateCache( $file, $contentObjectId )
+    public static function generateCache( $file, $extraData )
     {
-        $contentObject = parent::findContent( $contentObjectId );
+        $contentObject = parent::findContent( (int)$extraData[0] );
         $content = Content::createFromEzContentObject( $contentObject );;
         return array( 'content'  => $content,
                       'scope'    => 'ocopendata-cache',
