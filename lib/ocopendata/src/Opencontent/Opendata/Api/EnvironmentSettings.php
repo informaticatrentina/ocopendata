@@ -26,9 +26,9 @@ class EnvironmentSettings
 
     protected $debug;
 
-    protected $maxSearchLimit = 300;
+    protected $maxSearchLimit = 100;
 
-    protected $defaultSearchLimit = 100;
+    protected $defaultSearchLimit = 30;
 
     protected $requestBaseUri;
 
