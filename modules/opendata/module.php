@@ -27,10 +27,17 @@ $ViewList['api'] = array(
     'params' => array( 'Environment', 'Action', 'Param' ),
     'unordered_params' => array()
 );
+$ViewList['console'] = array(
+    'functions' => array( 'console' ),
+    'script' => 'console.php',
+    'params' => array( 'Environment', 'Action', 'Param' ),
+    'unordered_params' => array()
+);
 
 
 $FunctionList = array();
 $FunctionList['api'] = array();
+$FunctionList['console'] = array();
 $FunctionList['push'] = array();
 $FunctionList['view'] = array();
 $FunctionList['import'] = array();

@@ -11,7 +11,7 @@ $Environment = $Params['Environment'];
 $Action = $Params['Action'];
 $Param = $Params['Param'];
 
-$Debug = eZINI::instance()->variable( 'DebugSettings', 'DebugOutput' ) == 'enabled';
+$Debug = isset( $_GET['debug'] );
 
 try
 {
@@ -28,11 +28,11 @@ try
 
     if ( $Action == 'read' )
     {
-        $data = $contentRepository->read( $Param )->jsonSerialize();
+        $data = (array)$contentRepository->read( $Param );
     }
     elseif ( $Action == 'search' )
     {
-        $data = $contentSearch->search( $Param );
+        $data = (array)$contentSearch->search( $Param );
     }
 }
 catch( Exception $e )
