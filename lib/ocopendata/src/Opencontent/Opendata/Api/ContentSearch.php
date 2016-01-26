@@ -42,7 +42,7 @@ class ContentSearch
         $ezFindQuery = $this->currentEnvironmentSettings->filterQuery( $ezFindQuery );
         $ezFindQuery = $ezFindQuery->getArrayCopy();
 
-        $ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
+        //$ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
         $ezFindQuery['FieldsToReturn'] = array( SolrStorage::getSolrIdentifier() );
 
