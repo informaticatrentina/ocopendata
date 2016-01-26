@@ -153,7 +153,7 @@
                 $.each(results, function(){
                     if( this.metadata.classIdentifier != null ) {
                         content += '<li class="list-group-item">';
-                        content += '<a href="/content/view/full/'+this.metadata.parentNodes[0]+'" target="_blank"><strong>';
+                        content += '<a href="/content/view/full/'+this.metadata.mainNodeId+'" target="_blank"><strong>';
                         content += this.metadata.name['ita-IT'];
                         content += '</strong></a>';
                         content += ' ['+this.metadata.classIdentifier+']';
