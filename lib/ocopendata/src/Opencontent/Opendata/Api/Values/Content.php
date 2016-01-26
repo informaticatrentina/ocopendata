@@ -156,22 +156,22 @@ class Content
             }
             else
             {
-                if ( $attribute['content'] && !isset( $properties[$identifier] ))
-                {
-                    if ( is_scalar( $attribute['content'] ) )
-                    {
-                        $content = $attribute['content'];
-                    }
-                    elseif ( is_array( $attribute['content'] ) && isset( $attribute['content']['url'] ) )
-                    {
-                        $content = $attribute['content']['url'];
-                    }
-                    else
-                    {
-                        $content = $attribute['content']; //@todo
-                    }
-                    $properties[$identifier] = $content;
-                }
+//                if ( $attribute['content'] && !isset( $properties[$identifier] ))
+//                {
+//                    if ( is_scalar( $attribute['content'] ) )
+//                    {
+//                        $content = $attribute['content'];
+//                    }
+//                    elseif ( is_array( $attribute['content'] ) && isset( $attribute['content']['url'] ) )
+//                    {
+//                        $content = $attribute['content']['url'];
+//                    }
+//                    else
+//                    {
+//                        $content = $attribute['content']; //@todo
+//                    }
+//                    $properties[$identifier] = $content;
+//                }
             }
         }
         return new Feature( $this->metadata->id, $geometry, new Properties( $properties ) );
