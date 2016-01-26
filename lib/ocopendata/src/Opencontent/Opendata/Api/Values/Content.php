@@ -137,6 +137,7 @@ class Content
             $name = array_shift( $nameArray );
         }
 
+        $properties['id'] = $this->metadata->id;
         $properties['name'] = $name;
         $properties['class_identifier'] = $this->metadata->classIdentifier;
 
