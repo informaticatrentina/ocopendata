@@ -85,7 +85,7 @@
         var $form = $('form#search');
         var $classForm = $('form#class');
         var $icon = $form.find('button > i');
-        var $classFormIcon = $form.find('button > i');
+        var $classFormIcon = $classForm.find('button > i');
         var $classContainer = $('#class-result');
         var search = function( url ){
             var searchQuery = url.replace(endpoint,'');
