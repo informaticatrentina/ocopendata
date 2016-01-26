@@ -146,8 +146,8 @@ class Content
             {
                 $geometry->type = 'Point';
                 $geometry->coordinates = array(
-                    isset( $attribute['content']['latitude'] ) ? $attribute['content']['latitude'] : 0,
-                    isset( $attribute['content']['longitude'] ) ? $attribute['content']['longitude'] : 0
+                    isset( $attribute['content']['longitude'] ) ? $attribute['content']['longitude'] : 0,
+                    isset( $attribute['content']['latitude'] ) ? $attribute['content']['latitude'] : 0
                 );
                 if ( !empty( $attribute['content']['address'] ) )
                 {
