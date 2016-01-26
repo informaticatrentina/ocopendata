@@ -30,10 +30,15 @@ $ViewList['api'] = array(
 $ViewList['console'] = array(
     'functions' => array( 'console' ),
     'script' => 'console.php',
-    'params' => array( 'Environment', 'Action', 'Param' ),
+    'params' => array(),
     'unordered_params' => array()
 );
-
+$ViewList['analyzer'] = array(
+    'functions' => array( 'console' ),
+    'script' => 'analyzer.php',
+    'params' => array(),
+    'unordered_params' => array()
+);
 
 $FunctionList = array();
 $FunctionList['api'] = array();

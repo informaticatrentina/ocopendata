@@ -21,7 +21,7 @@ try
     $metaFields = $factory->metaFields;
     $operators = $factory->operators;
     $parameters = $factory->parameters;
-    $tokens = array_merge( $fields, $parameters, $operators );
+    $tokens = array_unique( array_merge( $fields, $parameters, $operators ) );
     sort( $tokens );
 
 }

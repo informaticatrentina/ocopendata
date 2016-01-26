@@ -13,6 +13,7 @@ use Exception;
 use eZSolr;
 use ezfSearchResultInfo;
 use ezfSolrDocumentFieldBase;
+use ArrayObject;
 
 class ContentSearch
 {
@@ -34,7 +35,7 @@ class ContentSearch
         $queryObject = $builder->instanceQuery( $query );
         $ezFindQuery = $queryObject->convert();
 
-        if ( !$ezFindQuery instanceof \ArrayObject )
+        if ( !$ezFindQuery instanceof ArrayObject )
         {
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
