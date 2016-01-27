@@ -214,7 +214,7 @@ class SentenceConverter
         {
             if ( is_array( $value ) )
             {
-                $data = array( 'and' );
+                $data = count( $value ) > 1 ? array( 'and' ) : array();
                 foreach ( $value as $item )
                 {
                     $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
@@ -245,7 +245,7 @@ class SentenceConverter
         {
             if ( is_array( $value ) )
             {
-                $data = array( 'or' );
+                $data = count( $value ) > 1 ? array( 'or' ) : array();
                 foreach ( $value as $item )
                 {
                     $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
