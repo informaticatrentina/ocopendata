@@ -301,7 +301,8 @@
             $('[data-toggle="tooltip"]').tooltip();
         };
         $(document).on( 'click', 'a.search', function(e){
-            search($(e.currentTarget).data('query'));
+            $searchContainers.results.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
+            contentSearch($(e.currentTarget).data('query'));
             e.preventDefault();
         });
         $forms.search.submit( function(e){
