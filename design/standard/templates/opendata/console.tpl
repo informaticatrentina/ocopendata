@@ -88,9 +88,9 @@
         var $classFormIcon = $classForm.find('button > i');
         var $classContainer = $('#class-result');
         var search = function( url ){
-            $string.html();
-            $container.html();
-            $analysis.html();
+            $string.html('');
+            $container.html('');
+            $analysis.html('');
             var searchQuery = url.replace(endpoint,'');
             $icon.addClass('fa-cog fa-spin');
             $.ajax({
