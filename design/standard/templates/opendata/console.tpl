@@ -178,7 +178,7 @@
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error);
+                    loadError(error.error_message);
                 }
             });
         };
@@ -235,7 +235,7 @@
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error);
+                    loadError(error.error_message);
                 }
             });
         };
