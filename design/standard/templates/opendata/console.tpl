@@ -207,7 +207,7 @@
                             error: function(){loadError('Problema con validatore geojson');}
                         });
 
-                        var content = '<a href="'+geoUrl+'">'+geoUrl+'</a>';
+                        var content = '<a href="'+geoUrl+'"><strong>API /geo</strong>: '+geoUrl+'</a>';
                         if ( response.features.length > 0 ) {
                             content += '<h3>Visualizzati ' + response.features.length + ' marker</h3><div id="map" style="width: 100%; height: 400px"></div>'
                             $searchContainers.geoResults.html(content);
@@ -270,7 +270,7 @@
             $(icon).removeClass('fa-cog fa-spin');
 
             var results = data.searchHits;
-            var content = '<a href="'+url+'">'+url+'</a>';
+            var content = '<a href="'+url+'"><strong>API /content</strong>: '+url+'</a>';
             if ( results.length > 0 ) {
                 content += '<h3>Visualizzati ' + results.length + ' su ' +data.totalCount+ ' risultati ';
                 if ( data.nextPageQuery !== null )
