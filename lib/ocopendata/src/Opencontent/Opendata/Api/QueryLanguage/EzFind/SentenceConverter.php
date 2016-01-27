@@ -137,13 +137,13 @@ class SentenceConverter
             $data = array();
             foreach( $value as $item )
             {
-                $item = str_replace( "\'", "''", $item );
+                $item = str_replace( "\'", "'", $item );
                 $data[] = trim( $item, "'" );
             }
         }
         else
         {
-            $value = str_replace( "\'", "''", $value );
+            $value = str_replace( "\'", "'", $value );
             $data[] = trim( $value, "'" );
         }
         return $data;
