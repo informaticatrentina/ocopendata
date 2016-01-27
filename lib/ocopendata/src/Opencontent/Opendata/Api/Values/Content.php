@@ -140,6 +140,7 @@ class Content
         $properties['id'] = $this->metadata->id;
         $properties['name'] = $name;
         $properties['class_identifier'] = $this->metadata->classIdentifier;
+        $properties['mainNodeId'] = $this->metadata->mainNodeId;
 
         foreach ( $data as $identifier => $attribute )
         {

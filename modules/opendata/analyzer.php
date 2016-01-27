@@ -27,7 +27,7 @@ if ( $http->hasGetVariable( 'query' ) )
     }
     catch ( Exception $e )
     {
-        $data = array( 'error' => $e->getMessage() );
+        $data = array( 'error_message' => $e->getMessage() );
     }
 }
 header('Content-Type: application/json');

@@ -7,13 +7,18 @@
 
     <title>OCQL Console</title>
 
-    <!-- Bootstrap core CSS -->
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <script src="http://code.jquery.com/jquery-1.12.0.min.js" type="application/javascript"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <link rel="stylesheet" href="/extension/ocopendata/design/standard/stylesheets/MarkerCluster.css">
+    <link rel="stylesheet" href="/extension/ocopendata/design/standard/stylesheets/MarkerCluster.Default.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
     <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script src="https://raw.githubusercontent.com/Opencontent/Leaflet.markercluster/leaflet-0.7/dist/leaflet.markercluster.js"></script>
 
 </head>
 
@@ -41,16 +46,22 @@
         </div>
     </form>
 
-    {if $error}
-        <div class="alert alert-warning" role="alert">{$error|wash()}</div>
-    {/if}
 
-
-    <div id="query-string" style="margin: 20px 0"></div>
+    <div id='errors'role="alert">{if $error}{$error|wash()}{/if}</div>
     <div id="query-analysis" style="margin: 20px 0"></div>
-    <div id="search-results" style="margin: 20px 0"></div>
+    <div id="query-string" style="margin: 20px 0"></div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div id="search-results" style="margin: 20px 0"></div>
+        </div>
+        <div class="col-md-6">
+            <div id="geo-results" style="margin: 20px 0"></div>
+        </div>
+    </div>
 
     <hr />
+
     <h2>Classi</h2>
     <form id="class" action="{'opendata/console'|ezurl(no)}" method="GET">
         <div class="row">
@@ -74,82 +85,194 @@
 
     <script>
     $(function() {ldelim}
-        var analyzer = "{'opendata/analyzer'|ezurl(no,full)}/";
-        var endpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
+        var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no,full)}/";
+        var searchEndpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
+        var geoEndpoint = "{'api/opendata/v2/geo/search'|ezurl(no,full)}/";
         var classEndpoint = "{'api/opendata/v2/classes'|ezurl(no,full)}/";
         var availableTokens = [{foreach $tokens as $token}'{$token}'{delimiter},{/delimiter}{/foreach}];
         {literal}
-        var $container = $('#search-results');
-        var $analysis = $('#query-analysis');
-        var $string = $('#query-string');
-        var $form = $('form#search');
-        var $classForm = $('form#class');
-        var $icon = $form.find('button > i');
-        var $classFormIcon = $classForm.find('button > i');
-        var $classContainer = $('#class-result');
+
+        var $searchContainers = {
+            'queryString': $('#query-string'),
+            'queryAnalysis': $('#query-analysis'),
+            'results': $('#search-results'),
+            'geoResults': $('#geo-results')
+        };
+
+        var $errors = $('#errors');
+
+        var $forms = {
+            'search': $('form#search'),
+            'class': $('form#class')
+        };
+        var icon = 'button > i';
+
+        var $classContainers ={
+            'results': $('#class-result')
+        };
+
+        var loadError = function(data){
+            $(icon).removeClass('fa-cog fa-spin');
+            $('.fa-spinner').remove();
+            $errors.append($('<p>'+data+'</p>')).addClass('alert alert-warning');
+        };
+
+        var clearError = function(){
+            $errors.html('').removeClass('alert alert-warning');
+        };
+
+        var clearContainers = function(){
+            $.each( $searchContainers, function(){
+                this.html('')
+            });
+        };
+
+        // search form
         var search = function( url ){
-            $string.html('');
-            $container.html('');
-            $analysis.html('');
-            var searchQuery = url.replace(endpoint,'');
-            $icon.addClass('fa-cog fa-spin');
+            clearContainers();
+            clearError();
+            var searchQuery = url.replace(searchEndpoint,'');
+            var geoUrl = geoEndpoint+searchQuery;
+
+            // parte lo spinner
+            $(icon,$forms.search).addClass('fa-cog fa-spin');
+            $searchContainers.queryAnalysis.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
+            $.ajax({
+                type: "GET",
+                url: analyzerEndpoint,
+                data: {query:searchQuery},
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data) {
+                    if( 'error_message' in data )
+                        loadError(data.error_message);
+                    else if( data.length == 0 )
+                        loadError("L'analisi della query non ha portato risultati");
+                    else {
+                        $searchContainers.results.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
+                        $searchContainers.geoResults.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
+                        loadAnalysisResults(data);
+                        contentSearch(url);
+                        geoSearch(geoUrl);
+                    }
+                },
+                error: function(data){
+                    var error = data.responseJSON;
+                    loadError(error.error_message);
+                }
+            });
+        };
+
+        var contentSearch = function(url){
             $.ajax({
                 type: "GET",
                 url: url,
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: function(data) {
-                    if( 'error_message' in data )
-                        loadError(data,$container);
+                success: function(response) {
+                    if( 'error_message' in response )
+                        loadError(response.error_message);
                     else {
-                        loadSearchResults(data);
-                        $('<a href="'+url+'"><small>'+url+'</small></a>').appendTo($string);
+                        loadSearchResults(url,response);
                     }
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error,$container);
+                    loadError(error);
                 }
             });
-            $.get(analyzer, {query:searchQuery}, function(data){
-                var content = '<h4>Analisi della query</h4>';
-                var writeFilter = function(item){
-                    content += '<span class="field label label-success" data-toggle="tooltip" data-placement="top" title="Campo">'+item.field+'</span> ';
-                    content += '<span class="operator label label-default" data-toggle="tooltip" data-placement="top" title="Operatore">'+item.operator+'</span> ';
-                    content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
-                };
-                var writeClause = function(item){
-                    content += '<span class="clause label label-danger" data-toggle="tooltip" data-placement="top" title="Clausola logica">'+item.value+'</span> ';
-                };
-                var writeParenthesis = function(item){
-                    content += '<span class="parenthesis label label-default" data-toggle="tooltip" data-placement="top" title="Parentesi">'+item.value+'</span> ';
-                };
-                var writeParameter = function(item){
-                    content += '<span class="key label label-warning" data-toggle="tooltip" data-placement="top" title="Parametro">'+item.key+'</span> ';
-                    content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
-                };
-                $.each(data,function(){
-                    if( this.type == 'filter' ) writeFilter(this);
-                    else if( this.type == 'clause' ) writeClause(this);
-                    else if( this.type == 'parenthesis' ) writeParenthesis(this);
-                    else if( this.type == 'parameter' ) writeParameter(this);
-                });
-                $analysis.html( content );
+        };
+
+        var geoSearch = function(geoUrl){
+            $.ajax({
+                type: "GET",
+                url: geoUrl,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(response) {
+                    if( 'error_message' in response )
+                        loadError(response.error_message);
+                    else {
+
+                        $.ajax({
+                            url: 'http://geojsonlint.com/validate',
+                            type: 'POST',
+                            data: JSON.stringify(response),
+                            dataType: 'json',
+                            success: function(validatorData) {
+                                if (validatorData.status === 'error') {
+                                    loadError('There was a problem with your GeoJSON: ' + validatorData.message);
+                                }
+                            },
+                            error: function(){loadError('Problema con validatore geojson');}
+                        });
+
+                        var content = '<a href="'+geoUrl+'">'+geoUrl+'</a>';
+                        if ( response.features.length > 0 ) {
+                            content += '<h3>Visualizzati ' + response.features.length + ' marker</h3><div id="map" style="width: 100%; height: 400px"></div>'
+                            $searchContainers.geoResults.html(content);
+                            var map = L.map('map').setView([0, 0], 10);
+                            L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                            }).addTo(map);
+                            var geoJsonLayer = L.geoJson(response,{
+                                onEachFeature: function(feature, layer) {
+                                    var popup = '<a href="/content/view/full/'+feature.properties.mainNodeId+'" target="_blank"><strong>';
+                                    popup += feature.properties.name;
+                                    popup += '</strong></a>';
+                                    layer.bindPopup(popup);
+                                }
+                            });
+                            var markers = L.markerClusterGroup();
+                            markers.addLayer(geoJsonLayer);
+                            map.addLayer(markers);
+                            map.fitBounds(markers.getBounds());
+                        }else{
+                            content += '<h3>Nessun risultato</h3>';
+                            $searchContainers.geoResults.html(content);
+                        }
+                    }
+                },
+                error: function(data){
+                    var error = data.responseJSON;
+                    loadError(error);
+                }
             });
         };
-        var loadError = function(data,container){
-            $icon.removeClass('fa-cog fa-spin');
-            $classFormIcon.removeClass('fa-cog fa-spin');
-            var content = '<div class="alert alert-warning">'+data.error_message+'</div>';
-            container.html(content);
+
+        var loadAnalysisResults = function(data){
+            var content = '<h4>Analisi della query</h4>';
+            var writeFilter = function(item){
+                content += '<span class="field label label-success" data-toggle="tooltip" data-placement="top" title="Campo">'+item.field+'</span> ';
+                content += '<span class="operator label label-default" data-toggle="tooltip" data-placement="top" title="Operatore">'+item.operator+'</span> ';
+                content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
+            };
+            var writeClause = function(item){
+                content += '<span class="clause label label-danger" data-toggle="tooltip" data-placement="top" title="Clausola logica">'+item.value+'</span> ';
+            };
+            var writeParenthesis = function(item){
+                content += '<span class="parenthesis label label-default" data-toggle="tooltip" data-placement="top" title="Parentesi">'+item.value+'</span> ';
+            };
+            var writeParameter = function(item){
+                content += '<span class="key label label-warning" data-toggle="tooltip" data-placement="top" title="Parametro">'+item.key+'</span> ';
+                content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
+            };
+            $.each(data,function(){
+                if( this.type == 'filter' ) writeFilter(this);
+                else if( this.type == 'clause' ) writeClause(this);
+                else if( this.type == 'parenthesis' ) writeParenthesis(this);
+                else if( this.type == 'parameter' ) writeParameter(this);
+            });
+            $searchContainers.queryAnalysis.html( content );
         };
-        var loadSearchResults = function(data){
-            $icon.removeClass('fa-cog fa-spin');
+
+        var loadSearchResults = function(url,data){
+            $(icon).removeClass('fa-cog fa-spin');
+
             var results = data.searchHits;
-            $string.html( '<h4>Query eseguita</h4><pre>'+data.query+'</pre>' );
-            var content = '<h2>Trovati '+data.totalCount+ ' risultati</h2>';
+            var content = '<a href="'+url+'">'+url+'</a>';
             if ( results.length > 0 ) {
-                content += '<h3>Visualizzati ' + results.length + ' risultati ';
+                content += '<h3>Visualizzati ' + results.length + ' su ' +data.totalCount+ ' risultati ';
                 if ( data.nextPageQuery !== null )
                     content += '<a href="#" data-query="'+data.nextPageQuery+'" class="search">(pagina successiva)</a></h3>';
                 else
@@ -171,9 +294,43 @@
                     }
                 });
                 content += '</ul>';
+            }else{
+                content += '<h3>Nessun risultato</h3>';
             }
-            $container.html(content);
+            $searchContainers.results.html(content);
             $('[data-toggle="tooltip"]').tooltip();
+        };
+        $(document).on( 'click', 'a.search', function(e){
+            search($(e.currentTarget).data('query'));
+            e.preventDefault();
+        });
+        $forms.search.submit( function(e){
+            var query = $forms.search.find('input').val();
+            search(searchEndpoint+encodeURIComponent(query));
+            e.preventDefault();
+        });
+
+        // class form
+        var searchClass = function( url ) {
+            $(icon, $forms.class).addClass('fa-cog fa-spin');
+            $classContainers.results.html('');
+            clearError();
+            $.ajax({
+                type: "GET",
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    if ('error_message' in data)
+                        loadError(data.error_message);
+                    else
+                        loadClass(data);
+                },
+                error: function (data) {
+                    var error = data.responseJSON;
+                    loadError(error.error_message);
+                }
+            });
         };
         var loadClass = function(data){
             var content = '<table class="table table-striped">';
@@ -194,50 +351,24 @@
                 }
             });
             content += '</table>';
-            $classContainer.html(content);
-            $classFormIcon.removeClass('fa-cog fa-spin');
+            $classContainers.results.html(content);
+            $(icon, $forms.class).removeClass('fa-cog fa-spin');
         };
-        $(document).on( 'click', 'a.search', function(e){
-            search($(e.currentTarget).data('query'));
-            e.preventDefault();
-        });
-        $form.submit( function(e){
-            var query = $form.find('input').val();
-            search(endpoint+query);
-            e.preventDefault();
-        });
-        var searchClass = function( url ) {
-            $classFormIcon.addClass('fa-cog fa-spin');
-            $.ajax({
-                type: "GET",
-                url: url,
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                success: function (data) {
-                    if ('error_message' in data)
-                        loadError(data,$classContainer);
-                    else
-                        loadClass(data);
-                },
-                error: function (data) {
-                    var error = data.responseJSON;
-                    loadError(error,$classContainer);
-                }
-            });
-        };
-        $classForm.submit( function(e){
-            var identifier = $classForm.find('select option:selected').val();
+        $forms.class.submit( function(e){
+            var identifier = $forms.class.find('select option:selected').val();
             searchClass(classEndpoint+identifier);
             e.preventDefault();
         });
 
+
+        // autocomplete
         function split( val ) {
             return val.split( ' ' );
         }
         function extractLast( term ) {
             return split( term ).pop();
         }
-        $form.find('input')
+        $forms.search.find('input')
             .bind( "keydown", function( event ) {
                 if ( event.keyCode === $.ui.keyCode.TAB &&
                         $( this ).autocomplete( "instance" ).menu.active ) {
@@ -262,7 +393,7 @@
                     return false;
                 }
             });
-        $('[data-toggle="tooltip"]').tooltip();
+
         {/literal}
     });
     </script>
