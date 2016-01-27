@@ -214,10 +214,17 @@ class SentenceConverter
         {
             if ( is_array( $value ) )
             {
-                $data = count( $value ) > 1 ? array( 'and' ) : array();
-                foreach ( $value as $item )
+                if ( count( $value ) > 1 )
                 {
-                    $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                    $data = array( 'and' );
+                    foreach ( $value as $item )
+                    {
+                        $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                    }
+                }
+                else
+                {
+                    $data = $negative . $fieldName . ':' . $this->formatFilterValue( $value[0], $type );
                 }
             }
             else
@@ -245,10 +252,17 @@ class SentenceConverter
         {
             if ( is_array( $value ) )
             {
-                $data = count( $value ) > 1 ? array( 'or' ) : array();
-                foreach ( $value as $item )
+                if ( count( $value ) > 1 )
                 {
-                    $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                    $data = array( 'or' );
+                    foreach ( $value as $item )
+                    {
+                        $data[] = $negative . $fieldName . ':' . $this->formatFilterValue( $item, $type );
+                    }
+                }
+                else
+                {
+                    $data = $negative . $fieldName . ':' . $this->formatFilterValue( $value[0], $type );
                 }
             }
             else
