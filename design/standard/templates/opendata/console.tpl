@@ -98,8 +98,10 @@
                 success: function(data) {
                     if( 'error_message' in data )
                         loadError(data,$container);
-                    else
+                    else {
                         loadSearchResults(data);
+                        $('<a href="'+url+'"><small>'+url+'</small></a>').appendTo($string);
+                    }
                 },
                 error: function(data){
                     var error = data.responseJSON;
