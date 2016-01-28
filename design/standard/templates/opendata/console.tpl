@@ -18,7 +18,7 @@
     <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
     <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
-    <script src="https://raw.githubusercontent.com/Opencontent/Leaflet.markercluster/leaflet-0.7/dist/leaflet.markercluster.js"></script>
+    <script src="/extension/ocopendata/design/standard/stylesheets/leaflet.markercluster.js"></script>
 
 </head>
 
