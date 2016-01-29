@@ -207,7 +207,8 @@
                             error: function(){loadError('Problema con validatore geojson');}
                         });
 
-                        var content = '<strong>API /geo</strong>: <a href="'+geoUrl+'">'+geoUrl+'</a>';
+                        var searchQuery = geoUrl.replace(geoEndpoint,'');
+                        var content = '<strong>API /geo</strong>:<br/> <a href="'+geoUrl+'"><code>'+decodeURIComponent(searchQuery)+'</code></a>';
                         if ( response.features.length > 0 ) {
                             content += '<h3>Visualizzati ' + response.features.length + ' marker</h3><div id="map" style="width: 100%; height: 400px"></div>'
                             $searchContainers.geoResults.html(content);
@@ -257,20 +258,22 @@
                 content += '<span class="key label label-warning" data-toggle="tooltip" data-placement="top" title="Parametro">'+item.key+'</span> ';
                 content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
             };
-            $.each(data,function(){
+            $.each(data.analysis,function(){
                 if( this.type == 'filter' ) writeFilter(this);
                 else if( this.type == 'clause' ) writeClause(this);
                 else if( this.type == 'parenthesis' ) writeParenthesis(this);
                 else if( this.type == 'parameter' ) writeParameter(this);
             });
             $searchContainers.queryAnalysis.html( content );
+            console.log(data.ezfind);
         };
 
         var loadSearchResults = function(url,data){
             $(icon).removeClass('fa-cog fa-spin');
 
             var results = data.searchHits;
-            var content = '<strong>API /content</strong>: <a href="'+url+'">'+url+'</a>';
+            var searchQuery = url.replace(searchEndpoint,'');
+            var content = '<strong>API /content</strong>:<br/> <a href="'+url+'"><code>'+decodeURIComponent(searchQuery)+'</code></a>';
             if ( results.length > 0 ) {
                 content += '<h3>Visualizzati ' + results.length + ' su ' +data.totalCount+ ' risultati ';
                 if ( data.nextPageQuery !== null )

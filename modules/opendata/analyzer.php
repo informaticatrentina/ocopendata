@@ -11,18 +11,43 @@ if ( $http->hasGetVariable( 'query' ) )
 
     try
     {
-        $factory = new \Opencontent\Opendata\Api\QueryLanguage\EzFind\QueryBuilder();
-        $tokenFactory = $factory->getTokenFactory();
-        $converter = new \Opencontent\QueryLanguage\Converter\AnalyzerQueryConverter();
+        $builder = new \Opencontent\Opendata\Api\QueryLanguage\EzFind\QueryBuilder();
+        $ezFindQuery = null;
+        try
+        {
+            $queryObject = $builder->instanceQuery( $query );
+            $ezFindQuery = $queryObject->convert();
+        }
+        catch ( Exception $e )
+        {
+            $ezFindQuery = array(
+                'error_message' => $e->getMessage(),
+                'error_code' => \Opencontent\Opendata\Api\Exception\BaseException::cleanErrorCode( get_class( $e ) ),
+                'error_trace' => explode( "\n", $e->getTraceAsString() )
+            );
+        }
+
+        $tokenFactory = $builder->getTokenFactory();
         $parser = new \Opencontent\QueryLanguage\Parser( new \Opencontent\QueryLanguage\Query( $query ) );
         $query = $parser->setTokenFactory( $tokenFactory )->parse();
+
+        $converter = new \Opencontent\QueryLanguage\Converter\AnalyzerQueryConverter();
         $converter->setQuery( $query );
 
-        $data = $converter->convert();
+        $data = array(
+            'analysis' => $converter->convert(),
+            'ezfind' => $ezFindQuery
+        );
+
+
     }
     catch ( Exception $e )
     {
-        $data = array( 'error_message' => $e->getMessage() );
+        $data = array(
+            'error_message' => $e->getMessage(),
+            'error_code' => \Opencontent\Opendata\Api\Exception\BaseException::cleanErrorCode( get_class( $e ) ),
+            'error_trace' => explode( "\n", $e->getTraceAsString() )
+        );
     }
 }
 header('Content-Type: application/json');

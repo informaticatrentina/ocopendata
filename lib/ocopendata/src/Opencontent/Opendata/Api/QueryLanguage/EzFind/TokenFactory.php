@@ -34,21 +34,15 @@ class TokenFactory extends BaseTokenFactory
     protected function findFieldType( Token $token )
     {
         $string = (string)$token;
-        $subParts = explode( '.', $string );
-        if ( count( $subParts ) > 1 )
+
+        foreach( $this->functionFields as $functionField )
         {
-            $subTokens = array();
-            foreach( $subParts as $part )
+            if ( strpos( $string . '[', $functionField ) === 0 )
             {
-                $tokenPart = $this->createQueryToken( $part );
-                if ( !$this->isField( $tokenPart ) )
-                    return false;
-                else
-                    $subTokens[] = $tokenPart;
+                $token->data( 'is_function_field', true );
+                $token->data( 'function', $functionField );
+                return true;
             }
-            $token->data( 'is_field', true );
-            $token->data( 'sub_fields', $subTokens );
-            return true;
         }
 
         if( in_array( $string, $this->metaFields ) )
@@ -63,13 +57,21 @@ class TokenFactory extends BaseTokenFactory
         }
         else
         {
-            foreach( $this->functionFields as $functionField )
+            $subParts = explode( '.', $string );
+            if ( count( $subParts ) > 1 )
             {
-                if ( strpos( $string, $functionField ) === 0 )
+                $subTokens = array();
+                foreach( $subParts as $part )
                 {
-                    $token->data( 'is_function_field', true );
-                    return true;
+                    $tokenPart = $this->createQueryToken( $part );
+                    if ( !$this->isField( $tokenPart ) )
+                        return false;
+                    else
+                        $subTokens[] = $tokenPart;
                 }
+                $token->data( 'is_field', true );
+                $token->data( 'sub_fields', $subTokens );
+                return true;
             }
         }
 

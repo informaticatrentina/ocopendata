@@ -9,6 +9,7 @@ use Opencontent\QueryLanguage\Parser\Sentence;
 use Opencontent\QueryLanguage\Converter\Exception;
 use ArrayObject;
 use ezfSolrDocumentFieldBase;
+use Opencontent\QueryLanguage\Parser\Token;
 
 class SentenceConverter
 {
@@ -36,11 +37,6 @@ class SentenceConverter
      * @var ClassRepository
      */
     protected $classRepository;
-
-    /**
-     * @var bool
-     */
-    private $availableFieldIsFiltered = false;
 
     public function __construct( SolrNamesHelper $solrNamesHelper )
     {
@@ -79,36 +75,142 @@ class SentenceConverter
 
         $value = $this->cleanValue( $value );
 
+
+
+        if ( $field->data( 'is_function_field' ) )
+        {
+            switch( $field->data( 'function' ) )
+            {
+                case 'calendar':
+                    return $this->convertCalendar( $field, $operator, $value );
+                    break;
+
+                case 'raw':
+                    $fieldNames = Sentence::parseString( str_replace( 'raw', '', (string)$field ) );
+                    break;
+            }
+        }
+
+        if ( !isset( $fieldNames ) )
+        {
+            $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
+        }
+
         switch ( $operator )
         {
             case 'contains':
             case '!contains':
             {
-                $data = $this->generateContainsFilter( $field, $value, $operator == '!contains' );
-            } break;
+                $data = $this->generateContainsFilter(
+                    $fieldNames,
+                    $value,
+                    $operator == '!contains'
+                );
+            }
+                break;
 
             case 'in':
             case '!in':
             {
-                $data = $this->generateInFilter( $field, $value, $operator == '!in' );
-            } break;
+                $data = $this->generateInFilter( $fieldNames, $value, $operator == '!in' );
+            }
+                break;
 
             case 'range':
             case '!range':
             {
-                $data = $this->generateRangeFilter( $field, $value, $operator == '!range' );
-            } break;
+                $data = $this->generateRangeFilter( $fieldNames, $value, $operator == '!range' );
+            }
+                break;
 
             case '=':
             case '!=':
             {
-                $data = $this->generateEqFilter( $field, $value, $operator == '!=' );
-            } break;
+                $data = $this->generateEqFilter( $fieldNames, $value, $operator == '!=' );
+            }
+                break;
 
             default:
                 throw new Exception( "Operator $operator not handled" );
         }
         return ( empty( $data ) ) ? null : $data;
+    }
+
+    protected function convertCalendar( Token $field, $operator, $value )
+    {
+        $fields = Sentence::parseString( str_replace( 'calendar', '', (string)$field ) );
+        if ( empty( $fields ) )
+        {
+            $fields = array( 'from_time', 'to_time' ); //default
+        }
+        if ( count( $fields ) !== 2 )
+        {
+            throw new Exception( "Function field 'calendar' requires two parameters (e.g: calendar[from_time, to_time] = [yesterday, today])" );
+        }
+        $fromFieldNames = $this->solrNamesHelper->generateSortNames( $fields[0] );
+        $toFieldNames = $this->solrNamesHelper->generateSortNames( $fields[1] );
+
+        $fieldCouples = array();
+        $index = 0;
+        foreach( $fromFieldNames as $type => $fieldName )
+        {
+            $typeParts = explode( '.', $type );
+            $type = array_pop( $typeParts );
+            if ( $type != 'date' )
+            {
+                throw new Exception( "Function field 'calendar' arguments must be a date identifier" );
+            }
+            $fieldCouples[] = array(
+                'from' =>  $fieldName
+            );
+            $index++;
+        }
+
+        $index = 0;
+        foreach( $toFieldNames as $type => $fieldName )
+        {
+            $typeParts = explode( '.', $type );
+            $type = array_pop( $typeParts );
+            if ( $type != 'date' )
+            {
+                throw new Exception( "Function field 'calendar' arguments must be a date identifier" );
+            }
+            if ( isset( $fieldCouples[$index] ) )
+                $fieldCouples[$index]['to'] = $fieldName;
+            $index++;
+        }
+
+        if ( $operator != '=' )
+            throw new Exception( "The operator of function field 'calendar' must be '\"' (e.g: calendar[from_time, to_time] = [yesterday, today])" );
+
+        if ( !is_array( $value ) || ( is_array( $value ) && count( $value ) != 2 ) )
+            throw new Exception( "The value of function field 'calendar' requires a two elements array (e.g: calendar[from_time, to_time] = [yesterday, today])" );
+
+        $fromValue = $this->formatFilterValue( $value[0], 'date' );
+        $toValue = $this->formatFilterValue( $value[1], 'date' );
+
+        $filter = array();
+        foreach( $fieldCouples as $fieldCouple )
+        {
+            $item = array(
+                'or',
+                $fieldCouple['from'] . ':[' . $fromValue . ' TO ' . $toValue . ']',
+                $fieldCouple['to'] . ':[' . $fromValue . ' TO ' . $toValue . ']',
+                array(
+                    'and',
+                    $fieldCouple['from'] . ':[* TO ' . $fromValue . ']',
+                    $fieldCouple['to'] . ':[' . $toValue . ' TO *]'
+                )
+            );
+            $filter[] = $item;
+        }
+
+        if ( count( $filter ) == 1 )
+            $filter = array_pop( $filter );
+        elseif ( count( $filter ) > 1 )
+            array_unshift( $filter, 'or' );
+
+        return $filter;
     }
 
     protected function cleanValue( $value )
@@ -201,10 +303,9 @@ class SentenceConverter
         return $value;
     }
 
-    protected function generateContainsFilter( $field, $value, $negative )
+    protected function generateContainsFilter( $fieldNames, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -239,10 +340,9 @@ class SentenceConverter
         return $filter;
     }
 
-    protected function generateInFilter( $field, $value, $negative )
+    protected function generateInFilter( $fieldNames, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -277,13 +377,12 @@ class SentenceConverter
         return $filter;
     }
 
-    protected function generateRangeFilter( $field, $value, $negative )
+    protected function generateRangeFilter( $fieldNames, $value, $negative )
     {
         if ( !is_array( $value ) )
             throw new Exception( "Range require an array value" );
 
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -299,9 +398,9 @@ class SentenceConverter
         return $filter;
     }
 
-    protected function generateEqFilter( $field, $value, $negative )
+    protected function generateEqFilter( $fieldNames, $value, $negative )
     {
-        return $this->generateInFilter( $field, $value, $negative );
+        return $this->generateInFilter( $fieldNames, $value, $negative );
     }
 
 }

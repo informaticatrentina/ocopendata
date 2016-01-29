@@ -42,7 +42,8 @@ class QueryBuilder extends BaseQueryBuilder
     );
 
     public $functionFields = array(
-        'calendar'
+        'calendar',
+        'raw'
     );
 
     public function __construct()
