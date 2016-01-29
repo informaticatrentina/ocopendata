@@ -51,14 +51,14 @@ class TokenFactory extends BaseTokenFactory
             return true;
         }
 
-        if( in_array( $string, $this->fields ) )
-        {
-            $token->data( 'is_field', true );
-            return true;
-        }
-        elseif( in_array( $string, $this->metaFields ) )
+        if( in_array( $string, $this->metaFields ) )
         {
             $token->data( 'is_meta_field', true );
+            return true;
+        }
+        elseif( in_array( $string, $this->fields ) )
+        {
+            $token->data( 'is_field', true );
             return true;
         }
         else
