@@ -153,7 +153,8 @@ class SentenceConverter
                 break;
 
             case 'string':
-                $value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
+                //$value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
+                $value = '"' . $value . '"';
                 break;
 
             case 'sub_string':
