@@ -154,7 +154,7 @@ class SentenceConverter
 
             case 'string':
                 //$value = '((*' . strtolower( $value ) . '*) OR "' . $value . '"")';
-                //$value = '"' . $value . '"';
+                $value = '"' . $value . '"';
                 break;
 
             case 'sub_string':
