@@ -5,7 +5,6 @@ namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
 use Opencontent\QueryLanguage\Converter\Exception;
 use Opencontent\QueryLanguage\Parser\Parameter;
 use Opencontent\QueryLanguage\Parser\Sentence;
-use eZSolr;
 
 class ParameterConverter extends SentenceConverter
 {
@@ -26,7 +25,6 @@ class ParameterConverter extends SentenceConverter
             {
                 case 'classes':
                     $this->convertClasses( $value );
-                    $this->filterAvailableFieldDefinitions();
                     break;
 
                 case 'sort':
@@ -70,7 +68,7 @@ class ParameterConverter extends SentenceConverter
             if ( !in_array( $class, $this->classRepository->listClassIdentifiers() ) )
                 throw new Exception( "Class $class not found" );
         }
-
+        $this->solrNamesHelper->filterAvailableFieldDefinitionsByClasses( $list );
         $this->convertedQuery['SearchContentClassID'] = $list;
     }
 
@@ -85,18 +83,10 @@ class ParameterConverter extends SentenceConverter
                 {
                     throw new Exception( "Can not convert sort order value: $order" );
                 }
-                $fieldName = $this->generateSortName( $field );
-                if ( is_array( $fieldName ) )
+                $fieldNames = $this->solrNamesHelper->generateSortNames( $field  );
+                foreach( $fieldNames as $name )
                 {
-                    foreach( $fieldName as $name )
-                    {
-                        $data[$name] = $order;
-                    }
-
-                }
-                else
-                {
-                    $data[$fieldName] = $order;
+                    $data[$name] = $order;
                 }
 
             }
@@ -134,18 +124,5 @@ class ParameterConverter extends SentenceConverter
         }
         $value = array_map( 'intval', $value );
         $this->convertedQuery['SearchSubTreeArray'] = $value;
-    }
-
-    protected function generateSortName( $field )
-    {
-        if ( in_array( $field, $this->metaFields ) )
-        {
-            return eZSolr::getMetaFieldName( $field, 'sort' );
-        }
-        elseif ( isset( $this->availableFieldDefinitions[$field] ) )
-        {
-            return $this->getFieldName( $field, 'sort' );
-        }
-        throw new Exception( "Can not convert sort field $field" );
     }
 }

@@ -25,6 +25,8 @@ class Metadata
 
     public $ownerId;
 
+    public $ownerName;
+
     public $mainNodeId;
 
     public $parentNodes;
@@ -87,6 +89,20 @@ class Metadata
         $metadata->name = $names;
         $metadata->remoteId = $contentObject->attribute( 'remote_id' );
         $metadata->ownerId = (int)$contentObject->attribute( 'owner_id' );
+        $owner = eZContentObject::fetch( $metadata->ownerId );
+        if ( $owner instanceof eZContentObject )
+        {
+            $ownerAvailableLanguages = array_keys( $owner->allLanguages() );
+            $names = array();
+            foreach ( $languages as $language )
+            {
+                if ( in_array( $language, $ownerAvailableLanguages ) )
+                {
+                    $names[$language] = $owner->name( false, $language );
+                }
+            }
+            $metadata->ownerName = $names;
+        }
         $metadata->classIdentifier = $contentObject->attribute( 'class_identifier' );
         $metadata->classId = $contentObject->attribute( 'contentclass_id' );
         $metadata->mainNodeId = $contentObject->attribute( 'main_node_id' );

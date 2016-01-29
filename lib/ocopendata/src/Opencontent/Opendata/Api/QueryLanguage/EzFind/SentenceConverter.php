@@ -8,9 +8,6 @@ use Opencontent\Opendata\Api\SectionRepository;
 use Opencontent\QueryLanguage\Parser\Sentence;
 use Opencontent\QueryLanguage\Converter\Exception;
 use ArrayObject;
-use eZINI;
-use eZSolr;
-use ezfSolrDocumentFieldName;
 use ezfSolrDocumentFieldBase;
 
 class SentenceConverter
@@ -24,16 +21,6 @@ class SentenceConverter
      * @var array[]
      */
     protected $availableFieldDefinitions;
-
-    /**
-     * @var ezfSolrDocumentFieldName
-     */
-    protected $documentFieldName;
-
-    /**
-     * @var array
-     */
-    protected $metaFields;
 
     /**
      * @var StateRepository
@@ -55,11 +42,10 @@ class SentenceConverter
      */
     private $availableFieldIsFiltered = false;
 
-    public function __construct( $availableFieldDefinitions, $metaFields )
+    public function __construct( SolrNamesHelper $solrNamesHelper )
     {
-        $this->availableFieldDefinitions = $availableFieldDefinitions;
-        $this->metaFields = $metaFields;
-        $this->documentFieldName = new ezfSolrDocumentFieldName();
+        $this->solrNamesHelper = $solrNamesHelper;
+
         $this->stateRepository = new StateRepository();
         $this->sectionRepository = new SectionRepository();
         $this->classRepository = new ClassRepository();
@@ -81,12 +67,7 @@ class SentenceConverter
      */
     public function convert( Sentence $sentence )
     {
-        if ( !$this->availableFieldIsFiltered )
-        {
-            $this->filterAvailableFieldDefinitions();
-        }
-
-        $field = (string)$sentence->getField();
+        $field = $sentence->getField();
         $operator = (string)$sentence->getOperator();
         $value = $sentence->getValue();
 
@@ -127,7 +108,7 @@ class SentenceConverter
             default:
                 throw new Exception( "Operator $operator not handled" );
         }
-        return $data;
+        return ( empty( $data ) ) ? null : $data;
     }
 
     protected function cleanValue( $value )
@@ -151,7 +132,9 @@ class SentenceConverter
 
     protected function formatFilterValue( $value, $type )
     {
-        switch( $type )
+        $typeParts = explode( '.', $type );
+        $type = array_pop( $typeParts );
+        switch ( $type )
         {
             case 'meta_section';
             case 'meta_state';
@@ -159,14 +142,14 @@ class SentenceConverter
             case 'tint':
             case 'sint':
             case 'int':
-                $value = (int) $value;
+                $value = (int)$value;
                 break;
 
             case 'float':
             case 'double':
             case 'sfloat':
             case 'tfloat':
-                $value = (float) $value;
+                $value = (float)$value;
                 break;
 
             case 'string':
@@ -180,7 +163,17 @@ class SentenceConverter
             case 'meta_published':
             case 'meta_modified':
             case 'date':
-                $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( strtotime( $value ) ) . '"';
+            {
+                if ( $value != '*' )
+                {
+                    $time = strtotime( $value );
+                    if ( !$time )
+                    {
+                        throw new Exception( "Problem with date $value" );
+                    }
+                    $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( $time ) . '"';
+                }
+            }
                 break;
 
             case 'meta_section_id':
@@ -188,26 +181,29 @@ class SentenceConverter
                 $section = $this->sectionRepository->load( $value );
                 if ( is_array( $section ) )
                 {
-                    $value = (int) $section['id'];
+                    $value = (int)$section['id'];
                 }
-            } break;
+            }
+                break;
 
             case 'meta_object_states':
             {
                 $state = $this->stateRepository->load( $value );
                 if ( is_array( $state ) )
                 {
-                    $value = (int) $state['id'];
+                    $value = (int)$state['id'];
                 }
-            } break;
+            }
+                break;
         }
+
         return $value;
     }
 
     protected function generateContainsFilter( $field, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->generateFieldName( $field );
+        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -245,7 +241,7 @@ class SentenceConverter
     protected function generateInFilter( $field, $value, $negative )
     {
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->generateFieldName( $field );
+        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -286,7 +282,7 @@ class SentenceConverter
             throw new Exception( "Range require an array value" );
 
         if ( $negative ) $negative = '!';
-        $fieldNames = $this->generateFieldName( $field );
+        $fieldNames = $this->solrNamesHelper->generateFieldNames( $field );
 
         $filter = array();
         foreach( $fieldNames as $type => $fieldName )
@@ -305,151 +301,6 @@ class SentenceConverter
     protected function generateEqFilter( $field, $value, $negative )
     {
         return $this->generateInFilter( $field, $value, $negative );
-    }
-
-    /**
-     * Se è presente un parametro di classe restringe il campo degli attributi a disposizione
-     */
-    protected function filterAvailableFieldDefinitions()
-    {
-        if ( isset( $this->convertedQuery['SearchContentClassID'] ) )
-        {
-            $filteredAvailableFieldDefinitions = array();
-            foreach ( $this->availableFieldDefinitions as $identifier => $fieldDefinition )
-            {
-                foreach ( $fieldDefinition as $dataType => $classes )
-                {
-                    $filteredClasses = array_intersect(
-                        $this->convertedQuery['SearchContentClassID'],
-                        $classes
-                    );
-                    if ( !empty( $filteredClasses ) )
-                    {
-                        $filteredAvailableFieldDefinitions[$identifier][$dataType] = $filteredClasses;
-                    }
-                }
-            }
-            $this->availableFieldDefinitions = $filteredAvailableFieldDefinitions;
-        }
-    }
-
-    protected function generateFieldName( $field )
-    {
-        if ( in_array( $field, $this->metaFields ) )
-        {
-            if ( $field == 'section' )
-            {
-                $field = 'section_id';
-            }
-            elseif ( $field == 'state' )
-            {
-                $field = 'object_states';
-            }
-            return array( 'meta_' . $field => eZSolr::getMetaFieldName( $field, 'search' ) );
-        }
-        elseif ( isset( $this->availableFieldDefinitions[$field] ) )
-        {
-            return $this->getFieldName( $field, 'search' );
-        }
-        throw new Exception( "Can not convert field $field" );
-    }
-
-    /**
-     * Mutuato da ezfSolrDocumentFieldBase restituisce il campo solr senza usare la classe eZContentClassAttribute
-     *
-     * @param $field
-     * @param $context
-     *
-     * @return array
-     */
-    protected function getFieldName( $field, $context )
-    {
-        $data = array();
-        if ( isset( $this->availableFieldDefinitions[$field] ) )
-        {
-            foreach ( $this->availableFieldDefinitions[$field] as $dataType => $classes )
-            {
-                $type = $this->getSolrType( $dataType, $context );
-                if ( $dataType == 'ezobjectrelationlist' || $dataType == 'ezobjectrelation' )
-                {
-                    $data['sub_' . $type] = $this->generateSolrSubFieldName(
-                        $field,
-                        $type
-                    );
-                }
-                else
-                {
-                    $data[$type] = $this->generateSolrFieldName(
-                        $field,
-                        $type
-                    );
-                }
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * @see SentenceConverter::getFieldName
-     *
-     * @param $datatypeString
-     * @param string $context
-     *
-     * @return string
-     */
-    protected function getSolrType( $datatypeString, $context = 'search' )
-    {
-        $eZFindINI = eZINI::instance( 'ezfind.ini' );
-        $datatypeMapList = $eZFindINI->variable(
-            'SolrFieldMapSettings',
-            eZSolr::$fieldTypeContexts[$context]
-        );
-        if ( !empty( $datatypeMapList[$datatypeString] ) )
-        {
-            return $datatypeMapList[$datatypeString];
-        }
-        $datatypeMapList = $eZFindINI->variable( 'SolrFieldMapSettings', 'DatatypeMap' );
-        if ( !empty( $datatypeMapList[$datatypeString] ) )
-        {
-            return $datatypeMapList[$datatypeString];
-        }
-
-        return $eZFindINI->variable( 'SolrFieldMapSettings', 'Default' );
-    }
-
-    /**
-     * @see SentenceConverter::getFieldName
-     *
-     * @param $identifier
-     * @param $type
-     *
-     * @return string
-     */
-    protected function generateSolrFieldName( $identifier, $type )
-    {
-        return $this->documentFieldName->lookupSchemaName(
-            ezfSolrDocumentFieldBase::ATTR_FIELD_PREFIX . $identifier,
-            $type
-        );
-    }
-
-    /**
-     * @see SentenceConverter::getFieldName
-     *
-     * @param $identifier
-     * @param $type
-     * @param $subIdentifier
-     *
-     * @return string
-     */
-    protected function generateSolrSubFieldName( $identifier, $type, $subIdentifier = 'name' )
-    {
-        return $this->documentFieldName->lookupSchemaName(
-            ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $identifier
-            . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . $subIdentifier . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
-            $type
-        );
     }
 
 }

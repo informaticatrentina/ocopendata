@@ -57,8 +57,8 @@ class QueryConverter implements QueryConverterInterface
             $this->parameterConverter->setCurrentConvertedQuery( $this->convertedQuery );
             $this->sentenceConverter->setCurrentConvertedQuery( $this->convertedQuery );
 
-            $this->convertFilters();
             $this->convertParameters();
+            $this->convertFilters();
 
             if ( isset( $this->convertedQuery['Filter'] ) && empty( $this->convertedQuery['Filter'] ) )
             {

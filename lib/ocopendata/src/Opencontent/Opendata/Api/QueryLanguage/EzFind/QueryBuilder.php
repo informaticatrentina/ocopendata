@@ -3,7 +3,6 @@
 namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
 
 use Opencontent\Opendata\Api\ClassRepository;
-use Opencontent\QueryLanguage\Parser\TokenFactory;
 use Opencontent\QueryLanguage\QueryBuilder as BaseQueryBuilder;
 
 
@@ -42,6 +41,10 @@ class QueryBuilder extends BaseQueryBuilder
         '!range'
     );
 
+    public $functionFields = array(
+        'calendar'
+    );
+
     public function __construct()
     {
         $classRepository = new ClassRepository();
@@ -53,31 +56,29 @@ class QueryBuilder extends BaseQueryBuilder
 
         $this->fields = array_merge(
             $this->fields,
-            $this->metaFields,
             array_keys( $availableFieldDefinitions )
         );
 
-        $sentenceConverter = new SentenceConverter(
-            $availableFieldDefinitions,
-            $this->metaFields
+        $this->tokenFactory = new TokenFactory(
+            $this->fields,
+            $this->metaFields,
+            $this->functionFields,
+            $this->operators,
+            $this->parameters,
+            $this->clauses
         );
 
-        $parameterConverter = new ParameterConverter(
-            $availableFieldDefinitions,
-            $this->metaFields
-        );
+        $sensorHelper = new SolrNamesHelper( $availableFieldDefinitions, $this->tokenFactory );
+
+        $sentenceConverter = new SentenceConverter( $sensorHelper );
+
+        $parameterConverter = new ParameterConverter( $sensorHelper );
 
         $this->converter = new QueryConverter(
             $sentenceConverter,
             $parameterConverter
         );
 
-        $this->tokenFactory = new TokenFactory(
-            $this->fields,
-            $this->operators,
-            $this->parameters,
-            $this->clauses
-        );
     }
 
 }

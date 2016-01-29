@@ -14,13 +14,8 @@ if ( $http->hasGetVariable( 'query' ) )
         $factory = new \Opencontent\Opendata\Api\QueryLanguage\EzFind\QueryBuilder();
         $tokenFactory = $factory->getTokenFactory();
         $converter = new \Opencontent\QueryLanguage\Converter\AnalyzerQueryConverter();
-        $parser = new \Opencontent\QueryLanguage\Parser(
-            new \Opencontent\QueryLanguage\Query( $query ),
-            $query,
-            $tokenFactory
-        );
-
-        $query = $parser->parse();
+        $parser = new \Opencontent\QueryLanguage\Parser( new \Opencontent\QueryLanguage\Query( $query ) );
+        $query = $parser->setTokenFactory( $tokenFactory )->parse();
         $converter->setQuery( $query );
 
         $data = $converter->convert();
