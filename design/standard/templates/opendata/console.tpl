@@ -277,7 +277,7 @@
                     content += '<a href="#" data-query="'+data.nextPageQuery+'" class="search">(pagina successiva)</a></h3>';
                 else
                     content += '</h3>';
-                content += '<ul class="list-group">';
+                content += '<div style="max-height: 400px; overflow: scroll;"><ul class="list-group">';
                 $.each(results, function(){
                     if( this.metadata.classIdentifier != null ) {
                         content += '<li class="list-group-item">';
@@ -293,7 +293,7 @@
                         content += '</small>';
                     }
                 });
-                content += '</ul>';
+                content += '</ul></div>';
             }else{
                 content += '<h3>Nessun risultato</h3>';
             }
