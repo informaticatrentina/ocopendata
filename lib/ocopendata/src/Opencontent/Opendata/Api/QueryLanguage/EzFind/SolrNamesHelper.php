@@ -23,6 +23,8 @@ class SolrNamesHelper
      */
     protected $availableFieldDefinitions;
 
+    protected $originalAvailableFieldDefinitions;
+
     /**
      * @var TokenFactory
      */
@@ -31,6 +33,7 @@ class SolrNamesHelper
     public function __construct( array $availableFieldDefinitions, TokenFactory $tokenFactory )
     {
         $this->documentFieldName = new ezfSolrDocumentFieldName();
+        $this->originalAvailableFieldDefinitions = $availableFieldDefinitions;
         $this->availableFieldDefinitions = new \ArrayObject( $availableFieldDefinitions );
         $this->tokenFactory = $tokenFactory;
     }
@@ -156,7 +159,7 @@ class SolrNamesHelper
                 }
                 elseif ( $subField->data( 'is_field' ) )
                 {
-                    $subDataTypes = $this->getDatatypesByIdentifier( (string)$subField );
+                    $subDataTypes = $this->getUnFilteredDatatypesByIdentifier( (string)$subField );
                     foreach ( $subDataTypes as $subDataType )
                     {
                         $type = $this->getSolrType( $subDataType, $context );
@@ -183,6 +186,15 @@ class SolrNamesHelper
         if ( isset( $this->availableFieldDefinitions[$identifier] ) )
         {
             return array_keys( $this->availableFieldDefinitions[$identifier] );
+        }
+        throw new Exception( "Field $identifier not found or not searchable" );
+    }
+
+    protected function getUnFilteredDatatypesByIdentifier( $identifier )
+    {
+        if ( isset( $this->originalAvailableFieldDefinitions[$identifier] ) )
+        {
+            return array_keys( $this->originalAvailableFieldDefinitions[$identifier] );
         }
         throw new Exception( "Field $identifier not found or not searchable" );
     }
