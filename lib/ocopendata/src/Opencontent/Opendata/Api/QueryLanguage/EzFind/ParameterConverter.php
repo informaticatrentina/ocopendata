@@ -11,6 +11,7 @@ class ParameterConverter extends SentenceConverter
 
     /**
      * @param Sentence $parameter
+     *
      * @return void
      * @throws Exception
      */
@@ -18,10 +19,10 @@ class ParameterConverter extends SentenceConverter
     {
         if ( $parameter instanceof Parameter )
         {
-            $key = (string) $parameter->getKey();
+            $key = (string)$parameter->getKey();
             $value = $parameter->getValue();
 
-            switch( $key )
+            switch ( $key )
             {
                 case 'classes':
                     $this->convertClasses( $value );
@@ -30,22 +31,32 @@ class ParameterConverter extends SentenceConverter
                 case 'sort':
                 {
                     $this->convertSortBy( $value );
-                } break;
+                }
+                    break;
+
+                case 'geosort':
+                {
+                    $this->convertGeoSort( $value );
+                }
+                    break;
 
                 case 'limit':
                 {
                     $this->convertLimit( $value );
-                } break;
+                }
+                    break;
 
                 case 'offset':
                 {
                     $this->convertOffset( $value );
-                } break;
+                }
+                    break;
 
                 case 'subtree':
                 {
                     $this->convertSubtree( $value );
-                } break;
+                }
+                    break;
 
                 default:
                     throw new Exception( "Can not convert $key parameter" );
@@ -60,13 +71,17 @@ class ParameterConverter extends SentenceConverter
             $value = array( $value );
         }
         $list = array();
-        foreach( $value as $item )
+        foreach ( $value as $item )
+        {
             $list[] = trim( $item, "'" );
+        }
 
-        foreach( $list as $class )
+        foreach ( $list as $class )
         {
             if ( !in_array( $class, $this->classRepository->listClassIdentifiers() ) )
+            {
                 throw new Exception( "Class $class not found" );
+            }
         }
         $this->solrNamesHelper->filterAvailableFieldDefinitionsByClasses( $list );
         $this->convertedQuery['SearchContentClassID'] = $list;
@@ -77,14 +92,14 @@ class ParameterConverter extends SentenceConverter
         if ( is_array( $value ) )
         {
             $data = array();
-            foreach( $value as $field => $order )
+            foreach ( $value as $field => $order )
             {
                 if ( !in_array( $order, array( 'asc', 'desc' ) ) )
                 {
                     throw new Exception( "Can not convert sort order value: $order" );
                 }
-                $fieldNames = $this->solrNamesHelper->generateSortNames( $field  );
-                foreach( $fieldNames as $name )
+                $fieldNames = $this->solrNamesHelper->generateSortNames( $field );
+                foreach ( $fieldNames as $name )
                 {
                     $data[$name] = $order;
                 }
@@ -95,6 +110,45 @@ class ParameterConverter extends SentenceConverter
         else
         {
             throw new Exception( "Sort parameter require an hash value" );
+        }
+    }
+
+    protected function convertGeoSort( $value )
+    {
+        if ( !class_exists( 'eZFindGeoDistExtendedAttributeFilter' ) )
+        {
+            throw new Exception( "geo extended attribute filter not found: the server eZFind version is outdated" );
+        }
+        if ( is_array( $value ) )
+        {
+            $fields = $this->solrNamesHelper->getIdentifiersByDatatype( 'ezgmaplocation' );
+            $extendedFilters = array();
+            foreach ( $fields as $field )
+            {
+                $extendedFilters[] = array(
+                    'id' => 'geodist',
+                    'params' => array(
+                        'field' => $field,
+                        'latitude' => $value[0],
+                        'longitude' => $value[1]
+                    )
+                );
+            }
+            if ( isset( $this->convertedQuery['ExtendedAttributeFilter'] ) )
+            {
+                $this->convertedQuery['ExtendedAttributeFilter'] = array_merge(
+                    $this->convertedQuery['ExtendedAttributeFilter'],
+                    $extendedFilters
+                );
+            }
+            else
+            {
+                $this->convertedQuery['ExtendedAttributeFilter'] = $extendedFilters;
+            }
+        }
+        else
+        {
+            throw new Exception( "Geosort parameter require a LatLon array" );
         }
     }
 

@@ -24,6 +24,7 @@ class QueryBuilder extends BaseQueryBuilder
 
     public $parameters = array(
         'sort',
+        'geosort',
         'limit',
         'offset',
         'classes',

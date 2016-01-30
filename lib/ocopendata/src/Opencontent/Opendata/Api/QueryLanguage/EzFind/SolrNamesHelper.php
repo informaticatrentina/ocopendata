@@ -181,7 +181,7 @@ class SolrNamesHelper
         return $data;
     }
 
-    protected function getDatatypesByIdentifier( $identifier )
+    public function getDatatypesByIdentifier( $identifier )
     {
         if ( isset( $this->availableFieldDefinitions[$identifier] ) )
         {
@@ -190,13 +190,43 @@ class SolrNamesHelper
         throw new Exception( "Field $identifier not found or not searchable" );
     }
 
-    protected function getUnFilteredDatatypesByIdentifier( $identifier )
+    public function getUnFilteredDatatypesByIdentifier( $identifier )
     {
         if ( isset( $this->originalAvailableFieldDefinitions[$identifier] ) )
         {
             return array_keys( $this->originalAvailableFieldDefinitions[$identifier] );
         }
         throw new Exception( "Field $identifier not found or not searchable" );
+    }
+
+    public function getIdentifiersByDatatype( $datatype )
+    {
+        $result = array();
+        foreach ( $this->availableFieldDefinitions as $identifier => $data )
+        {
+            if ( array_key_exists( $datatype, $data ) )
+            {
+                $result[] = $identifier;
+            }
+        }
+        if ( !empty( $result ) )
+            return $result;
+        throw new Exception( "Datatype $datatype not found or not searchable" );
+    }
+
+    public function getUnFilteredIdentifiersByDatatype( $datatype )
+    {
+        $result = array();
+        foreach ( $this->originalAvailableFieldDefinitions as $identifier => $data )
+        {
+            if ( array_key_exists( $datatype, $data ) )
+            {
+                $result[] = $identifier;
+            }
+        }
+        if ( !empty( $result ) )
+            return $result;
+        throw new Exception( "Datatype $datatype not found or not searchable" );
     }
 
     /**
