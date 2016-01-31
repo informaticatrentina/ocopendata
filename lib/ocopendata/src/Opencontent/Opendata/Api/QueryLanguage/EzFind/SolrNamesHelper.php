@@ -187,7 +187,7 @@ class SolrNamesHelper
         {
             return array_keys( $this->availableFieldDefinitions[$identifier] );
         }
-        throw new Exception( "Field $identifier not found or not searchable" );
+        throw new Exception( "Field $identifier not found or not searchable in query class range" );
     }
 
     public function getUnFilteredDatatypesByIdentifier( $identifier )
@@ -211,7 +211,7 @@ class SolrNamesHelper
         }
         if ( !empty( $result ) )
             return $result;
-        throw new Exception( "Datatype $datatype not found or not searchable" );
+        throw new Exception( "Datatype $datatype not found or not searchable in query class range" );
     }
 
     public function getUnFilteredIdentifiersByDatatype( $datatype )
