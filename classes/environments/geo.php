@@ -13,40 +13,72 @@ class GeoEnvironmentSettings extends EnvironmentSettings
 
     protected $defaultSearchLimit = 500;
 
-    public function filterContent( Content $content )
+    public function filterContent(Content $content)
     {
         $language = isset( $this->request->get['language'] ) ? $this->request->get['language'] : null;
-        return $content->geoJsonSerialize( $language );
+
+        return $content->geoJsonSerialize($language);
     }
 
-    public function filterSearchResult( \Opencontent\Opendata\Api\Values\SearchResults $searchResults )
-    {
-        return $searchResults->geoJsonSerialize();
+    public function filterSearchResult(
+        \Opencontent\Opendata\Api\Values\SearchResults $searchResults,
+        \ArrayObject $query,
+        \Opencontent\QueryLanguage\QueryBuilder $builder
+    ) {
+        $collection = new FeatureCollection();
+        /** @var Feature $content */
+        foreach ($searchResults->searchHits as $i => $content) {
+            if ($this->issetGeoDistFilter($query)) {
+                $content->properties->add('index', ++$i);
+            }
+            $collection->add($content);
+        }
+        $collection->query = $searchResults->query;
+        $collection->nextPageQuery = $searchResults->nextPageQuery;
+        $collection->totalCount = $searchResults->totalCount;
+
+        return $collection;
     }
 
-    public function filterQuery( \ArrayObject $query )
+    protected function issetGeoDistFilter(\ArrayObject $query)
     {
-        $classRepository = new \Opencontent\Opendata\Api\ClassRepository();
-        $attributes = $classRepository->listAttributesGroupedByDatatype();
-        if ( isset( $attributes['ezgmaplocation'] ) )
-        {
+        if (isset( $query['ExtendedAttributeFilter'] )) {
+            foreach ($query['ExtendedAttributeFilter'] as $filter) {
+                if ($filter['id'] == 'geodist') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function filterQuery(\ArrayObject $query, \Opencontent\QueryLanguage\QueryBuilder $builder)
+    {
+        if (!$this->issetGeoDistFilter($query)) {
             $filters = array();
-            foreach ( $attributes['ezgmaplocation'] as $identifier => $classes )
-            {
-                $filters[] = "subattr_{$identifier}___longitude____f:[* TO *]";
+            /** @var Opencontent\Opendata\Api\QueryLanguage\EzFind\QueryBuilder $builder */
+            $fields = $builder->getSolrNamesHelper()->getIdentifiersByDatatype('ezgmaplocation');
+            foreach ($fields as $field) {
+                $field = $builder->getSolrNamesHelper()->generateSolrSubFieldName($field, 'coordinates', 'geopoint');
+                $filters[] = "{$field}:[-90,-90 TO 90,90]";
+                //                $field = $builder->getSolrNamesHelper()->generateSolrSubFieldName($field, 'latitude', 'float');
+                //                $filters[] = "{$field}:[* TO *]";
             }
-            if ( !isset( $query['Filter'] ) )
-            {
-                $query['Filter'] = array();
+
+            if (!empty( $filters )) {
+                if (!isset( $query['Filter'] )) {
+                    $query['Filter'] = array();
+                }
+                if (count($filters) > 1) {
+                    array_unshift($filters, 'or');
+                }
+                $query['Filter'][] = $filters;
+            } else {
+                throw new RuntimeException("No attribute type ezgmaplocation found");
             }
-            if ( count( $filters ) > 1 )
-                array_unshift( $filters, 'or' );
-            $query['Filter'][] = $filters;
         }
-        else
-        {
-            throw new RuntimeException( "No attribute type ezgmaplocation found" );
-        }
-        return parent::filterQuery( $query );
+
+        return parent::filterQuery($query, $builder);
     }
 }

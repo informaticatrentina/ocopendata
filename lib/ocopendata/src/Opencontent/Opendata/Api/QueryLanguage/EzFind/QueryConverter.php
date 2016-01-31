@@ -76,6 +76,8 @@ class QueryConverter implements QueryConverterInterface
             $filter = $this->parseItem( $item );
             if ( !empty( $filter ) && $filter !== null )
             {
+                if ( is_array( $filter ) && count( $filter ) == 1 )
+                    $filter = array_pop( $filter );
                 $filters[] = $filter;
             }
         }

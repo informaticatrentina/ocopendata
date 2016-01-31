@@ -19,6 +19,31 @@
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
     <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/leaflet.markercluster.js"></script>
+    <script src="/extension/ocopendata/design/standard/javascript/leaflet.makimarkers.js"></script>
+
+    <style>
+        {literal}
+        .leaflet-div-icon {
+            background: transparent;
+            border: none;
+        }
+
+        .leaflet-marker-icon .number{
+            background: #fff none repeat scroll 0 0;
+            border-radius: 20px;
+            color: #000;
+            font-size: 1em;
+            font-weight: bold;
+            height: 21px;
+            line-height: 21px;
+            margin-left: 2px;
+            position: relative;
+            text-align: center;
+            top: -37px;
+            width: 21px;
+        }
+        {/literal}
+    </style>
 
 </head>
 
@@ -26,8 +51,9 @@
 
 <div class="container">
 
-    <h2>OCQL Console
+    <h2 class="console">OCQL Console
         <small>beta version</small>
+        <small class="pull-right"><i class="fa fa-map-marker"></i> <small id="geolocation"></small></small>
     </h2>
 
     <form id="search" action="{'opendata/console'|ezurl(no)}" method="GET">
@@ -57,6 +83,7 @@
         </div>
         <div class="col-md-6">
             <div id="geo-results" style="margin: 20px 0"></div>
+            <div id="map" style="width: 100%; height: 400px"></div>
         </div>
     </div>
 
@@ -86,11 +113,46 @@
     <script>
     $(function() {ldelim}
         var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no,full)}/";
+        var contentEndpoint = "{'api/opendata/v2/content/read'|ezurl(no,full)}/";
         var searchEndpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
         var geoEndpoint = "{'api/opendata/v2/geo/search'|ezurl(no,full)}/";
         var classEndpoint = "{'api/opendata/v2/classes'|ezurl(no,full)}/";
         var availableTokens = [{foreach $tokens as $token}'{$token}'{delimiter},{/delimiter}{/foreach}];
         {literal}
+
+        // https://gist.github.com/comp615/2288108
+        L.NumberedDivIcon = L.Icon.extend({
+            options: {
+                iconUrl: 'http://cdn.leafletjs.com/leaflet/v0.7.7/images/marker-icon.png',
+                number: '',
+                shadowUrl: null,
+                iconSize: new L.Point(25, 41),
+                iconAnchor: new L.Point(13, 41),
+                popupAnchor: new L.Point(0, -33),
+                /*
+                 iconAnchor: (Point)
+                 popupAnchor: (Point)
+                 */
+                className: 'leaflet-div-icon'
+            },
+
+            createIcon: function () {
+                var div = document.createElement('div');
+                var img = this._createImg(this.options['iconUrl']);
+                var numdiv = document.createElement('div');
+                numdiv.setAttribute ( "class", "number" );
+                numdiv.innerHTML = this.options['number'] || '';
+                div.appendChild ( img );
+                div.appendChild ( numdiv );
+                this._setIconStyles(div, 'icon');
+                return div;
+            },
+
+            //you could change this to add a shadow like in the normal marker if you really wanted
+            createShadow: function () {
+                return null;
+            }
+        });
 
         var $searchContainers = {
             'queryString': $('#query-string'),
@@ -149,6 +211,7 @@
                     else if( data.length == 0 )
                         loadError("L'analisi della query non ha portato risultati");
                     else {
+                        markers.clearLayers();
                         $searchContainers.results.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
                         $searchContainers.geoResults.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
                         loadAnalysisResults(data);
@@ -210,24 +273,30 @@
                         var searchQuery = geoUrl.replace(geoEndpoint,'');
                         var content = '<strong>API /geo</strong>:<br/> <a href="'+geoUrl+'"><code>'+decodeURIComponent(searchQuery)+'</code></a>';
                         if ( response.features.length > 0 ) {
-                            content += '<h3>Visualizzati ' + response.features.length + ' marker</h3><div id="map" style="width: 100%; height: 400px"></div>'
+                            content += '<h3>Visualizzati ' + response.features.length + ' marker</h3>'
                             $searchContainers.geoResults.html(content);
-                            var map = L.map('map').setView([0, 0], 10);
-                            L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                            }).addTo(map);
                             var geoJsonLayer = L.geoJson(response,{
+                                pointToLayer: function(feature, latlng) {
+                                    if( 'index' in feature.properties )
+                                        return L.marker(latlng, {icon: new L.NumberedDivIcon({number: feature.properties.index})});
+                                    else
+                                        return L.marker(latlng);
+                                },
                                 onEachFeature: function(feature, layer) {
                                     var popup = '<a href="/content/view/full/'+feature.properties.mainNodeId+'" target="_blank"><strong>';
                                     popup += feature.properties.name;
-                                    popup += '</strong></a>';
+                                    popup += '</strong></a><br />';
+                                    popup += $.map(feature.geometry.coordinates.reverse(), function(val,index) {return val;}).join(",");
                                     layer.bindPopup(popup);
                                 }
                             });
-                            var markers = L.markerClusterGroup();
                             markers.addLayer(geoJsonLayer);
-                            map.addLayer(markers);
-                            map.fitBounds(markers.getBounds());
+                            if (typeof userMarker == 'object') {
+                                var group = new L.FeatureGroup([markers, userMarker]);
+                                map.fitBounds(group.getBounds());
+                            }else {
+                                map.fitBounds(markers.getBounds());
+                            }
                         }else{
                             content += '<h3>Nessun risultato</h3>';
                             $searchContainers.geoResults.html(content);
@@ -257,6 +326,9 @@
             var writeParameter = function(item){
                 content += '<span class="key label label-warning" data-toggle="tooltip" data-placement="top" title="Parametro">'+item.key+'</span> ';
                 content += '<span class="value label label-info" data-toggle="tooltip" data-placement="top" title="Valore ('+item.format+')">'+item.value+'</span> ';
+                if ( item.key == 'geosort' ){
+                    setUserMarker(new L.latLng(eval(item.value)));
+                }
             };
             $.each(data.analysis,function(){
                 if( this.type == 'filter' ) writeFilter(this);
@@ -291,8 +363,8 @@
                         content += '<br /><small>';
                         var published = new Date(Date.parse(this.metadata.published));
                         var modified = new Date(Date.parse(this.metadata.modified));
-                        content += ' Pubblicato il: '+ published.toDateString();
-                        content += ' Ultima modifica di: '+ modified.toDateString();
+                        content += 'ID: <a href="'+contentEndpoint+this.metadata.id+'">'+this.metadata.id+'</a> - Pubblicato il: '+ published.toDateString();
+                        content += ' - Ultima modifica di: '+ modified.toDateString();
                         content += '</small>';
                     }
                 });
@@ -372,7 +444,7 @@
         function extractLast( term ) {
             return split( term ).pop();
         }
-        $forms.search.find('input')
+        $forms.search.find('input.austosuggest')
             .bind( "keydown", function( event ) {
                 if ( event.keyCode === $.ui.keyCode.TAB &&
                         $( this ).autocomplete( "instance" ).menu.active ) {
@@ -397,6 +469,35 @@
                     return false;
                 }
             });
+
+        var map = L.map('map').setView([0, 0], 1);
+        L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        var markers = L.markerClusterGroup();
+        map.addLayer(markers);
+        var userMarker;
+        map.on('click', function (e) {
+            setUserMarker(e.latlng);
+        });
+        var setUserMarker = function(latlng){
+            var customIcon = L.MakiMarkers.icon({icon: "star", color: "#f00", size: "l"});
+            if (typeof userMarker != 'object')
+                userMarker = new L.marker(latlng,{icon: customIcon});
+            userMarker.setLatLng(latlng);
+            userMarker.addTo(map);
+            map.addLayer(userMarker);
+            userMarker.bindPopup(latlng.lat+','+latlng.lng);
+            $('#geolocation').html( latlng.lat+','+latlng.lng);
+        };
+
+        $('.fa-map-marker').bind( 'click', function(){
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position){
+                    setUserMarker(new L.latLng(position.coords.latitude,position.coords.longitude) );
+                });
+            }
+        });
 
         {/literal}
     });

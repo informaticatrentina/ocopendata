@@ -33,15 +33,15 @@ class ContentSearch
     {
         $builder = new EzFindQueryBuilder();
         $queryObject = $builder->instanceQuery( $query );
-        $ezFindQuery = $queryObject->convert();
+        $ezFindQueryObject = $queryObject->convert();
 
-        if ( !$ezFindQuery instanceof ArrayObject )
+        if ( !$ezFindQueryObject instanceof ArrayObject )
         {
             throw new \RuntimeException( "Query builder did not return a valid query" );
         }
 
-        $ezFindQuery = $this->currentEnvironmentSettings->filterQuery( $ezFindQuery );
-        $ezFindQuery = $ezFindQuery->getArrayCopy();
+        $ezFindQueryObject = $this->currentEnvironmentSettings->filterQuery( $ezFindQueryObject, $builder );
+        $ezFindQuery = $ezFindQueryObject->getArrayCopy();
 
         //$ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
         $ezFindQuery['AsObjects'] = false;
@@ -133,6 +133,6 @@ class ContentSearch
             $searchResults->searchHits[] = $content;
         }
 
-        return $this->currentEnvironmentSettings->filterSearchResult( $searchResults );
+        return $this->currentEnvironmentSettings->filterSearchResult( $searchResults, $ezFindQueryObject, $builder );
     }
 }

@@ -28,15 +28,5 @@ class SearchResults
      */
     public $searchHits = array();
 
-    public function geoJsonSerialize()
-    {
-        $collection = new FeatureCollection();
-        foreach( $this->searchHits as $content )
-        {
-            $collection->add( $content );
-        }
-        return $collection;
-    }
-
 
 }

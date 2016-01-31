@@ -47,6 +47,8 @@ class QueryBuilder extends BaseQueryBuilder
         'raw'
     );
 
+    protected $solrNamesHelper;
+
     public function __construct()
     {
         $classRepository = new ClassRepository();
@@ -70,17 +72,21 @@ class QueryBuilder extends BaseQueryBuilder
             $this->clauses
         );
 
-        $sensorHelper = new SolrNamesHelper( $availableFieldDefinitions, $this->tokenFactory );
+        $this->solrNamesHelper = new SolrNamesHelper( $availableFieldDefinitions, $this->tokenFactory );
 
-        $sentenceConverter = new SentenceConverter( $sensorHelper );
+        $sentenceConverter = new SentenceConverter( $this->solrNamesHelper );
 
-        $parameterConverter = new ParameterConverter( $sensorHelper );
+        $parameterConverter = new ParameterConverter( $this->solrNamesHelper );
 
         $this->converter = new QueryConverter(
             $sentenceConverter,
             $parameterConverter
         );
+    }
 
+    public function getSolrNamesHelper()
+    {
+        return $this->solrNamesHelper;
     }
 
 }

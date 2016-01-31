@@ -11,4 +11,9 @@ class Properties
             $this->{$key} = $value;
         }
     }
+
+    public function add( $key, $value )
+    {
+        $this->{$key} = $value;
+    }
 }
