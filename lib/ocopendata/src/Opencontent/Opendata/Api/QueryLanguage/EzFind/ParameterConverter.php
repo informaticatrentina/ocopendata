@@ -106,8 +106,7 @@ class ParameterConverter extends SentenceConverter
             $fields = $this->solrNamesHelper->getIdentifiersByDatatype('ezgmaplocation');
             $extendedFilters = array();
             if (count($fields) > 1) {
-                throw new Exception("There are ambigous geo identifiers (" . implode(', ',
-                        $fields) . "): reduce the classes parameter ");
+                throw new Exception("There are ambigous geo identifiers (" . implode(', ', $fields) . "): please reduce them using the 'classes' parameter (or fix your classes if you can)");
             }
             $field = $this->solrNamesHelper->generateSolrSubFieldName($fields[0], 'coordinates', 'geopoint');
 
