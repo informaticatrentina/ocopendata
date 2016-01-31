@@ -273,9 +273,10 @@
                         var searchQuery = geoUrl.replace(geoEndpoint,'');
                         var content = '<strong>API /geo</strong>:<br/> <a href="'+geoUrl+'"><code>'+decodeURIComponent(searchQuery)+'</code></a>';
                         if ( response.features.length > 0 ) {
-                            content += '<h3>Visualizzati ' + response.features.length + ' su ' +response.totalCount+ ' marker ';
+                            total = response.features.length + markers.getLayers().length;
+                            content += '<h3>Visualizzati ' + total + ' su ' +response.totalCount+ ' marker ';
                             if ( response.nextPageQuery !== null )
-                                content += '<a href="#" data-query="'+response.nextPageQuery+'" class="geosearch">(pagina successiva)</a></h3>';
+                                content += '<a href="#" data-query="'+response.nextPageQuery+'" class="geosearch">(ancora)</a></h3>';
                             $searchContainers.geoResults.html(content);
                             var geoJsonLayer = L.geoJson(response,{
                                 pointToLayer: function(feature, latlng) {
