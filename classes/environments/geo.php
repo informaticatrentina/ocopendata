@@ -25,6 +25,9 @@ class GeoEnvironmentSettings extends EnvironmentSettings
         \ArrayObject $query,
         \Opencontent\QueryLanguage\QueryBuilder $builder
     ) {
+
+        $searchResults = parent::filterSearchResult( $searchResults, $query, $builder );
+
         $collection = new FeatureCollection();
         /** @var Feature $content */
         foreach ($searchResults->searchHits as $i => $content) {
@@ -36,6 +39,7 @@ class GeoEnvironmentSettings extends EnvironmentSettings
         $collection->query = $searchResults->query;
         $collection->nextPageQuery = $searchResults->nextPageQuery;
         $collection->totalCount = $searchResults->totalCount;
+        $collection->facets = $searchResults->facets;
 
         return $collection;
     }

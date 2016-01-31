@@ -28,5 +28,10 @@ class SearchResults
      */
     public $searchHits = array();
 
+    /**
+     * @var array
+     */
+    public $facets = array();
+
 
 }

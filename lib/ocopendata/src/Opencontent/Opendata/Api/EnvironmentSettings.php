@@ -81,7 +81,7 @@ class EnvironmentSettings
     /**
      * @param SearchResults $searchResults
      *
-     * @return \ArrayAccess
+     * @return SearchResults
      */
     public function filterSearchResult(SearchResults $searchResults, \ArrayObject $query, QueryBuilder $builder)
     {

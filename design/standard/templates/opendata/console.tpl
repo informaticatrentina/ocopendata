@@ -273,7 +273,9 @@
                         var searchQuery = geoUrl.replace(geoEndpoint,'');
                         var content = '<strong>API /geo</strong>:<br/> <a href="'+geoUrl+'"><code>'+decodeURIComponent(searchQuery)+'</code></a>';
                         if ( response.features.length > 0 ) {
-                            content += '<h3>Visualizzati ' + response.features.length + ' marker</h3>'
+                            content += '<h3>Visualizzati ' + response.features.length + ' su ' +response.totalCount+ ' marker ';
+                            if ( response.nextPageQuery !== null )
+                                content += '<a href="#" data-query="'+response.nextPageQuery+'" class="geosearch">(pagina successiva)</a></h3>';
                             $searchContainers.geoResults.html(content);
                             var geoJsonLayer = L.geoJson(response,{
                                 pointToLayer: function(feature, latlng) {
@@ -378,6 +380,11 @@
         $(document).on( 'click', 'a.search', function(e){
             $searchContainers.results.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
             contentSearch($(e.currentTarget).data('query'));
+            e.preventDefault();
+        });
+        $(document).on( 'click', 'a.geosearch', function(e){
+            $searchContainers.geoResults.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
+            geoSearch($(e.currentTarget).data('query'));
             e.preventDefault();
         });
         $forms.search.submit( function(e){
