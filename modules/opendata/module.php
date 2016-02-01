@@ -39,11 +39,18 @@ $ViewList['analyzer'] = array(
     'params' => array(),
     'unordered_params' => array()
 );
+$ViewList['datatable'] = array(
+    'functions' => array( 'datatable' ),
+    'script' => 'datatable.php',
+    'params' => array(),
+    'unordered_params' => array()
+);
 
 $FunctionList = array();
 $FunctionList['api'] = array();
 $FunctionList['console'] = array();
 $FunctionList['analyzer'] = array();
+$FunctionList['datatable'] = array();
 $FunctionList['push'] = array();
 $FunctionList['view'] = array();
 $FunctionList['import'] = array();

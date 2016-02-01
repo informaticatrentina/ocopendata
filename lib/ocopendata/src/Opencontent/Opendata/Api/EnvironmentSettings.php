@@ -33,6 +33,9 @@ class EnvironmentSettings
 
     protected $requestBaseUri;
 
+    /**
+     * @var \ezpRestRequest
+     */
     protected $request;
 
     public function __construct(array $properties = array())
