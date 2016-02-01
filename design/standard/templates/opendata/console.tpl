@@ -209,7 +209,7 @@
                     if( 'error_message' in data )
                         loadError(data.error_message);
                     else if( data.length == 0 )
-                        loadError("L'analisi della query non ha portato risultati");
+                        loadError("ANALISI: L'analisi della query non ha portato risultati");
                     else {
                         markers.clearLayers();
                         $searchContainers.results.html('<i class="fa fa-spinner fa-spin fa-3x"></i>');
@@ -221,7 +221,7 @@
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error.error_message);
+                    loadError("ANALISI: "+error.error_message);
                 }
             });
         };
@@ -234,14 +234,14 @@
                 dataType: "json",
                 success: function(response) {
                     if( 'error_message' in response )
-                        loadError(response.error_message);
+                        loadError("CONTENT: "+response.error_message);
                     else {
                         loadSearchResults(url,response);
                     }
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error.error_message);
+                    loadError("CONTENT: "+error.error_message);
                 }
             });
         };
@@ -254,7 +254,7 @@
                 dataType: "json",
                 success: function(response) {
                     if( 'error_message' in response )
-                        loadError(response.error_message);
+                        loadError('GEO: '+error.error_message);
                     else {
 
                         $.ajax({
@@ -264,10 +264,10 @@
                             dataType: 'json',
                             success: function(validatorData) {
                                 if (validatorData.status === 'error') {
-                                    loadError('There was a problem with your GeoJSON: ' + validatorData.message);
+                                    loadError('GEO: There was a problem with your GeoJSON: ' + validatorData.message);
                                 }
                             },
-                            error: function(){loadError('Problema con validatore geojson');}
+                            error: function(){loadError('GEO: Problema con validatore geojson');}
                         });
 
                         var searchQuery = geoUrl.replace(geoEndpoint,'');
@@ -308,7 +308,7 @@
                 },
                 error: function(data){
                     var error = data.responseJSON;
-                    loadError(error.error_message);
+                    loadError('GEO: '+error.error_message);
                 }
             });
         };
@@ -406,13 +406,13 @@
                 dataType: "json",
                 success: function (data) {
                     if ('error_message' in data)
-                        loadError(data.error_message);
+                        loadError('CLASS: '+data.error_message);
                     else
                         loadClass(data);
                 },
                 error: function (data) {
                     var error = data.responseJSON;
-                    loadError(error.error_message);
+                    loadError('CLASS: '+error.error_message);
                 }
             });
         };
