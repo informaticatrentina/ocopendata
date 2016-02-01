@@ -9,7 +9,7 @@ use eZSection;
 use eZContentLanguage;
 use eZContentObjectTreeNode;
 
-class Metadata
+class Metadata implements \ArrayAccess
 {
     public $id;
 
@@ -145,4 +145,26 @@ class Metadata
         return $metadata;
     }
 
+    public function offsetExists($property)
+    {
+        return isset( $this->{$property} );
+    }
+
+    public function offsetGet($property)
+    {
+        return $this->{$property};
+    }
+
+    public function offsetSet($property, $value)
+    {
+        if ( property_exists( $this, $property ) )
+            $this->{$property} = $value;
+        else
+            throw new OutOfRangeException( $property );
+    }
+
+    public function offsetUnset($property)
+    {
+        $this->{$property} = null;
+    }
 }

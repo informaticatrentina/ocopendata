@@ -85,11 +85,14 @@ class SolrNamesHelper
             {
                 $field = 'object_states';
             }
+            elseif ( $field == 'class' )
+            {
+                return array( 'meta_class' => 'meta_class_identifier_ms' );
+            }
             return array( 'meta_' . $field => $this->getMetaFieldName( (string)$field, $context ) );
         }
         elseif ( $field->data( 'is_field' ) )
         {
-
             if ( $subFields = $field->data( 'sub_fields' ) )
             {
                 if ( count( $subFields ) == 2 )
@@ -105,6 +108,11 @@ class SolrNamesHelper
             }
 
             return $this->getFieldNames( $field, $context );
+        }
+        elseif ( $field->data( 'is_function_field' ) && $field->data( 'function' ) == 'raw')
+        {
+            $fieldName = trim( str_replace( 'raw', '', (string)$field ), '[]' );
+            return array( $fieldName );
         }
         throw new Exception( "Can not convert field $field" );
     }

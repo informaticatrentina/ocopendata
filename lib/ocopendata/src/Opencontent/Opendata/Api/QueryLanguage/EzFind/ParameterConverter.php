@@ -51,6 +51,12 @@ class ParameterConverter extends SentenceConverter
                 }
                     break;
 
+                case 'facets': {
+                    $this->convertFacets($value);
+                }
+                    break;
+
+
                 default:
                     throw new Exception("Can not convert $key parameter");
             }
@@ -103,19 +109,23 @@ class ParameterConverter extends SentenceConverter
         }
 
         if (is_array($value) && count($value) == 2) {
+
             $fields = $this->solrNamesHelper->getIdentifiersByDatatype('ezgmaplocation');
-            $extendedFilters = array();
             if (count($fields) > 1) {
-                throw new Exception("There are ambigous geo identifiers (" . implode(', ', $fields) . "): please reduce them using the 'classes' parameter (or fix your classes if you can)");
+                throw new Exception("There are ambigous geo identifiers (" . implode(', ',
+                        $fields) . "): please reduce them using the 'classes' parameter (or fix your classes if you can)");
             }
             $field = $this->solrNamesHelper->generateSolrSubFieldName($fields[0], 'coordinates', 'geopoint');
+
+            $extendedFilters = array();
 
             $latitude = (float)$value[0];
             $longitude = (float)$value[1];
 
-            if ( \eZINI::instance( 'ocopendata.ini' )->hasVariable( 'DevSettings', 'SolrGmapLocationBugWorkround' )
-                 && \eZINI::instance( 'ocopendata.ini' )->variable( 'DevSettings', 'SolrGmapLocationBugWorkround' ) == 'enabled' )
-            {
+            if (\eZINI::instance('ocopendata.ini')->hasVariable('DevSettings', 'SolrGmapLocationBugWorkround')
+                && \eZINI::instance('ocopendata.ini')->variable('DevSettings',
+                    'SolrGmapLocationBugWorkround') == 'enabled'
+            ) {
                 $latitude = (float)$value[1];
                 $longitude = (float)$value[0];
             }
@@ -161,4 +171,66 @@ class ParameterConverter extends SentenceConverter
         $value = array_map('intval', $value);
         $this->convertedQuery['SearchSubTreeArray'] = $value;
     }
+
+    protected function convertFacets($value)
+    {
+        $facets = array();
+
+        foreach ($value as $item) {
+
+            $item = self::parseFacetQueryValue( $item );
+
+            switch( $item['field'] )
+            {
+                case 'author':
+                {
+                    $fields = array( \eZSolr::getMetaFieldName( 'owner_id', 'facet' ) );
+                } break;
+
+                case 'class':
+                {
+                    $fields = array( \eZSolr::getMetaFieldName( 'class_identifier', 'facet' ) );
+                } break;
+
+//                case 'installation':
+//                {
+//                    $fields = array( \eZSolr::getMetaFieldName( 'installation_id', 'facet' ) );
+//                } break;
+
+                case 'translation':
+                {
+                    $fields = array( \eZSolr::getMetaFieldName( 'language_code', 'facet' ) );
+                } break;
+
+                default:
+                {
+                    $fields = $this->solrNamesHelper->generateFieldNames($item['field'], 'filter');
+                } break;
+            }
+
+            foreach ($fields as $field) {
+                $facets[] = array(
+                    'field' => $field,
+                    'name'=> $item['field'],
+                    'limit' => $item['limit'],
+                    'offset' => $item['offset'],
+                    'sort' => $item['sort']
+                );
+            }
+        }
+        $this->convertedQuery['Facet'] = $facets;
+    }
+
+    public static function parseFacetQueryValue( $item )
+    {
+        $item = trim( $item, "'" );
+        @list( $field, $sort, $limit, $offset ) = explode( '|', $item );
+        return array(
+            'field'=> $field,
+            'limit' => $limit ? $limit : 100,
+            'offset' => $offset ? $offset : 0,
+            'sort' => $sort ? $sort : 'count'
+        );
+    }
+
 }

@@ -238,9 +238,8 @@ class SentenceConverter
         $type = array_pop( $typeParts );
         switch ( $type )
         {
-            case 'meta_section';
-            case 'meta_state';
             case 'meta_id';
+            case 'meta_owner_id';
             case 'tint':
             case 'sint':
             case 'int':

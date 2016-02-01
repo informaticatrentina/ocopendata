@@ -20,6 +20,7 @@ class QueryBuilder extends BaseQueryBuilder
         'modified',
         'section',
         'state',
+        'class'
     );
 
     public $parameters = array(
@@ -28,7 +29,8 @@ class QueryBuilder extends BaseQueryBuilder
         'limit',
         'offset',
         'classes',
-        'subtree'
+        'subtree',
+        'facets'
     );
 
     public $operators = array(

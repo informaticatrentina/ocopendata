@@ -48,7 +48,7 @@ class ContentSearch
         $ezFindQuery['FieldsToReturn'] = array( SolrStorage::getSolrIdentifier() );
 
         $solr = new eZSolr();
-        $rawResults = $solr->search(
+        $rawResults = @$solr->search(
             $ezFindQuery['_query'],
             $ezFindQuery
         );
@@ -130,7 +130,24 @@ class ContentSearch
                     )
                 );
             }
+        }
 
+        if ( isset( $ezFindQuery['Facet'] )
+             && is_array( $ezFindQuery['Facet'] )
+             && !empty( $ezFindQuery['Facet'] )
+             && $rawResults['SearchExtras'] instanceof ezfSearchResultInfo)
+        {
+            $facets = array();
+            $facetResults = $rawResults['SearchExtras']->attribute('facet_fields');
+            foreach( $ezFindQuery['Facet'] as $index => $facetDefinition )
+            {
+                $facetResult = $facetResults[$index];
+                $facets[] = array(
+                    'name' => $facetDefinition['name'],
+                    'data' => $facetResult['countList']
+                );
+            }
+            $searchResults->facets = $facets;
         }
 
         return $this->currentEnvironmentSettings->filterSearchResult( $searchResults, $ezFindQueryObject, $builder );
