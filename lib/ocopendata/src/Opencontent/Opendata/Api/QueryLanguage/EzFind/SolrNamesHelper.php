@@ -322,7 +322,8 @@ class SolrNamesHelper
             ezfSolrDocumentFieldBase::SUBMETA_FIELD_PREFIX
             . $identifier
             . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR
-            . $subIdentifier,
+            . $subIdentifier
+            . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
             eZSolr::getMetaAttributeType( $subIdentifier )
         );
     }
