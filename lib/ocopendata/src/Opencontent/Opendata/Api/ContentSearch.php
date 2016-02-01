@@ -117,6 +117,7 @@ class ContentSearch
                 }
 
                 $content = $contentRepository->read( $content );
+                $searchResults->searchHits[] = $content;
             }
             catch ( Exception $e )
             {
@@ -130,7 +131,6 @@ class ContentSearch
                 );
             }
 
-            $searchResults->searchHits[] = $content;
         }
 
         return $this->currentEnvironmentSettings->filterSearchResult( $searchResults, $ezFindQueryObject, $builder );
