@@ -90,7 +90,7 @@ class OCOpenDataController extends ezpRestContentController
         {
             
             // @todo
-            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ) ) );
+            $link = $this->request->getHostURI() . $this->getRouter()->generateUrl( 'openDataListByClass', array( 'classIdentifier' => $class->attribute( 'identifier' ), 'offset' => 0, 'limit' => 10 ) );
             $link = explode( '(', $link );
             $link = $link[0];
             
