@@ -10,7 +10,7 @@ class DatatableEnvironmentSettings extends DefaultEnvironmentSettings
     ) {
 
         return array(
-            'draw' => (int)( $this->request->get['draw']++ ),
+            'draw' => (int)($this->request->get['draw']++),
             'recordsTotal' => (int)$searchResults->totalCount,
             'recordsFiltered' => (int)$searchResults->totalCount,
             'data' => $searchResults->searchHits,
@@ -18,13 +18,15 @@ class DatatableEnvironmentSettings extends DefaultEnvironmentSettings
         );
     }
 
-    public function filterQuery(\ArrayObject $query, \Opencontent\QueryLanguage\QueryBuilder $builder)
-    {
+    public function filterQuery(
+        \ArrayObject $query,
+        \Opencontent\QueryLanguage\QueryBuilder $builder
+    ) {
         $parameters = $this->request->get;
-        if (isset( $parameters['length'] )) {
+        if (isset($parameters['length'])) {
             $query['SearchLimit'] = $parameters['length'];
         }
-        if (isset( $parameters['start'] )) {
+        if (isset($parameters['start'])) {
             $query['SearchOffset'] = $parameters['start'];
         }
 
