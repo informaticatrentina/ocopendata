@@ -59,7 +59,7 @@ class Base
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
-        if ( !is_string( $data ) )
+        if ( $data !== null && !is_string( $data ) )
             throw new InvalidInputException( 'Invalid type', $identifier, $data );
     }
 

@@ -5,6 +5,8 @@ namespace Opencontent\Opendata\Api\QueryLanguage\EzFind;
 use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\StateRepository;
 use Opencontent\Opendata\Api\SectionRepository;
+use Opencontent\Opendata\Api\Values\ContentSection;
+use Opencontent\Opendata\Api\Values\ContentState;
 use Opencontent\QueryLanguage\Parser\Sentence;
 use Opencontent\QueryLanguage\Converter\Exception;
 use ArrayObject;
@@ -281,7 +283,7 @@ class SentenceConverter
             case 'meta_section_id':
             {
                 $section = $this->sectionRepository->load( $value );
-                if ( is_array( $section ) )
+                if ( $section instanceof ContentSection )
                 {
                     $value = (int)$section['id'];
                 }
@@ -291,7 +293,7 @@ class SentenceConverter
             case 'meta_object_states':
             {
                 $state = $this->stateRepository->load( $value );
-                if ( is_array( $state ) )
+                if ( $state instanceof ContentState )
                 {
                     $value = (int)$state['id'];
                 }

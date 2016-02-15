@@ -7,6 +7,7 @@ use eZSys;
 use eZClusterFileHandler;
 use eZContentObjectStateGroup;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
+use Opencontent\Opendata\Api\Values\ContentState;
 
 class StateRepository
 {
@@ -22,6 +23,19 @@ class StateRepository
             }
         }
         throw new NotFoundException( $identifier, 'State' );
+    }
+
+    public function defaultStates()
+    {
+        $defaults = array();
+        /** @var \eZContentObjectState[] $defaultStates */
+        $defaultStates = \eZContentObjectState::defaults();
+        foreach( $defaultStates as $defaultState )
+        {
+            $default = $this->load( $defaultState->attribute( 'id' ) );
+            $defaults[$default['identifier']] = $default;
+        }
+        return $defaults;
     }
 
     public function loadAll()
@@ -79,13 +93,13 @@ class StateRepository
             /** @var \eZContentObjectState $state */
             foreach( $group->attribute( 'states' ) as $state )
             {
-                $stateList[] = array_merge(
+                $stateList[] = new ContentState( array_merge(
                     array(
                     'id' => $state->attribute( 'id' ),
                     'identifier' => $stateGroup['group_identifier'] . '.' . $state->attribute( 'identifier' ),
                     'state_identifier' => $state->attribute( 'identifier' ),
                     ), $stateGroup
-                );
+                ) );
             }
         }
 

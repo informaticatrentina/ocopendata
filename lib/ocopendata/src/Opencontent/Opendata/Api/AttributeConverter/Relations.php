@@ -60,7 +60,7 @@ class Relations extends Base
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
-        if ( !is_array( $data ) )
+        if ( is_array( $data ) )
         {
             foreach( $data as $item )
             {
@@ -85,8 +85,9 @@ class Relations extends Base
                     }
                 }
             }
+        }else {
+            throw new InvalidInputException('Invalid data', $identifier, $data);
         }
-        throw new InvalidInputException( 'Invalid data', $identifier, $data );
     }
 
     protected static function findContents( $data )

@@ -143,7 +143,7 @@ class ContentClass
                 'dataType' => $attribute->attribute( 'data_type_string' ),
                 'template' => $template,
                 'isSearchable' => (bool)$attribute->attribute( 'is_searchable' ),
-                'IsRequired' => (bool)$attribute->attribute( 'is_required' ),
+                'isRequired' => (bool)$attribute->attribute( 'is_required' ),
             );
         }
 
@@ -153,5 +153,21 @@ class ContentClass
     public static function __set_state( array $array )
     {
         return new static( $array );
+    }
+
+    /**
+     * @return int
+     */
+    public function getClassId()
+    {
+        return eZContentClass::classIDByIdentifier( $this->identifier );
+    }
+
+    /**
+     * @return eZContentClass
+     */
+    public function getClassObject()
+    {
+        return eZContentClass::fetchByIdentifier( $this->identifier );
     }
 }

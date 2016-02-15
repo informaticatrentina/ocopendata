@@ -7,6 +7,7 @@ use Opencontent\Opendata\Api\ContentSearch;
 use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\Exception\BaseException;
 use Opencontent\Opendata\Api\Values\ContentClass;
+use Opencontent\Opendata\Api\Structs\ContentCreateStruct;
 
 class OCOpenDataController2 extends ezpRestContentController
 {
@@ -66,7 +67,6 @@ class OCOpenDataController2 extends ezpRestContentController
     protected function getPayload()
     {
         $data = json_decode( file_get_contents( "php://input" ), true );
-
         return $data;
     }
 
@@ -162,7 +162,8 @@ class OCOpenDataController2 extends ezpRestContentController
         {
             $this->setEnvironment();
             $result = new ezpRestMvcResult();
-            $result->variables['result'] = $this->contentRepository->create( $this->getPayload() );
+            $createStruct = ContentCreateStruct::fromArray( $this->getPayload() );
+            $result->variables['result'] = (array)$this->contentRepository->create( $createStruct );
         }
         catch ( Exception $e )
         {

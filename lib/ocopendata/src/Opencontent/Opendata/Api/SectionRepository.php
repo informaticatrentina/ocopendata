@@ -7,6 +7,7 @@ use eZSys;
 use eZClusterFileHandler;
 use eZSection;
 use Opencontent\Opendata\Api\Exception\NotFoundException;
+use Opencontent\Opendata\Api\Values\ContentSection;
 
 class SectionRepository
 {
@@ -72,8 +73,13 @@ class SectionRepository
             null,
             false
         );
+        $data = array();
+        foreach( $sectionList as $section )
+        {
+            $data[] = new ContentSection( $section );
+        }
         return array(
-            'content' => $sectionList,
+            'content' => $data,
             'scope' => 'ocopendata-cache',
             'datatype' => 'php',
             'store' => true

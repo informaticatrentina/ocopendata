@@ -7,6 +7,7 @@ use Opencontent\Opendata\Api\Gateway\FileSystem;
 use Opencontent\Opendata\Api\Gateway\Database;
 use Opencontent\Opendata\Api\Gateway\SolrStorage;
 use Opencontent\Opendata\Api\Exception\ForbiddenException;
+use Opencontent\Opendata\Api\Structs\ContentCreateStruct;
 use Opencontent\Opendata\Api\Values\Content;
 
 class ContentRepository
@@ -45,9 +46,11 @@ class ContentRepository
         return $this->currentEnvironmentSettings->filterContent( $content );
     }
 
-    public function create( $data )
+    public function create( ContentCreateStruct $createStruct )
     {
-        return 'todo';
+        $createStruct->validate();
+        $createStruct->checkAccess( \eZUser::currentUser() );
+        return $createStruct;
     }
 
     public function update( $data )

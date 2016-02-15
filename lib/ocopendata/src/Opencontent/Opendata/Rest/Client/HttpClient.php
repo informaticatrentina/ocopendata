@@ -23,7 +23,7 @@ class HttpClient
 
     protected $apiEnvironmentPreset;
 
-    protected $apiEndPontBase;
+    protected $apiEndPointBase;
 
     public static $connectionTimeout = 60;
 
@@ -34,14 +34,14 @@ class HttpClient
         $login,
         $password,
         $apiEnvironmentPreset = 'content',
-        $apiEndPontBase = '/api/opendata/v2'
+        $apiEndPointBase = '/api/opendata/v2'
     )
     {
         $this->server = rtrim( $server, '/' );
         $this->login = $login;
         $this->password = $password;
         $this->apiEnvironmentPreset = $apiEnvironmentPreset;
-        $this->apiEndPontBase = rtrim( $apiEndPontBase, '/' );
+        $this->apiEndPointBase = rtrim( $apiEndPointBase, '/' );
     }
 
     public function setProxy(
@@ -77,7 +77,7 @@ class HttpClient
     public function request( $method, $path, $data = null )
     {
         $credentials = "{$this->login}:{$this->password}";
-        $url = $this->server . $this->apiEndPontBase . $path;
+        $url = $this->server . $this->apiEndPointBase . $path;
 
         $headers = array( "Authorization: Basic " . base64_encode( $credentials ) );
 
