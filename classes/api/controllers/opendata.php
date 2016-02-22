@@ -3,6 +3,11 @@
 class OCOpenDataController extends ezpRestContentController
 {
 
+    /**
+     * @var ezpRestRequest
+     */
+    protected $request;
+
     public function doHelp()
     {
         $result = new ezpRestMvcResult();
