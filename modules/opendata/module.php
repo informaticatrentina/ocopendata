@@ -45,6 +45,12 @@ $ViewList['datatable'] = array(
     'params' => array(),
     'unordered_params' => array()
 );
+$ViewList['help'] = array(
+    'functions' => array( 'console' ),
+    'script' => 'help.php',
+    'params' => array( 'Section', 'Identifier' ),
+    'unordered_params' => array()
+);
 
 $FunctionList = array();
 $FunctionList['api'] = array();

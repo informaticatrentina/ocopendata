@@ -159,6 +159,10 @@ class Converter implements \OcOpenDataConverterInterface
                         return $this->dataMap['fields_description']->toString();
                     }
                 }
+                elseif ( isset( $this->dataMap['fields_description_text'] ) && $this->dataMap['fields_description_text']->attribute( 'has_content' ) )
+                {
+                    return $this->dataMap['fields_description_text']->toString();
+                }
                 break;
 
             case 'Data di creazione':
@@ -263,7 +267,7 @@ class Converter implements \OcOpenDataConverterInterface
     {
         if ( isset( $this->dataMap['notes'] ) && $this->dataMap['notes']->hasContent() )
         {
-            return strtolower( $this->dataMap['notes']->toString() );
+            return $this->dataMap['notes']->toString();
         }
         return null;
     }
@@ -398,8 +402,10 @@ class Converter implements \OcOpenDataConverterInterface
                         if ( isset( $resource[$resourceAttribute] ) && $resource[$resourceAttribute]->attribute( 'has_content' ) )
                         {
                             $string = $resource[$resourceAttribute]->toString();
-                            $string = str_replace( "\n", " ", $string );
-                            $string = str_replace( "\r", " ", $string );
+                            if ( $resourceAttribute == 'description' )
+                            {
+                                $string = str_replace( ";", "", $string );
+                            }
                             $data[$resourceAttribute] = $string;
                         }
                         break;
