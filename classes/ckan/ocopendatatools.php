@@ -4,7 +4,7 @@
  * Tool per la gestione dei dataset e la loro esposizione
  * Estende la libreria Ckan_client
  */
-class OCOpenDataTools extends Ckan_client
+class OCOpenDataTools
 {
     /**
      * Separatore per il remote id
@@ -17,52 +17,88 @@ class OCOpenDataTools extends Ckan_client
      * @var string
      */
     static $InstallationID;
-    
-    /**
-     * Risorse Api
-     * @see parent::resources
-     */
-    protected $resources = array(
-		'package_register' => 'rest/dataset',
-		'package_entity' => 'rest/dataset',
-		'group_register' => 'rest/group',
-		'group_entity' => 'rest/group',
-		'tag_register' => 'rest/tag',
-		'tag_entity' => 'rest/tag',
-		'rating_register' => 'rest/rating',
-		'rating_entity' => 'rest/rating',
-		'revision_register' => 'rest/revision',
-		'revision_entity' => 'rest/revision',
-		'license_list' => 'rest/licenses',
-		'package_search' => 'search/dataset'
-	);
-    
+
     /**
      * Configurazioni ini
      * @var eZINI
      */
     public $openDataIni;
-    
+
+    /**
+     * @var OcOpenDataClientInterface
+     */
+    public $client;
+
+    /**
+     * @var OcOpenDataConverterInterface
+     */
+    public $converter;
+
+    /**
+     * @var OcOpendataOrganizationBuilderInterface
+     */
+    public $organizationBuilder;
+
     /**
      * @see parent::__construct
-     * @var string $api_key
+     * @var string $apiKey
      */
-    public function __construct( $api_key = false )
+    /**
+     * OCOpenDataTools constructor.
+     *
+     * @param null $apiKey
+     * @param array|null $organizationParameters
+     */
+    public function __construct( array $organizationParameters = null )
     {
         $this->openDataIni = eZINI::instance( 'ocopendata.ini' );
-        $this->base_url = $this->openDataIni->variable( 'CkanSettings', 'BaseUrl' );
-        $this->api_version = $this->openDataIni->variable( 'CkanSettings', 'ApiVersion' );
-        if ( !$api_key && $this->openDataIni->hasVariable( 'CkanSettings', 'ApiKey' ) )
+        $baseUrl = $this->openDataIni->variable( 'CkanSettings', 'BaseUrl' );
+        $apiVersion = $this->openDataIni->variable( 'CkanSettings', 'ApiVersion' );
+
+        if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'OrganizationBuilder' ) )
         {
-            $api_key = $this->openDataIni->variable( 'CkanSettings', 'ApiKey' );
+            $organizationBuilderClassName = $this->openDataIni->variable( 'GeneralSettings', 'OrganizationBuilder' );
+            $this->organizationBuilder =  new $organizationBuilderClassName( $organizationParameters );
         }
-        parent::__construct( $api_key );
+
+        $apiKey = null;
+        if ( $this->openDataIni->hasVariable( 'CkanSettings', 'ApiKey' ) )
+        {
+            $apiKey = $this->openDataIni->variable( 'CkanSettings', 'ApiKey' );
+        }
+        if ( intval( $apiVersion ) == 2 ){
+            $this->client = new CkanClientVersion2($apiKey,$baseUrl);
+            $this->converter = new OCOpenDataConverter();
+        }
+        else
+        {
+            $clientClassName = '\Opencontent\Ckan\DatiTrentinoIt\Client';
+            $converterClassName = '\Opencontent\Ckan\DatiTrentinoIt\Converter';
+            if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'Client' ) )
+            {
+                $clientClassName = $this->openDataIni->variable( 'GeneralSettings', 'Client' );
+            }
+            if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'Converter' ) )
+            {
+                $clientClassName = $this->openDataIni->variable( 'GeneralSettings', 'Converter' );
+            }
+            $this->client = new $clientClassName($apiKey,$baseUrl);
+            $this->converter = new $converterClassName();
+
+            $this->converter->setOrganizationBuilder( $this->organizationBuilder );
+        }
+    }
+
+    public function getClient()
+    {
+        return $this->client;
     }
     
     /**
      * Push di un oggetto (creazione o aggiornamento) in CKAN
      * @param eZContentObject|integer $object
      * @throws Exception
+     * @return stdClass
      */
     public function pushObject( $object )
     {
@@ -74,28 +110,14 @@ class OCOpenDataTools extends Ckan_client
         {
             try
             {
-                $data = $this->getDatasetFromObject( $object );
-                $postData = json_encode( $data );
-                $postData = str_replace( ';', ',', $postData );
-                if ( isset( $data['id'] ) )
-                {
-                    $response = $this->post_package_update( $postData, $data['id'] );                
-                }
-                else
-                {
-                    $response = $this->post_package_register( $postData );                    
-                    if ( isset( $response->id ) )
-                    {
-                        $object->setAttribute( 'remote_id', OCOpenDataConverter::$remotePrefix . $response->id );
-                        $object->store();
-                    }
-                }
-                return $response;
+                $data = $this->converter->getDatasetFromObject( $object );
+                $returnData = $this->client->pushDataset($data);
+                $this->converter->markObjectPushed( $object, $returnData );
+                return $returnData;
             }
             catch( Exception $e )
             {
                 eZDebug::writeError( $e->getMessage() . ' on object id #' . $object->attribute( 'id' ), __METHOD__ );
-                eZDebug::writeError( $data, __METHOD__ );
                 throw new Exception( $e->getMessage() );
             }
         }
@@ -104,24 +126,28 @@ class OCOpenDataTools extends Ckan_client
             throw new Exception( 'Object not found' );
         }
     }
-    
-    /**
-     * Api di aggrionamento
-     * @param array $data
-     * @param string $packageId
-     * @see parent::make_request
-     */
-    public function post_package_update( $data, $packageId )
-	{
-		return $this->make_request( 'POST', 
-			$this->resources['package_register'] . '/' . $packageId, 
-			$data );
-	}
-    
+
+    public function pushOrganization()
+    {
+        $data = $this->organizationBuilder->build();
+        try
+        {
+            $returnData = $this->client->pushOrganization($data);
+            $this->organizationBuilder->storeOrganizationPushedId( $returnData );
+            return $returnData;
+        }
+        catch( Exception $e )
+        {
+            eZDebug::writeError( $e->getMessage() . ' on organization', __METHOD__ );
+            throw new Exception( $e->getMessage() );
+        }
+    }
+
     /**
      * Costruisce il datatset a partire da un oggetto
      * @param eZContentObject $object
-     * @throws Excepetion
+     * @throws Exception
+     * @return array
      */
     public function getDatasetFromObject( eZContentObject $object )
     {
@@ -131,59 +157,9 @@ class OCOpenDataTools extends Ckan_client
         }
         if ( $object->attribute( 'class_identifier' ) == $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' ) )
         {
-            $resources = $this->parseResourcesFromObject( $object );
-            $converter = new OCOpenDataConverter( $object, $resources );
-            return $converter->getData();
+            return $this->converter->getDatasetFromObject( $object );
         }
         throw new Exception( "L'oggetto {$object->attribute( 'id' )} non è di classe {$this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' )}" );
-    }
-    
-    /**
-     * Parse le risorse di un oggetto dataset
-     * @param eZContentObject $object
-     * @return array
-     */
-    public function parseResourcesFromObject( eZContentObject $object )
-    {
-        $dataMap = $object->attribute( 'data_map' );
-        $resources = array();
-        foreach( array_keys( $dataMap ) as $attributeIdentifier )
-        {
-            if ( strpos( $attributeIdentifier, 'resource' ) !== false )
-            {
-                list( $resource, $number, $resourceIdentifier ) = explode( '_', $attributeIdentifier );
-                $resources[intval( $number )][$resourceIdentifier] = $dataMap[$attributeIdentifier];
-            }
-        }
-        
-        $unset = array();
-        foreach( $resources as $number => $resource )
-        {
-            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'content' ) != '' )
-            {
-                unset( $resources[$number]['file'] );
-                unset( $resources[$number]['api'] );
-            }
-            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
-            {
-                unset( $resources[$number]['url'] );
-                unset( $resources[$number]['api'] );
-            }
-            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'content' ) != '' )
-            {
-                unset( $resources[$number]['url'] );
-                unset( $resources[$number]['file'] );
-            }
-            else
-            {
-                $unset[] = $number;
-            }
-        }
-        foreach( $unset as $number )
-        {
-           unset( $resources[$number] );
-        }
-        return $resources;
     }
     
     /**
@@ -231,6 +207,7 @@ class OCOpenDataTools extends Ckan_client
     public function getClassList()
     {
         $return = array();
+        /** @var eZContentClass[] $classes */
         $classes = eZContentClass::fetchList();
         $classBlacklist = self::getClassBlacklist();        
         foreach( $classes as $class )
@@ -251,6 +228,7 @@ class OCOpenDataTools extends Ckan_client
     public function getUsedClassList()
     {
         $return = array();
+        /** @var eZContentClass[] $classes */
         $classes = eZContentClass::fetchList();
         $classBlacklist = self::getClassBlacklist();        
         foreach( $classes as $class )
@@ -320,6 +298,7 @@ class OCOpenDataTools extends Ckan_client
                 'Depth' => 1,
                 'DepthOperator' => 'ge'
             );
+            /** @var eZContentObjectTreeNode[] $nodes */
             $nodes = eZContentObjectTreeNode::subTreeByNodeID( $params, eZINI::instance( 'content.ini' )->variable( 'NodeSettings', 'RootNode' ) );
             foreach( $nodes as $node )
             {
@@ -388,7 +367,7 @@ class OCOpenDataTools extends Ckan_client
         if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'DatatypeBlackListForExternal' ) )
         {
             $datatypeBlacklist = array_fill_keys(
-                eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'DatatypeBlackListForExternal' ),
+                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'DatatypeBlackListForExternal' ),
                 true
             );
         }
@@ -405,7 +384,7 @@ class OCOpenDataTools extends Ckan_client
         if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'ClassIdentifierBlackListForExternal' ) )
         {
             $classBlacklist = array_fill_keys(
-                eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'ClassIdentifierBlackListForExternal' ),
+                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'ClassIdentifierBlackListForExternal' ),
                 true
             );
         }
@@ -422,7 +401,7 @@ class OCOpenDataTools extends Ckan_client
         if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'IdentifierBlackListForExternal' ) )
         {
             $fieldBlacklist = array_fill_keys(
-                eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'IdentifierBlackListForExternal' ),
+                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'IdentifierBlackListForExternal' ),
                 true
             );
         }
@@ -430,12 +409,14 @@ class OCOpenDataTools extends Ckan_client
     }
     
     /**
-     * Restituice la lista degli ovveride degli identificatori di attributo 
+     * Restituice la lista degli ovveride degli identificatori di attributo
+     * @param $fieldName
+     * @param $classIdentifier
+     *
      * @return array
      */
     public static function getOverrideFieldIdentifier( $fieldName, $classIdentifier )
     {
-        $list = array();
         if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'OverrideFieldIdentifierList' ) )
         {
             $list = eZINI::instance( 'ocopendata.ini' )->variableArray( 'ContentSettings', 'OverrideFieldIdentifierList' );
@@ -459,7 +440,6 @@ class OCOpenDataTools extends Ckan_client
      */    
     public static function getRealFieldIdentifier( $fieldName, $classIdentifier )
     {
-        $list = array();
         if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'OverrideFieldIdentifierList' ) )
         {
             $list = eZINI::instance( 'ocopendata.ini' )->variableArray( 'ContentSettings', 'OverrideFieldIdentifierList' );
@@ -483,6 +463,10 @@ class OCOpenDataTools extends Ckan_client
             }
         }
         return $fieldName;
+    }
+
+    public function getLicenseList(){
+        return $this->client->getLicenseList();
     }
     
 }

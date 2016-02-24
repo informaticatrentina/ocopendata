@@ -30,10 +30,11 @@ class ContentClass
     {
         foreach ( $properties as $property => $value )
         {
-            if ( property_exists( $this, $property ) )
+            if ( property_exists( $this, $property ) ){
                 $this->$property = $value;
-            else
+            }else{
                 throw new OutOfRangeException( $property );
+            }
         }
     }
 
@@ -41,9 +42,14 @@ class ContentClass
     {
         if ( eZINI::instance( 'ezfind.ini' )->hasVariable( 'IndexExclude', 'ClassIdentifierList' ) )
         {
-            $indexExcludeList = (array) eZINI::instance( 'ezfind.ini' )->variable( 'IndexExclude', 'ClassIdentifierList' );
+            $indexExcludeList = (array)eZINI::instance( 'ezfind.ini' )->variable(
+                'IndexExclude',
+                'ClassIdentifierList'
+            );
+
             return !in_array( $classIdentifier, $indexExcludeList );
         }
+
         return true;
     }
 
@@ -89,14 +95,14 @@ class ContentClass
             true
         );
         $class->groups = array();
-        foreach( $groups as $group )
+        foreach ( $groups as $group )
         {
             $class->groups[] = $group->attribute( 'group_name' );
         }
 
         /** @var eZContentClassAttribute[] $attributes */
         $attributes = $contentClass->dataMap();
-        foreach( $attributes as $attribute )
+        foreach ( $attributes as $attribute )
         {
             $converter = AttributeConverterLoader::load(
                 $class->identifier,
@@ -136,11 +142,18 @@ class ContentClass
                 $template['help'] = $help;
             }
 
+            $dataTypeInfo = array( 'name' => null );
+            /** @var \eZDataType $dataType */
+            $dataType = $attribute->dataType();
+            if ( $dataType instanceof \eZDataType ){
+                $dataTypeInfo = $dataType->attribute( 'information' );
+            }
             $class->fields[] = array(
                 'identifier' => $attribute->attribute( 'identifier' ),
                 'name' => $attributeNames,
                 'description' => $attributeDescriptions,
                 'dataType' => $attribute->attribute( 'data_type_string' ),
+                'dataTypeName' => $dataTypeInfo['name'],
                 'template' => $template,
                 'isSearchable' => (bool)$attribute->attribute( 'is_searchable' ),
                 'isRequired' => (bool)$attribute->attribute( 'is_required' ),

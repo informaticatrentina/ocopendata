@@ -1,6 +1,6 @@
 <?php
 
-class OCOpenDataConverter
+class OCOpenDataConverter implements OcOpenDataConverterInterface
 {    
    
     /**
@@ -10,9 +10,26 @@ class OCOpenDataConverter
     private $data = array();
         
     public static $remotePrefix = 'ckan_';
+
+    /**
+     * @var eZContentObject
+     */
     protected $object;
+
+    /**
+     * @var eZContentObjectAttribute[]
+     */
     protected $dataMap;
+
+    /**
+     * @var eZContentObjectAttribute[][]
+     */
     protected $resources;
+
+    /**
+     * @var OcOpendataOrganizationBuilderInterface
+     */
+    public $organizationBuilder;
     
     /**
      * Parametri del dataset ricavati dalle proprietà dell'oggetto
@@ -84,17 +101,15 @@ class OCOpenDataConverter
         "Descrizione campi"                     => array( 'attribute' => "fields_description" ),
         "URL sito"                              => array( 'property' => "url" )
     );
-        
-    /**
-     * Costruttore
-     * @see OCOpenDataTools::parseResourcesFromObject
-     * @param eZContentObject $object
-     * @param array $resources
-     */
-    public function __construct( eZContentObject $object, array $resources )
+
+    public function setObject( eZContentObject $object )
     {
         $this->object = $object;
         $this->dataMap = $object->attribute( 'data_map' );
+    }
+
+    public function setResources( array $resources )
+    {
         $this->resources = $resources;
     }
     
@@ -313,7 +328,7 @@ class OCOpenDataConverter
         
         foreach( $this->datasetAttributes as $datasetAttribute )
         {
-            $this->convertAttribute( $datasetMetaAttribute, $this->data );
+            $this->convertAttribute( $datasetAttribute, $this->data );
         }
         
         $this->data['extras'] = array();
@@ -347,12 +362,15 @@ class OCOpenDataConverter
     
     /**
      * Converte la singola risorsa
-     * @param array $resource
+     * @param eZContentObjectAttribute[] $resource
      * @return array
      */
     public function convertResource( array $resource )
     {
         $data = array();
+        $format = null;
+        $resourceType = null;
+        $url = null;
         foreach( $this->resourceAttributes as $resourceAttribute )
         {
             switch( $resourceAttribute )
@@ -413,5 +431,90 @@ class OCOpenDataConverter
     {        
         $this->convert();        
         return $this->data;
+    }
+
+    public function getRemotePrefix()
+    {
+        return self::$remotePrefix;
+    }
+
+    public function getDatasetFromObject( eZContentObject $object )
+    {
+        $resources = $this->getResourcesFromObject( $object );
+        $this->setObject( $object );
+        $this->setResources( $resources );
+        return $this->getData();
+    }
+
+    protected function getResourcesFromObject( eZContentObject $object )
+    {
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $object->attribute( 'data_map' );
+
+        $resources = array();
+        foreach ( array_keys( $dataMap ) as $attributeIdentifier )
+        {
+            if ( strpos( $attributeIdentifier, 'resource' ) !== false )
+            {
+                list( $resource, $number, $resourceIdentifier ) = explode(
+                    '_',
+                    $attributeIdentifier
+                );
+                $resources[intval( $number )][$resourceIdentifier] = $dataMap[$attributeIdentifier];
+            }
+        }
+
+        $unset = array();
+        /** @var eZContentObjectAttribute[] $resource */
+        foreach ( $resources as $number => $resource )
+        {
+            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'content' ) != '' )
+            {
+                unset( $resources[$number]['file'] );
+                unset( $resources[$number]['api'] );
+            }
+            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
+            {
+                unset( $resources[$number]['url'] );
+                unset( $resources[$number]['api'] );
+            }
+            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'content' ) != '' )
+            {
+                unset( $resources[$number]['url'] );
+                unset( $resources[$number]['file'] );
+            }
+            else
+            {
+                $unset[] = $number;
+            }
+        }
+        foreach ( $unset as $number )
+        {
+            unset( $resources[$number] );
+        }
+
+        return $resources;
+    }
+
+    public function markObjectPushed( eZContentObject $object, $response )
+    {
+        if ( isset( $response->id ) )
+        {
+            $object->setAttribute(
+                'remote_id',
+                OCOpenDataConverter::$remotePrefix . $response->id
+            );
+            $object->store();
+        }
+    }
+
+    public function getOrganization( eZContentObject $object = null )
+    {
+        throw new Exception( 'Not implemented' );
+    }
+
+    public function setOrganizationBuilder( OcOpendataOrganizationBuilderInterface $builder )
+    {
+        $this->organizationBuilder = $builder;
     }
 }

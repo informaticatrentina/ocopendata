@@ -32,8 +32,8 @@ class OCOpenDataOperators
                 break;
             
             case 'fetch_licenses':
-                $ckan = new OCOpenDataTools();
-                $licenses = $ckan->get_license_list();
+                $openDataTools = new OCOpenDataTools();
+                $licenses = $openDataTools->getLicenseList();
                 $returnArray = array();        
                 foreach( $licenses as $license )
                 {

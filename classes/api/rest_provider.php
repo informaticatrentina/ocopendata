@@ -166,7 +166,11 @@ class OCOpenDataProvider extends ezpRestApiProvider
                 new ezpMvcRegexpRoute(
                     '@^/content/node/(?P<nodeId>\d+)/list(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?(?:/sort/(?P<sortKey>\w+)(?:/(?P<sortType>asc|desc))?)?$@',
                     'OCOpenDataController',
-                    'list'
+                    'list',
+                    array(
+                        'offset' => 0,
+                        'limit' => 10
+                    )
                 ), 1
             ),
             'ezpNode' => new ezpRestVersionedRoute(
@@ -223,7 +227,11 @@ class OCOpenDataProvider extends ezpRestApiProvider
             //'@^/content/class/(?P<classIdentifier>\w+)(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?(?:/sort/(?P<sortKey>\w+)(?:/(?P<sortType>asc|desc))?)?$@',
                 '@^/content/class/(?P<classIdentifier>\w+)(?:/offset/(?P<offset>\d+))?(?:/limit/(?P<limit>\d+))?$@',
                 'OCOpenDataController',
-                'listByClass'
+                'listByClass',
+                array(
+                    'offset' => 0,
+                    'limit' => 10
+                )
             ), 1
         );
 
