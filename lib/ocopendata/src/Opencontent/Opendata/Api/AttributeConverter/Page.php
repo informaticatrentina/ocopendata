@@ -38,6 +38,7 @@ class Page extends Base
                         'block_id' => $block->attribute( 'id' ),
                         'name' => $block->attribute( 'name' ),
                         'type' => $block->attribute( 'type' ),
+                        'view' => $block->hasAttribute( 'view' ) ? $block->attribute( 'view' ) : null,
                         'custom_attributes' => $block->attribute( 'custom_attributes' ),
                         'valid_items' => $validItems
                     );
