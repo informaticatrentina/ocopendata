@@ -6,6 +6,7 @@ use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 use Opencontent\Opendata\Api\PublicationProcess;
+use Opencontent\Opendata\Api\Values\Metadata;
 
 class Page extends Base
 {
@@ -27,10 +28,18 @@ class Page extends Base
                 $blocks = (array)$zone->attribute( 'blocks' );
                 foreach ( $blocks as $block )
                 {
+                    $validItems = array();
+                    /** @var \eZContentObjectTreeNode[] $validNodes */
+                    $validNodes = $block->attribute( 'valid_nodes' );
+                    foreach( $validNodes as $node ){
+                        $validItems[] = $node->object()->attribute( 'remote_id' );
+                    }
                     $blocksData[] = array(
                         'block_id' => $block->attribute( 'id' ),
                         'name' => $block->attribute( 'name' ),
-                        'type' => $block->attribute( 'type' )
+                        'type' => $block->attribute( 'type' ),
+                        'custom_attributes' => $block->attribute( 'custom_attributes' ),
+                        'valid_items' => $validItems
                     );
                 }
                 $data[$zone->attribute( 'zone_identifier' )] = array(
