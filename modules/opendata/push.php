@@ -1,11 +1,18 @@
 <?php
+/** @var eZModule $Module */
 $Module = $Params['Module'];
 $ObjectID = $Params['ObjectID'];
+
+
 try
 {
     $object = eZContentObject::fetch( $ObjectID );
     $tools = new OCOpenDataTools();
-    $tools->pushObject( $ObjectID );
+    $data = $tools->pushObject( $ObjectID );
+    echo '<pre>';
+    print_r( $data );
+    eZDisplayDebug();
+    eZExecution::cleanExit();
     $Module->redirectTo( $object->attribute( 'main_node' )->attribute( 'url_alias' ) . '/(message)/Dataset inviato' );
 }
 catch( Exception $e )
