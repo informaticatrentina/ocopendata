@@ -201,9 +201,15 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
             return true;
         }
 
+        /** @var eZUser $user */
+        $user = eZUser::fetchByName( 'admin' );
+        eZUser::setCurrentlyLoggedInUser( $user , $user->attribute( 'contentobject_id' ) );
+
         if ($exists) {
             $object = $exists->object();
             eZContentFunctions::updateAndPublishObject($object, $params);
+            eZContentObject::clearCache();
+            $object = eZContentObject::fetch( $object->attribute('id') );
         } else {
             $object = eZContentFunctions::createAndPublishObject($params);
         }
