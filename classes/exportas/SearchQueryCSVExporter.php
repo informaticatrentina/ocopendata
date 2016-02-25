@@ -16,12 +16,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
     public function __construct( $parentNodeId, $queryString )
     {
-        print_r($queryString);
         $this->functionName = 'csv';
-        if (  $this->checkAccess() !== true )
-        {
-            throw new Exception( 'Current user can not export csv' );
-        }
 
         $this->ini = eZINI::instance( 'exportas.ini' );
         $this->setOptions( $this->ini->group( 'Settings' ) );
