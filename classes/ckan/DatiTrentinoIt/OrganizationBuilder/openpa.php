@@ -12,6 +12,16 @@ class OpenPA implements OcOpendataOrganizationBuilderInterface
 
     public function build()
     {
+        $instance = \OpenPAInstance::current();
+
+        if ( !$instance->isLive() ){
+            throw new \Exception( "L'istanza corrente non è in produzione" );
+        }
+
+        if ( $instance->getType() != 'comune_standard' || $instance->getType() != 'comune_new_design' ){
+            throw new \Exception( "L'istanza corrente non è un comune" );
+        }
+
         $pagedata = new \OpenPAPageData();
         $contacts = $pagedata->getContactsData();
         $title = \eZINI::instance()->variable( 'SiteSettings', 'SiteName' );
