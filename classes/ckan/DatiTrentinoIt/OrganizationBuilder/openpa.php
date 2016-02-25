@@ -20,8 +20,7 @@ class OpenPA implements OcOpendataOrganizationBuilderInterface
         $name = $trans->transformByGroup( $title, 'identifier' );
         $description = "Dati di cui è titolare il " . $title;
 
-        $imageUrl = '/extension/ocopendata/design/standard/images/comunweb-cloud.png';
-        \eZURI::transformURI($imageUrl, true, 'full');
+        $imageUrl = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' ) . '/extension/ocopendata/design/standard/images/comunweb-cloud.png';
 
         $extras = array();
         foreach( $contacts as $key => $value ){
