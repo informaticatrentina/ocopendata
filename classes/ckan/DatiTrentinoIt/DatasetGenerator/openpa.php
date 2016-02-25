@@ -107,7 +107,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $attributeList['url_website'] = null;
         $attributeList['notes'] = 'Endpoint JSON e CSV dei contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;;
         $attributeList['tech_documentation'] = null;
-        $linkHelp = "http://$siteUrl/opendata/help/$classIdentifier";
+        $linkHelp = "http://$siteUrl/opendata/help/classes/$classIdentifier";
         $attributeList['fields_description_text'] = "[Link]($linkHelp) alla pagina di descrizione dei campi.";
         $attributeList['geo'] = str_replace( 'Comune di', '', $siteName );
         $attributeList['frequency'] = 'Continuo';
