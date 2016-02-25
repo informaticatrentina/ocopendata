@@ -113,7 +113,9 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $attributeList['frequency'] = 'Continuo';
         $attributeList['license_id'] = 'CC-BY';
         $attributeList['versione'] = '1.0';
-        $attributeList['tags'] = 'application/json, text/csv' . $hasGeoResource ? ', application/geojson' : '';
+        $attributeList['tags'] = $classIdentifier . ', json, csv';
+        if ( $hasGeoResource )
+            $attributeList['tags'] .= ', geojson';
 
         $params                     = array();
         $params['class_identifier'] = $tools->getIni()->variable( 'GeneralSettings', 'DatasetClassIdentifier' );
