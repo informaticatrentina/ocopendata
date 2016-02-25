@@ -138,7 +138,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
                 $mainNodeUrlAlias = $mainNode->attribute('url_alias');
                 /** @var \eZContentObjectAttribute[] $dataMap */
                 $dataMap = $object->attribute('data_map');
-                $dataMap['url_website']->fromString('http://' . $siteUrl);
+                $dataMap['url_website']->fromString('http://' . $siteUrl . '/' . $container->attribute('main_node')->attribute( 'url_alias' ) . '|' . $container->attribute('name'));
                 $dataMap['url_website']->store();
                 $mainNode->setAttribute( 'remote_id', $this->generateNodeRemoteId($classIdentifier));
                 $mainNode->store();
