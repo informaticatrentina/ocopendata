@@ -121,18 +121,30 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $hasResource = false;
         $hasGeoResource = false;
 
+        $title = 'Contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;
+        $notes = 'Tutti i contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;
+        $tags = $classIdentifier;
+        $resourceTitle = 'Contenuti di tipo ' . $class->attribute('name');
+        if (isset( $parameters['Plurale'], $parameters['Descrizione'] )) {
+            $title = $parameters['Plurale'] . ' del ' . $siteName;
+            $notes = $parameters['Descrizione'] . ' pubblicati sul sito istituzionale del ' . $siteName;
+            $tags = strtolower($parameters['Plurale']);
+            $resourceTitle = $parameters['Plurale'];
+        }
+
+
         $contentSearch->setEnvironment($contentEnvironment);
         if ($this->anonymousSearch($contentSearch, $undecodeQuery)) {
             $resourceFieldPrefix = 'resource_1_';
             $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/api/opendata/v2/content/search/$query";
-            $attributeList[$resourceFieldPrefix . 'name'] = 'Contenuti di tipo ' . $class->attribute('name') . ' in formato JSON';
+            $attributeList[$resourceFieldPrefix . 'name'] = $resourceTitle . ' in formato JSON';
             $attributeList[$resourceFieldPrefix . 'description'] = $class->attribute('description');
             $attributeList[$resourceFieldPrefix . 'format'] = 'JSON';
             $attributeList[$resourceFieldPrefix . 'charset'] = 'UTF-8';
 
             $resourceFieldPrefix = 'resource_2_';
             $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/exportas/custom/csv_search/$query";;
-            $attributeList[$resourceFieldPrefix . 'name'] = 'Contenuti di tipo ' . $class->attribute('name') . ' in formato CSV';
+            $attributeList[$resourceFieldPrefix . 'name'] = $resourceTitle . ' in formato CSV';
             $attributeList[$resourceFieldPrefix . 'description'] = $class->attribute('description');
             $attributeList[$resourceFieldPrefix . 'format'] = 'CSV';
             $attributeList[$resourceFieldPrefix . 'charset'] = 'UTF-8';
@@ -143,7 +155,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $contentSearch->setEnvironment($geoEnvironment);
         if ($this->anonymousSearch($contentSearch, $undecodeQuery)) {
             $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/api/opendata/v2/content/geo/$query";
-            $attributeList[$resourceFieldPrefix . 'name'] = 'Contenuti di tipo ' . $class->attribute('name') . ' in formato GeoJSON';
+            $attributeList[$resourceFieldPrefix . 'name'] = $resourceTitle . ' in formato GeoJSON';
             $attributeList[$resourceFieldPrefix . 'description'] = $class->attribute('description');
             $attributeList[$resourceFieldPrefix . 'format'] = 'GeoJSON';
             $attributeList[$resourceFieldPrefix . 'charset'] = 'UTF-8';
@@ -159,18 +171,9 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         }
 
         $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/api/opendata/v2/classes/$classIdentifier";
-        $attributeList[$resourceFieldPrefix . 'name'] = 'Descrizione dei campi di contenuti di tipo ' . $class->attribute('name') . ' in formato JSON';
+        $attributeList[$resourceFieldPrefix . 'name'] = 'Descrizione dei campi in formato JSON';
         $attributeList[$resourceFieldPrefix . 'format'] = 'JSON';
         $attributeList[$resourceFieldPrefix . 'charset'] = 'UTF-8';
-
-        $title = 'Contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;
-        $notes = 'Tutti i contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;
-        $tags = $classIdentifier;
-        if (isset( $parameters['Plurale'], $parameters['Descrizione'] )) {
-            $title = $parameters['Plurale'] . ' del ' . $siteName;
-            $notes = $parameters['Descrizione'] . ' pubblicati sul sito istituzionale del ' . $siteName;
-            $tags = strtolower($parameters['Plurale']);
-        }
 
         $attributeList['title'] = $title;
         $attributeList['author'] = $siteName . '|' . $contacts['email'];
