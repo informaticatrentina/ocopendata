@@ -104,14 +104,14 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
             $resourceFieldPrefix = 'resource_4_';
 
         $attributeList[$resourceFieldPrefix.'api'] = "http://$siteUrl/api/opendata/v2/classes/$classIdentifier";
-        $attributeList[$resourceFieldPrefix.'name'] = 'Descrizione dei campi di contenuri di tipo ' . $class->attribute('name') . ' in formato JSON';
+        $attributeList[$resourceFieldPrefix.'name'] = 'Descrizione dei campi di contenuti di tipo ' . $class->attribute('name') . ' in formato JSON';
         $attributeList[$resourceFieldPrefix.'format'] = 'JSON';
         $attributeList[$resourceFieldPrefix.'charset'] = 'UTF-8';
 
         $attributeList['title'] = 'Contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;
         $attributeList['author'] = $siteName . '|' . $contacts['email'];
         $attributeList['maintainer'] = $siteName . '|' . $contacts['email'];;
-        $attributeList['url_website'] = null;
+        $attributeList['url_website'] = 'http://' . $siteUrl . '/' . $area->attribute('main_node')->attribute( 'url_alias' ) . '|' . $area->attribute('name');
         $attributeList['notes'] = 'Endpoint JSON e CSV dei contenuti di tipo ' . $class->attribute('name') . ' del ' . $siteName;;
         $attributeList['tech_documentation'] = null;
         $linkHelp = "http://$siteUrl/opendata/help/classes/$classIdentifier";
@@ -141,11 +141,6 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         if ( $object instanceof eZContentObject){
             $mainNode = $object->attribute( 'main_node' );
             if ( $mainNode instanceof eZContentObjectTreeNode) {
-                $mainNodeUrlAlias = $mainNode->attribute('url_alias');
-                /** @var \eZContentObjectAttribute[] $dataMap */
-                $dataMap = $object->attribute('data_map');
-                $dataMap['url_website']->fromString('http://' . $siteUrl . '/' . $area->attribute('main_node')->attribute( 'url_alias' ) . '|' . $area->attribute('name'));
-                $dataMap['url_website']->store();
                 $mainNode->setAttribute( 'remote_id', $this->generateNodeRemoteId($classIdentifier));
                 $mainNode->store();
             }
