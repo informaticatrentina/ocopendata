@@ -64,6 +64,19 @@ class Converter implements \OcOpenDataConverterInterface
         return $dataset;
     }
 
+    protected function fixUrl( $url ){
+        $url = ltrim( $url, '/' );
+        $siteUrl = rtrim( \eZINI::instance()->variable('SiteSettings', 'SiteURL'), '/' ) . '/';
+        if ( strpos( $url, $siteUrl ) === false ){
+            $url = $siteUrl . $url;
+        }
+        if ( strpos( $url, 'http' ) === false ){
+            $url = 'http://' . $url;
+        }
+
+        return $url;
+    }
+
     public function getDatasetId(eZContentObject $object)
     {
         if (strpos($object->attribute('remote_id'), $this->getRemotePrefix()) !== false) {
@@ -156,10 +169,8 @@ class Converter implements \OcOpenDataConverterInterface
                     } elseif ($this->dataMap['fields_description']->attribute('data_type_string') == 'ezurl') {
                         $url = explode('|', $this->dataMap['fields_description']->toString());
                         $url = $url[0];
-                        if ( strpos( 'http', $url ) === false )
-                            \eZURI::transformURI($url, false, 'full');
 
-                        return $url;
+                        return $this->fixUrl( $url );
                     } else {
                         return $this->dataMap['fields_description']->toString();
                     }
@@ -181,9 +192,8 @@ class Converter implements \OcOpenDataConverterInterface
                 if (isset( $this->dataMap['url_website'] ) && $this->dataMap['url_website']->hasContent()) {
                     $url = explode('|', $this->dataMap['url_website']->toString());
                     $url = $url[0];
-                    if ( strpos( 'http', $url ) === false )
-                        \eZURI::transformURI($url, false, 'full');
-                    return $url;
+
+                    return $this->fixUrl( $url );
                 }
                 break;
 
@@ -279,9 +289,8 @@ class Converter implements \OcOpenDataConverterInterface
     protected function getUrl()
     {
         $url = $this->object->attribute('main_node')->attribute('url_alias');
-        \eZURI::transformURI($url, false, 'full');
 
-        return $url;
+        return $this->fixUrl( $url );
     }
 
     protected function getVersion()
@@ -365,25 +374,19 @@ class Converter implements \OcOpenDataConverterInterface
                     case 'url':
                         if (isset( $resource['file'] )) {
                             $url = $resource['file']->content()->attribute('filepath');
-                            if ( strpos( 'http', $url ) === false )
-                                \eZURI::transformURI($url, false, 'full');
-                            $data["url"] = $url;
+                            $data["url"] = $this->fixUrl( $url );
                             $data["resource_type"] = 'file';
                             $data["size"] = $resource['file']->content()->attribute('filesize');
                             $data["mimetype"] = $resource['file']->content()->attribute('mime_type');
                             $data["format"] = \eZFile::suffix($resource['file']->content()->attribute('filepath'));
                         } elseif (isset( $resource['api'] )) {
                             $url = $resource['api']->toString();
-                            if ( strpos( 'http', $url ) === false )
-                                \eZURI::transformURI($url, false, 'full');
-                            $data["url"] = $url;
+                            $data["url"] = $this->fixUrl( $url );
                             $data["resource_type"] = 'api';
                         } elseif (isset( $resource['url'] )) {
                             $url = explode('|', $resource['url']->toString());
                             $url = $url[0];
-                            if ( strpos( 'http', $url ) === false )
-                                \eZURI::transformURI($url, false, 'full');
-                            $data["url"] = $url;
+                            $data["url"] = $this->fixUrl( $url );
                             $data["resource_type"] = 'file';
                         }
                         break;
