@@ -22,6 +22,10 @@ class OpenPA implements OcOpendataOrganizationBuilderInterface
 
         $imageUrl = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' ) . '/extension/ocopendata/design/standard/images/comunweb-cloud.png';
 
+        if ( !isset($contacts['web']) ){
+            $contacts['web'] = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' );
+        }
+
         $extras = array();
         foreach( $contacts as $key => $value ){
             $extras[] = array(
