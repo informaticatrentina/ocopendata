@@ -22,9 +22,60 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         'container' => 'opendata_datasetcontainer'
     );
 
+    public static $parameters =  array(
+        'albo_elenco' => array('Plurale' => 'Albi ed elenchi', 'Descrizione' => 'Tutti gli albi ed elenchi'),
+        'avviso' => array('Plurale' => 'Avvisi', 'Descrizione' => 'Tutti gli avvisi'),
+        'bando' => array('Plurale' => 'Bandi di gara', 'Descrizione' => 'Tutti i bandi'),
+        'bilancio_di_previsione' => array(
+            'Plurale' => 'Bilanci di previsione',
+            'Descrizione' => 'Tutti i bilanci previsionali'
+        ),
+        'concorso' => array('Plurale' => 'Concorsi', 'Descrizione' => 'Tutti i concorsi'),
+        'conferimento_incarico' => array(
+            'Plurale' => 'Conferimenti di incarico',
+            'Descrizione' => 'Tutti i conferimenti di incarico'
+        ),
+        'consulenza' => array('Plurale' => 'Consulenze', 'Descrizione' => 'Tutte le consulenze'),
+        'decreto_sindacale' => array(
+            'Plurale' => 'Decreti sindacali',
+            'Descrizione' => 'Tutti i decreti sindacali'
+        ),
+        'dipendente' => array('Plurale' => 'Dipendenti', 'Descrizione' => 'Tutti i dipendenti'),
+        'disciplinare' => array('Plurale' => 'Disciplinari', 'Descrizione' => 'Tutti i disciplinari'),
+        'documento' => array('Plurale' => 'Documenti', 'Descrizione' => 'Tutti i documenti'),
+        'gruppo_consiliare' => array(
+            'Plurale' => 'Gruppi consiliari',
+            'Descrizione' => 'Tutti i gruppi consiliari'
+        ),
+        'modulo' => array('Plurale' => 'Moduli', 'Descrizione' => 'Tutti i moduli'),
+        'organo_politico' => array('Plurale' => 'Organi politici', 'Descrizione' => 'Tutti gli organi politici'),
+        'piano_progetto' => array('Plurale' => 'Piani e progetti', 'Descrizione' => 'Tutti i piani e progetti'),
+        'politico' => array('Plurale' => 'Politici', 'Descrizione' => 'Tutti i politici'),
+        'pubblicazione' => array('Plurale' => 'Pubblicazioni', 'Descrizione' => 'Tutte le pubblicazioni'),
+        'luogo' => array(
+            'Plurale' => 'Luoghi e punti di interesse',
+            'Descrizione' => 'Tutti i luoghi ed i punti di interesse'
+        ),
+        'regolamento' => array('Plurale' => 'Regolamenti', 'Descrizione' => 'Tutti i regolamenti'),
+        'rendiconto' => array('Plurale' => 'Rendiconti', 'Descrizione' => 'Tutti i rendiconti'),
+        'sala_pubblica' => array('Plurale' => 'Sale pubbliche', 'Descrizione' => 'Tutte le sale pubbliche'),
+        'servizio' => array('Plurale' => 'Servizi', 'Descrizione' => 'Tutti i servizi'),
+        'ufficio' => array('Plurale' => 'Uffici', 'Descrizione' => 'Tutti gli uffici'),
+        'servizio_sul_territorio' => array(
+            'Plurale' => 'Servizi sul territorio',
+            'Descrizione' => 'Tutti i servizi sul territorio'
+        ),
+        'statuto' => array('Plurale' => 'Statuti', 'Descrizione' => 'Tutti gli statuti')
+    );
+
+
     public function createFromClassIdentifier($classIdentifier, $parameters = array(), $dryRun = null)
     {
         $tools = new OCOpenDataTools();
+
+        if ( empty( $parameters ) && isset( self::$parameters[$classIdentifier] )){
+            $parameters = self::$parameters[$classIdentifier];
+        }
 
         //controllo se l'organizzazione è valida
         $data = $tools->getOrganizationBuilder()->build();

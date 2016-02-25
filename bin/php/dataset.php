@@ -39,10 +39,9 @@ try {
     if ($options['generate_from_class']) {
         $generator = $tools->getDatasetGenerator();
         if ($generator instanceof OcOpendataDatasetGeneratorInterface) {
-            $parameters = array();
             $object = $generator->createFromClassIdentifier(
                 $options['generate_from_class'],
-                $parameters,
+                array(),
                 $options['dry-run'] !== null
             );
             if (!$options['dry-run']) {
