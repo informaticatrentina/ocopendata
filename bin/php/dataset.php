@@ -11,7 +11,7 @@ $script = eZScript::instance(array(
 $script->startup();
 
 $options = $script->getOptions(
-    '[id:][show][push][delete][purge][generate_from_class:]',
+    '[id:][show][push][delete][purge][generate_from_class:][dry-run]',
     '',
     array(
         'generate_from_class' => 'Genera un oggetto dataset in eZ dato p\'identificativo di classe specificato',
