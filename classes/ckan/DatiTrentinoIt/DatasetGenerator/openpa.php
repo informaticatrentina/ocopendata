@@ -22,7 +22,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         'container' => 'opendata_datasetcontainer'
     );
 
-    public function createFromClassIdentifier( $classIdentifier )
+    public function createFromClassIdentifier( $classIdentifier, $dryRun = null )
     {
         $tools = new OCOpenDataTools();
 
@@ -121,6 +121,9 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $params['class_identifier'] = $tools->getIni()->variable( 'GeneralSettings', 'DatasetClassIdentifier' );
         $params['parent_node_id']   = $container->attribute('main_node_id');
         $params['attributes']       = $attributeList;
+
+        if ( $dryRun )
+            return true;
 
         if ( $exists ){
             $object = $exists->object();
