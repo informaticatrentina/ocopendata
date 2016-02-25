@@ -42,6 +42,11 @@ class OCOpenDataTools
      */
     public $organizationBuilder;
 
+    /**
+     * @var OcOpendataDatasetGeneratorInterface
+     */
+    protected $datasetGenerator;
+
     protected $settings;
 
     public function __construct(array $organizationParameters = null)
@@ -76,6 +81,14 @@ class OCOpenDataTools
         if (!class_exists($organizationBuilderClassName)) {
             throw new Exception("Class $organizationBuilderClassName not found");
         }
+        $datasetGeneratorClassName = isset( $this->settings['DatasetGenerator'] ) ? $this->settings['DatasetGenerator'] : null;
+        if ($datasetGeneratorClassName ) {
+            if(!class_exists($datasetGeneratorClassName)){
+                throw new Exception("Class $datasetGeneratorClassName not found");
+            }else{
+                $this->datasetGenerator = new $datasetGeneratorClassName();
+            }
+        }
 
         $this->organizationBuilder = new $organizationBuilderClassName($organizationParameters);
         $this->client = new $clientClassName($apiKey, $baseUrl, $apiVersion);
@@ -101,6 +114,19 @@ class OCOpenDataTools
     public function getSettings()
     {
         return $this->settings;
+    }
+
+    public function getDatasetGenerator()
+    {
+        return $this->datasetGenerator;
+    }
+
+    /**
+     * @return eZINI
+     */
+    public function getIni()
+    {
+        return $this->openDataIni;
     }
 
     /**
