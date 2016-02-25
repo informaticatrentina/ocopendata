@@ -45,7 +45,7 @@ class Organization extends Base
      *
      * @var string
      */
-    public $state;
+    public $state = 'active';
 
     /**
      *  (string) – (optional)

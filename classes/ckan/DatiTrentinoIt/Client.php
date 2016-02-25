@@ -58,10 +58,13 @@ class Client implements \OcOpenDataClientInterface
         '500' => 'Service Error'
     );
 
-    public function __construct( $apiKey, $baseUrl )
+    public function __construct( $apiKey, $baseUrl, $apiVersion = null )
     {
         $this->baseUrl = $baseUrl;
         $this->setApiKey( $apiKey );
+        if ( $apiVersion && $apiVersion != $this->apiVersion ){
+            throw new Exception( "Api version $apiVersion not supported by " . __CLASS__ );
+        }
     }
 
     public function setApiKey( $apiKey )
@@ -248,7 +251,7 @@ class Client implements \OcOpenDataClientInterface
      * @return bool|mixed
      * @throws Exception
      */
-    public function pushOrganization( $organization, $forceUpdate = false )
+    public function pushOrganization( $organization )
     {
         $result = null;
         try
@@ -279,6 +282,24 @@ class Client implements \OcOpenDataClientInterface
             );
         }
         return Organization::fromArray( $data );
+    }
+
+    public function deleteOrganization( $organization, $purge = false )
+    {
+        if ( $purge ){
+            $data = $this->makeRequest(
+                'POST',
+                'action/organization_purge',
+                json_encode(array('id' => $organization))
+            );
+        }else {
+            $data = $this->makeRequest(
+                'POST',
+                'action/organization_delete',
+                json_encode(array('id' => $organization))
+            );
+        }
+        return $data;
     }
 
     /**
@@ -336,9 +357,37 @@ class Client implements \OcOpenDataClientInterface
     }
 
     /**
+     * @param Dataset $dataset
+     * @param bool $purge
+     *
+     * @throws Exception
+     */
+    public function deleteDataset( $dataset, $purge = false ){
+        if ( $dataset->getData('id') !== null )
+        {
+            $dataSet = $this->getDataset($dataset->getData('id'));
+            if ( $purge ){
+                $data = $this->makeRequest(
+                    'POST',
+                    'action/dataset_purge',
+                    json_encode(array('id' => $dataSet->getData('id')))
+                );
+            }else {
+                $data = $this->makeRequest(
+                    'POST',
+                    'action/package_delete',
+                    json_encode(array('id' => $dataSet->getData('id')))
+                );
+            }
+            return $data;
+        }
+        throw new Exception( "Remote dataset not found" );
+    }
+
+    /**
      * @param $datasetId
      *
-     * @return mixed
+     * @return Dataset
      * @throws Exception
      */
     public function getDataset( $datasetId )

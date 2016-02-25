@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Classe OCOpenDataTools
  * Tool per la gestione dei dataset e la loro esposizione
@@ -10,9 +11,10 @@ class OCOpenDataTools
      * Separatore per il remote id
      */
     const SEPARATOR = ':';
-    
+
     /**
      * Id di installazione
+     *
      * @see OCOpenDataTools::installationID()
      * @var string
      */
@@ -20,6 +22,7 @@ class OCOpenDataTools
 
     /**
      * Configurazioni ini
+     *
      * @var eZINI
      */
     public $openDataIni;
@@ -39,169 +42,221 @@ class OCOpenDataTools
      */
     public $organizationBuilder;
 
-    /**
-     * @see parent::__construct
-     * @var string $apiKey
-     */
-    /**
-     * OCOpenDataTools constructor.
-     *
-     * @param null $apiKey
-     * @param array|null $organizationParameters
-     */
-    public function __construct( array $organizationParameters = null )
+    protected $settings;
+
+    public function __construct(array $organizationParameters = null)
     {
-        $this->openDataIni = eZINI::instance( 'ocopendata.ini' );
-        $baseUrl = $this->openDataIni->variable( 'CkanSettings', 'BaseUrl' );
-        $apiVersion = $this->openDataIni->variable( 'CkanSettings', 'ApiVersion' );
+        $this->openDataIni = eZINI::instance('ocopendata.ini');
 
-        if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'OrganizationBuilder' ) )
-        {
-            $organizationBuilderClassName = $this->openDataIni->variable( 'GeneralSettings', 'OrganizationBuilder' );
-            $this->organizationBuilder =  new $organizationBuilderClassName( $organizationParameters );
+        $alias = $this->openDataIni->variable('CkanSettings', 'Alias');
+
+        if (!$this->openDataIni->hasGroup($alias)) {
+            throw new Exception("Setting $alias not found in ocopendata.ini");
         }
 
-        $apiKey = null;
-        if ( $this->openDataIni->hasVariable( 'CkanSettings', 'ApiKey' ) )
-        {
-            $apiKey = $this->openDataIni->variable( 'CkanSettings', 'ApiKey' );
-        }
-        if ( intval( $apiVersion ) == 2 ){
-            $this->client = new CkanClientVersion2($apiKey,$baseUrl);
-            $this->converter = new OCOpenDataConverter();
-        }
-        else
-        {
-            $clientClassName = '\Opencontent\Ckan\DatiTrentinoIt\Client';
-            $converterClassName = '\Opencontent\Ckan\DatiTrentinoIt\Converter';
-            if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'Client' ) )
-            {
-                $clientClassName = $this->openDataIni->variable( 'GeneralSettings', 'Client' );
-            }
-            if ( $this->openDataIni->hasVariable( 'GeneralSettings', 'Converter' ) )
-            {
-                $clientClassName = $this->openDataIni->variable( 'GeneralSettings', 'Converter' );
-            }
-            $this->client = new $clientClassName($apiKey,$baseUrl);
-            $this->converter = new $converterClassName();
+        $this->settings = $this->openDataIni->group($alias);
 
-            $this->converter->setOrganizationBuilder( $this->organizationBuilder );
+        $baseUrl = $this->settings['BaseUrl'];
+
+        $apiVersion = $this->settings['ApiVersion'];
+
+        $apiKey = $this->settings['ApiKey'];
+        if (empty( $apiKey )) {
+            throw new Exception("Api key not found");
         }
+        $clientClassName = $this->settings['Client'];
+        if (!class_exists($clientClassName)) {
+            throw new Exception("Class $clientClassName not found");
+        }
+        $converterClassName = $this->settings['Converter'];
+        if (!class_exists($converterClassName)) {
+            throw new Exception("Class $converterClassName not found");
+        }
+        $organizationBuilderClassName = $this->settings['OrganizationBuilder'];
+        if (!class_exists($organizationBuilderClassName)) {
+            throw new Exception("Class $organizationBuilderClassName not found");
+        }
+
+        $this->organizationBuilder = new $organizationBuilderClassName($organizationParameters);
+        $this->client = new $clientClassName($apiKey, $baseUrl, $apiVersion);
+        $this->converter = new $converterClassName();
+        $this->converter->setOrganizationBuilder($this->organizationBuilder);
     }
 
     public function getClient()
     {
         return $this->client;
     }
-    
+
+    public function getConverter()
+    {
+        return $this->converter;
+    }
+
+    public function getOrganizationBuilder()
+    {
+        return $this->organizationBuilder;
+    }
+
+    public function getSettings()
+    {
+        return $this->settings;
+    }
+
     /**
      * Push di un oggetto (creazione o aggiornamento) in CKAN
+     *
      * @param eZContentObject|integer $object
+     *
      * @throws Exception
      * @return stdClass
      */
-    public function pushObject( $object )
+    public function pushObject($object)
     {
-        if ( is_numeric( $object ) )
-        {
-            $object = eZContentObject::fetch( $object );
+        try {
+            $object = $this->validateObject($object);
+            $data = $this->converter->getDatasetFromObject($object);
+            $returnData = $this->client->pushDataset($data);
+            $this->converter->markObjectPushed($object, $returnData);
+
+            return $returnData;
+        } catch (Exception $e) {
+            eZDebug::writeError($e->getMessage() . ' on object id #' . $object->attribute('id'), __METHOD__);
+            throw new Exception($e->getMessage());
         }
-        if ( $object instanceof eZContentObject )
-        {
-            try
-            {
-                $data = $this->converter->getDatasetFromObject( $object );
-                $returnData = $this->client->pushDataset($data);
-                $this->converter->markObjectPushed( $object, $returnData );
-                return $returnData;
+    }
+
+    public function deleteObject($object, $purge = false)
+    {
+        try {
+            $object = $this->validateObject($object);
+            $data = $this->converter->getDatasetFromObject($object);
+            $returnData = $this->client->deleteDataset($data, $purge);
+            if ($purge) {
+                $this->converter->markObjectDeleted($object, $returnData);
             }
-            catch( Exception $e )
-            {
-                eZDebug::writeError( $e->getMessage() . ' on object id #' . $object->attribute( 'id' ), __METHOD__ );
-                throw new Exception( $e->getMessage() );
-            }
+
+            return $returnData;
+        } catch (Exception $e) {
+            eZDebug::writeError($e->getMessage() . ' on object id #' . $object->attribute('id'), __METHOD__);
+            throw new Exception($e->getMessage());
         }
-        else
-        {
-            throw new Exception( 'Object not found' );
+    }
+
+    /**
+     * @param $object
+     *
+     * @return eZContentObject
+     * @throws Exception
+     */
+    public function validateObject($object)
+    {
+        if (is_numeric($object)) {
+            $object = eZContentObject::fetch((int)$object);
         }
+        if (!$object instanceof eZContentObject) {
+            throw new Exception('Object not found');
+        }
+        if ($object->attribute('class_identifier') != $this->openDataIni->variable('GeneralSettings','DatasetClassIdentifier')) {
+            throw new Exception('Object invalid');
+        }
+        return $object;
     }
 
     public function pushOrganization()
     {
         $data = $this->organizationBuilder->build();
-        try
-        {
+        try {
             $returnData = $this->client->pushOrganization($data);
-            $this->organizationBuilder->storeOrganizationPushedId( $returnData );
+            $this->organizationBuilder->storeOrganizationPushedId($returnData);
+
             return $returnData;
+        } catch (Exception $e) {
+            eZDebug::writeError($e->getMessage() . ' on organization', __METHOD__);
+            throw new Exception($e->getMessage());
         }
-        catch( Exception $e )
-        {
-            eZDebug::writeError( $e->getMessage() . ' on organization', __METHOD__ );
-            throw new Exception( $e->getMessage() );
+    }
+
+    public function deleteOrganization($purge = false)
+    {
+        $data = $this->organizationBuilder->getStoresOrganizationId();
+        try {
+            $returnData = $this->client->deleteOrganization($data, $purge);
+            $this->organizationBuilder->removeStoresOrganizationId();
+
+            return $returnData;
+        } catch (Exception $e) {
+            eZDebug::writeError($e->getMessage() . ' on organization', __METHOD__);
+            throw new Exception($e->getMessage());
         }
     }
 
     /**
      * Costruisce il datatset a partire da un oggetto
+     *
      * @param eZContentObject $object
+     *
      * @throws Exception
      * @return array
      */
-    public function getDatasetFromObject( eZContentObject $object )
+    public function getDatasetFromObject(eZContentObject $object)
     {
-        if ( !$object instanceof eZContentObject )
-        {
-            throw new Exception( "Oggetto non trovato" );
+        if (!$object instanceof eZContentObject) {
+            throw new Exception("Oggetto non trovato");
         }
-        if ( $object->attribute( 'class_identifier' ) == $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' ) )
-        {
-            return $this->converter->getDatasetFromObject( $object );
+        if ($object->attribute('class_identifier') == $this->openDataIni->variable('GeneralSettings',
+                'DatasetClassIdentifier')
+        ) {
+            return $this->converter->getDatasetFromObject($object);
         }
-        throw new Exception( "L'oggetto {$object->attribute( 'id' )} non è di classe {$this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' )}" );
+        throw new Exception("L'oggetto {$object->attribute( 'id' )} non è di classe {$this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' )}");
     }
-    
+
     /**
      * Genera id unico
+     *
      * @see self::installationID()
+     *
      * @param integer $objectId
+     *
      * @return string
      */
-    public static function generateUniqueId( $objectId )
+    public static function generateUniqueId($objectId)
     {
         return self::installationID() . self::SEPARATOR . $objectId;
     }
-    
+
     /**
      * Restituisce un oggetto, dato il suo id unico
+     *
      * @param string $id
+     *
      * @return eZContentObject or false
      */
-    public function getObjectFromUniqueId( $id )
-    {                
-        $fromRemote = eZContentObject::fetchByRemoteID( $id );
-        if ( $fromRemote instanceof eZContentObject )
-        {
+    public function getObjectFromUniqueId($id)
+    {
+        $fromRemote = eZContentObject::fetchByRemoteID($id);
+        if ($fromRemote instanceof eZContentObject) {
             return $fromRemote;
         }
-        $parts = explode( self::SEPARATOR, $id );        
-        if ( $parts[0] == self::installationID() )
-        {
-            $object = eZContentObject::fetch( $parts[1] );            
-            if ( $object instanceof eZContentObject )
-            {
-                if ( $object->attribute( 'class_identifier' ) == $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' ) )
-                {
+        $parts = explode(self::SEPARATOR, $id);
+        if ($parts[0] == self::installationID()) {
+            $object = eZContentObject::fetch($parts[1]);
+            if ($object instanceof eZContentObject) {
+                if ($object->attribute('class_identifier') == $this->openDataIni->variable('GeneralSettings',
+                        'DatasetClassIdentifier')
+                ) {
                     return $object;
                 }
             }
         }
+
         return false;
     }
-    
+
     /**
      * Restiuisce la lista delle classi filtrate sulla BlackList
+     *
      * @return eZContentClass[]
      */
     public function getClassList()
@@ -209,20 +264,20 @@ class OCOpenDataTools
         $return = array();
         /** @var eZContentClass[] $classes */
         $classes = eZContentClass::fetchList();
-        $classBlacklist = self::getClassBlacklist();        
-        foreach( $classes as $class )
-        {
-            if ( !isset( $classBlacklist[$class->attribute('identifier')] ) )
-            {
+        $classBlacklist = self::getClassBlacklist();
+        foreach ($classes as $class) {
+            if (!isset( $classBlacklist[$class->attribute('identifier')] )) {
                 $return[$class->attribute('identifier')] = $class;
             }
         }
-        ksort( $return );
+        ksort($return);
+
         return $return;
     }
-    
+
     /**
      * Restiuisce la lista delle classi effettivamente utilizzatr filtrate sulla BlackList
+     *
      * @return eZContentClass[]
      */
     public function getUsedClassList()
@@ -230,243 +285,245 @@ class OCOpenDataTools
         $return = array();
         /** @var eZContentClass[] $classes */
         $classes = eZContentClass::fetchList();
-        $classBlacklist = self::getClassBlacklist();        
-        foreach( $classes as $class )
-        {
-            if ( !isset( $classBlacklist[$class->attribute('identifier')] ) && $class->attribute( 'object_count' ) > 0 )
-            {
+        $classBlacklist = self::getClassBlacklist();
+        foreach ($classes as $class) {
+            if (!isset( $classBlacklist[$class->attribute('identifier')] ) && $class->attribute('object_count') > 0) {
                 $return[$class->attribute('identifier')] = $class;
             }
         }
-        ksort( $return );
+        ksort($return);
+
         return $return;
     }
-    
+
     /**
      * Restituisce la classe filtrando su balck list
+     *
      * @param string $classIdentifier
+     *
      * @return eZContentClass or false
      */
-    public function getClass( $classIdentifier )
+    public function getClass($classIdentifier)
     {
         $classBlacklist = self::getClassBlacklist();
-        if ( isset( $classBlacklist[$classIdentifier] ) )
-        {
+        if (isset( $classBlacklist[$classIdentifier] )) {
             return false;
         }
-        $class = eZContentClass::fetchByIdentifier( $classIdentifier );        
+        $class = eZContentClass::fetchByIdentifier($classIdentifier);
+
         return $class;
     }
-        
+
     /**
      * Restituisce i nodi dataset nel sottoalbero dei contenuti
+     *
      * @return eZContentObjectTreeNode[]
      */
     public function getDatasetNodes()
     {
         $nodes = array();
-        $classIdentifier = $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' );
-        $class = eZContentClass::fetchByIdentifier( $classIdentifier );
-        if ( $class instanceof eZContentClass )
-        {
+        $classIdentifier = $this->openDataIni->variable('GeneralSettings', 'DatasetClassIdentifier');
+        $class = eZContentClass::fetchByIdentifier($classIdentifier);
+        if ($class instanceof eZContentClass) {
             $params = array(
                 'ClassFilterType' => 'include',
-                'ClassFilterArray' => array( $classIdentifier ),
+                'ClassFilterArray' => array($classIdentifier),
                 'Depth' => 1,
                 'DepthOperator' => 'ge'
             );
-            $nodes = eZContentObjectTreeNode::subTreeByNodeID( $params,
-                                                               eZINI::instance( 'content.ini' )->variable( 'NodeSettings', 'RootNode' ) );            
+            $nodes = eZContentObjectTreeNode::subTreeByNodeID($params,
+                eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode'));
         }
+
         return $nodes;
     }
-    
+
     /**
      * Restituisce l'array degli id dataset nel sottoalbero dei contenuti
+     *
      * @return array
-     */    
+     */
     public function getDatasetIdArray()
     {
         $dataset = array();
-        $classIdentifier = $this->openDataIni->variable( 'GeneralSettings', 'DatasetClassIdentifier' );
-        $class = eZContentClass::fetchByIdentifier( $classIdentifier );
-        if ( $class instanceof eZContentClass )
-        {
+        $classIdentifier = $this->openDataIni->variable('GeneralSettings', 'DatasetClassIdentifier');
+        $class = eZContentClass::fetchByIdentifier($classIdentifier);
+        if ($class instanceof eZContentClass) {
             $params = array(
                 'ClassFilterType' => 'include',
-                'ClassFilterArray' => array( $classIdentifier ),
+                'ClassFilterArray' => array($classIdentifier),
                 'Depth' => 1,
                 'DepthOperator' => 'ge'
             );
             /** @var eZContentObjectTreeNode[] $nodes */
-            $nodes = eZContentObjectTreeNode::subTreeByNodeID( $params, eZINI::instance( 'content.ini' )->variable( 'NodeSettings', 'RootNode' ) );
-            foreach( $nodes as $node )
-            {
-               $dataset[] = self::generateUniqueId( $node->attribute( 'contentobject_id' ) );
+            $nodes = eZContentObjectTreeNode::subTreeByNodeID($params,
+                eZINI::instance('content.ini')->variable('NodeSettings', 'RootNode'));
+            foreach ($nodes as $node) {
+                $dataset[] = self::generateUniqueId($node->attribute('contentobject_id'));
             }
         }
+
         return $dataset;
     }
-    
+
     /**
      * Restituisce il dataset
+     *
      * @param string $datasetId
+     *
      * @return array
      */
-    public function getDataset( $datasetId )
-    {        
+    public function getDataset($datasetId)
+    {
         $dataset = array();
-        $object = $this->getObjectFromUniqueId( $datasetId );
-        if ( $object )
-        {
-            $dataset = $this->getDatasetFromObject( $object );
+        $object = $this->getObjectFromUniqueId($datasetId);
+        if ($object) {
+            $dataset = $this->getDatasetFromObject($object);
         }
+
         return $dataset;
     }
-    
+
     /**
      * Genera l'id di installazione
+     *
      * @see eZSolr::installationID()
      * @return string
      */
     public static function installationID()
     {
-        if ( class_exists( 'eZSolr' ) && method_exists( 'eZSolr', 'installationID' ) )
-        {
+        if (class_exists('eZSolr') && method_exists('eZSolr', 'installationID')) {
             return eZSolr::installationID();
         }
-        
-        if ( !empty( self::$InstallationID ) )
-        {
+
+        if (!empty( self::$InstallationID )) {
             return self::$InstallationID;
         }
         $db = eZDB::instance();
 
-        $resultSet = $db->arrayQuery( 'SELECT value FROM ezsite_data WHERE name=\'ezfind_site_id\'' );
+        $resultSet = $db->arrayQuery('SELECT value FROM ezsite_data WHERE name=\'ezfind_site_id\'');
 
-        if ( count( $resultSet ) >= 1 )
-        {
+        if (count($resultSet) >= 1) {
             self::$InstallationID = $resultSet[0]['value'];
-        }
-        else
-        {
-            self::$InstallationID = md5( time() . '-' . mt_rand() );
-            $db->query( 'INSERT INTO ezsite_data ( name, value ) values( \'ezfind_site_id\', \'' . self::$InstallationID . '\' )' );
+        } else {
+            self::$InstallationID = md5(time() . '-' . mt_rand());
+            $db->query('INSERT INTO ezsite_data ( name, value ) values( \'ezfind_site_id\', \'' . self::$InstallationID . '\' )');
         }
 
         return self::$InstallationID;
     }
-    
+
     /**
      * Restituice la lista dei datattype in black list
+     *
      * @return array
      */
     public static function getDatatypeBlackList()
     {
         $datatypeBlacklist = array();
-        if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'DatatypeBlackListForExternal' ) )
-        {
+        if (eZINI::instance('ocopendata.ini')->hasVariable('ContentSettings', 'DatatypeBlackListForExternal')) {
             $datatypeBlacklist = array_fill_keys(
-                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'DatatypeBlackListForExternal' ),
+                (array)eZINI::instance('ocopendata.ini')->variable('ContentSettings', 'DatatypeBlackListForExternal'),
                 true
             );
         }
+
         return $datatypeBlacklist;
     }
-    
+
     /**
      * Restituice la lista delle classi in black list
+     *
      * @return array
      */
     public static function getClassBlacklist()
     {
         $classBlacklist = array();
-        if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'ClassIdentifierBlackListForExternal' ) )
-        {
+        if (eZINI::instance('ocopendata.ini')->hasVariable('ContentSettings', 'ClassIdentifierBlackListForExternal')) {
             $classBlacklist = array_fill_keys(
-                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'ClassIdentifierBlackListForExternal' ),
+                (array)eZINI::instance('ocopendata.ini')->variable('ContentSettings',
+                    'ClassIdentifierBlackListForExternal'),
                 true
             );
         }
+
         return $classBlacklist;
     }
-    
+
     /**
      * Restituice la lista degli identificatori di attributo in black list
+     *
      * @return array
-     */    
+     */
     public static function getFieldBlacklist()
     {
         $fieldBlacklist = array();
-        if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'IdentifierBlackListForExternal' ) )
-        {
+        if (eZINI::instance('ocopendata.ini')->hasVariable('ContentSettings', 'IdentifierBlackListForExternal')) {
             $fieldBlacklist = array_fill_keys(
-                (array)eZINI::instance( 'ocopendata.ini' )->variable( 'ContentSettings', 'IdentifierBlackListForExternal' ),
+                (array)eZINI::instance('ocopendata.ini')->variable('ContentSettings', 'IdentifierBlackListForExternal'),
                 true
             );
         }
+
         return $fieldBlacklist;
     }
-    
+
     /**
      * Restituice la lista degli ovveride degli identificatori di attributo
+     *
      * @param $fieldName
      * @param $classIdentifier
      *
      * @return array
      */
-    public static function getOverrideFieldIdentifier( $fieldName, $classIdentifier )
+    public static function getOverrideFieldIdentifier($fieldName, $classIdentifier)
     {
-        if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'OverrideFieldIdentifierList' ) )
-        {
-            $list = eZINI::instance( 'ocopendata.ini' )->variableArray( 'ContentSettings', 'OverrideFieldIdentifierList' );
-            foreach( $list as $nameArray )
-            {
-                if ( ( $nameArray[0] == $fieldName || $nameArray[0] == $classIdentifier . '/' . $fieldName )
-                     && isset( $nameArray[1] ) )
-                {
-                    return $nameArray[1];                    
+        if (eZINI::instance('ocopendata.ini')->hasVariable('ContentSettings', 'OverrideFieldIdentifierList')) {
+            $list = eZINI::instance('ocopendata.ini')->variableArray('ContentSettings', 'OverrideFieldIdentifierList');
+            foreach ($list as $nameArray) {
+                if (( $nameArray[0] == $fieldName || $nameArray[0] == $classIdentifier . '/' . $fieldName )
+                    && isset( $nameArray[1] )
+                ) {
+                    return $nameArray[1];
                 }
             }
         }
-        return $fieldName;
-    }
-    
-    /**
-     * Restituice l'identificatore di attributo sulla base del loto override di identificatore
-     * @param string $fieldName
-     * @param string $classIdentifier
-     * @return string
-     */    
-    public static function getRealFieldIdentifier( $fieldName, $classIdentifier )
-    {
-        if ( eZINI::instance( 'ocopendata.ini' )->hasVariable( 'ContentSettings', 'OverrideFieldIdentifierList' ) )
-        {
-            $list = eZINI::instance( 'ocopendata.ini' )->variableArray( 'ContentSettings', 'OverrideFieldIdentifierList' );
-            foreach( $list as $nameArray )
-            {
-                if ( isset( $nameArray[1] ) && $nameArray[1] == $fieldName )
-                {
-                    $realField = explode( '/', $nameArray[0] );
-                    if ( count( $realField ) == 1 )
-                    {
-                        return $realField;
-                    }
-                    elseif ( count( $realField ) == 2 )
-                    {
-                        if ( $realField[0] == $classIdentifier )
-                        {
-                            return $realField[1];
-                        }
-                    }                    
-                }
-            }
-        }
+
         return $fieldName;
     }
 
-    public function getLicenseList(){
+    /**
+     * Restituice l'identificatore di attributo sulla base del loto override di identificatore
+     *
+     * @param string $fieldName
+     * @param string $classIdentifier
+     *
+     * @return string
+     */
+    public static function getRealFieldIdentifier($fieldName, $classIdentifier)
+    {
+        if (eZINI::instance('ocopendata.ini')->hasVariable('ContentSettings', 'OverrideFieldIdentifierList')) {
+            $list = eZINI::instance('ocopendata.ini')->variableArray('ContentSettings', 'OverrideFieldIdentifierList');
+            foreach ($list as $nameArray) {
+                if (isset( $nameArray[1] ) && $nameArray[1] == $fieldName) {
+                    $realField = explode('/', $nameArray[0]);
+                    if (count($realField) == 1) {
+                        return $realField;
+                    } elseif (count($realField) == 2) {
+                        if ($realField[0] == $classIdentifier) {
+                            return $realField[1];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $fieldName;
+    }
+
+    public function getLicenseList()
+    {
         return $this->client->getLicenseList();
     }
-    
+
 }

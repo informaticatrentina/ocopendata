@@ -105,8 +105,12 @@ class CkanClientVersion2 implements OcOpenDataClientInterface
     protected $version = '0.1.0';
 
 
-    public function __construct( $api_key = null, $base_url = null )
+    public function __construct( $api_key = null, $base_url = null, $apiVersion = null )
     {
+        if ( $apiVersion && $apiVersion != $this->api_version ){
+            throw new Exception( "Api version $apiVersion not supported by " . __CLASS__ );
+        }
+
         // If provided, set the API key.
         if ( $api_key )
         {
@@ -166,7 +170,16 @@ class CkanClientVersion2 implements OcOpenDataClientInterface
         throw new Exception( 'Not implemented' );
     }
 
+    public function deleteDataset( $dataset, $purge = false ){
+        throw new Exception( 'Not implemented' );
+    }
+
     public function pushOrganization( $data )
+    {
+        throw new Exception( 'Not implemented' );
+    }
+
+    public function deleteOrganization( $data, $purge = false )
     {
         throw new Exception( 'Not implemented' );
     }

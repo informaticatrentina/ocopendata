@@ -24,24 +24,21 @@ class Converter implements \OcOpenDataConverterInterface
      */
     public $organizationBuilder;
 
-    public function setOrganizationBuilder( \OcOpendataOrganizationBuilderInterface $builder )
+    public function setOrganizationBuilder(\OcOpendataOrganizationBuilderInterface $builder)
     {
         $this->organizationBuilder = $builder;
     }
 
-    public function getDatasetFromObject( eZContentObject $object )
+    public function getDatasetFromObject(eZContentObject $object)
     {
         $this->object = $object;
         $this->dataMap = $object->dataMap();
 
         $dataset = new Dataset();
 
-        if ( strpos( $this->object->attribute( 'remote_id' ), $this->getRemotePrefix() ) !== false )
-        {
-            $dataset->setData(
-                'id',
-                str_replace( $this->getRemotePrefix(), '', $this->object->attribute( 'remote_id' ) )
-            );
+        $id = $this->getDatasetId($this->object);
+        if ($id) {
+            $dataset->setData('id', $id);
         }
 
         $dataset->name = $this->getName();
@@ -63,7 +60,17 @@ class Converter implements \OcOpenDataConverterInterface
         $dataset->relationships_as_subject = $this->getRelationshipsAsSubject();
         $dataset->groups = $this->getGroups();
         $dataset->owner_org = $this->getOwnerOrg();
+
         return $dataset;
+    }
+
+    public function getDatasetId(eZContentObject $object)
+    {
+        if (strpos($object->attribute('remote_id'), $this->getRemotePrefix()) !== false) {
+            return str_replace($this->getRemotePrefix(), '', $object->attribute('remote_id'));
+        }
+
+        return null;
     }
 
     public function getRemotePrefix()
@@ -71,47 +78,51 @@ class Converter implements \OcOpenDataConverterInterface
         return 'ckan_';
     }
 
-    public function markObjectPushed( eZContentObject $object, $response )
+    /**
+     * @param eZContentObject $object
+     * @param Dataset $dataset
+     */
+    public function markObjectPushed(eZContentObject $object, $dataset)
     {
-        if ( isset( $response->id ) )
-        {
-            $object->setAttribute('remote_id', $this->getRemotePrefix() . $response->id );
+        if ($dataset->getData('id')) {
+            $object->setAttribute('remote_id', $this->getRemotePrefix() . $dataset->getData('id'));
             $object->store();
         }
     }
 
-    protected function getCustomField( $key )
+    public function markObjectDeleted(eZContentObject $object, $response)
     {
-        switch ( $key )
-        {
+        $object->setAttribute('remote_id', \eZRemoteIdUtility::generate());
+        $object->store();
+    }
+
+    protected function getCustomField($key)
+    {
+        switch ($key) {
             case 'Codifica Caratteri':
                 return 'UTF-8';
                 break;
 
             case 'Copertura Temporale (Data di inizio)':
-                if ( isset( $this->dataMap['from_time'] ) && $this->dataMap['from_time']->hasContent() )
-                {
-                    return date( DATE_ATOM, $this->dataMap['from_time']->toString() );
+                if (isset( $this->dataMap['from_time'] ) && $this->dataMap['from_time']->hasContent()) {
+                    return date(DATE_ATOM, $this->dataMap['from_time']->toString());
                 }
                 break;
 
             case 'Copertura Temporale (Data di fine)':
-                if ( isset( $this->dataMap['to_time'] ) && $this->dataMap['to_time']->hasContent() )
-                {
-                    return date( DATE_ATOM, $this->dataMap['to_time']->toString() );
+                if (isset( $this->dataMap['to_time'] ) && $this->dataMap['to_time']->hasContent()) {
+                    return date(DATE_ATOM, $this->dataMap['to_time']->toString());
                 }
                 break;
 
             case 'Aggiornamento':
-                if ( isset( $this->dataMap['frequency'] ) && $this->dataMap['frequency']->hasContent() )
-                {
+                if (isset( $this->dataMap['frequency'] ) && $this->dataMap['frequency']->hasContent()) {
                     return $this->dataMap['frequency']->toString();
                 }
                 break;
 
             case 'Copertura Geografica':
-                if ( isset( $this->dataMap['geo'] ) && $this->dataMap['geo']->hasContent() )
-                {
+                if (isset( $this->dataMap['geo'] ) && $this->dataMap['geo']->hasContent()) {
                     return $this->dataMap['geo']->toString();
                 }
                 break;
@@ -121,94 +132,86 @@ class Converter implements \OcOpenDataConverterInterface
                 break;
 
             case 'Descrizione campi':
-                if ( isset( $this->dataMap['fields_description'] ) && $this->dataMap['fields_description']->attribute( 'has_content' ) )
-                {
-                    if ( $this->dataMap['fields_description']->attribute( 'data_type_string' ) == 'ezmatrix' )
-                    {
+                if (isset( $this->dataMap['fields_description'] ) && $this->dataMap['fields_description']->attribute('has_content')) {
+                    if ($this->dataMap['fields_description']->attribute('data_type_string') == 'ezmatrix') {
 
                         $fields = $keys = array();
                         $columns = $this->dataMap['fields_description']->content()->attribute(
                             'columns'
                         );
-                        foreach ( $columns['sequential'] as $column )
-                        {
+                        foreach ($columns['sequential'] as $column) {
                             $keys[] = $column['identifier'];
                         }
                         $rows = $this->dataMap['fields_description']->content()->attribute(
                             'rows'
                         );
-                        foreach ( $rows['sequential'] as $row )
-                        {
-                            $fields[] = array_combine( $keys, $row['columns'] );
+                        foreach ($rows['sequential'] as $row) {
+                            $fields[] = array_combine($keys, $row['columns']);
                         }
 
                         $tpl = \eZTemplate::factory();
-                        $tpl->setVariable( 'fields', $fields );
+                        $tpl->setVariable('fields', $fields);
 
-                        return $tpl->fetch( "design:push/dataset_fields_description.tpl" );
-                    }
-                    elseif ( $this->dataMap['fields_description']->attribute( 'data_type_string' ) == 'ezurl' )
-                    {
-                        $url = explode( '|', $this->dataMap['fields_description']->toString() );
+                        return $tpl->fetch("design:push/dataset_fields_description.tpl");
+                    } elseif ($this->dataMap['fields_description']->attribute('data_type_string') == 'ezurl') {
+                        $url = explode('|', $this->dataMap['fields_description']->toString());
                         $url = $url[0];
-                        \eZURI::transformURI( $url, false, 'full' );
+                        \eZURI::transformURI($url, false, 'full');
+
                         return $url;
-                    }
-                    else
-                    {
+                    } else {
                         return $this->dataMap['fields_description']->toString();
                     }
-                }
-                elseif ( isset( $this->dataMap['fields_description_text'] ) && $this->dataMap['fields_description_text']->attribute( 'has_content' ) )
-                {
+                } elseif (isset( $this->dataMap['fields_description_text'] ) && $this->dataMap['fields_description_text']->attribute('has_content')) {
                     return $this->dataMap['fields_description_text']->toString();
                 }
                 break;
 
             case 'Data di creazione':
             case 'Data di pubblicazione':
-                return date( DATE_ATOM, $this->object->attribute( 'published' ) );
+                return date(DATE_ATOM, $this->object->attribute('published'));
                 break;
 
             case 'Data di aggiornamento':
-                return date( DATE_ATOM, $this->object->attribute( 'modified' ) );
+                return date(DATE_ATOM, $this->object->attribute('modified'));
                 break;
 
             case 'URL sito':
-                if ( isset( $this->dataMap['url_website'] ) && $this->dataMap['url_website']->hasContent() )
-                {
-                    $url = explode( '|', $this->dataMap['url_website']->toString() );
+                if (isset( $this->dataMap['url_website'] ) && $this->dataMap['url_website']->hasContent()) {
+                    $url = explode('|', $this->dataMap['url_website']->toString());
                     $url = $url[0];
-                    \eZURI::transformURI( $url, false, 'full' );
+                    \eZURI::transformURI($url, false, 'full');
+
                     return $url;
                 }
                 break;
 
         }
+
         return null;
     }
 
     protected function getName()
     {
         $trans = eZCharTransform::instance();
-        $title = $this->object->attribute( 'name' );
-        $name = $trans->transformByGroup( $title, 'urlalias' );
+        $title = $this->object->attribute('name');
+        $name = $trans->transformByGroup($title, 'urlalias');
 
-        return strtolower( $name );
+        return strtolower($name);
     }
 
     protected function getTitle()
     {
-        return $this->object->attribute( 'name' );
+        return $this->object->attribute('name');
     }
 
     protected function getAuthorName()
     {
-        if ( isset( $this->dataMap['author'] )
-             && $this->dataMap['author']->hasContent()
-        )
-        {
-            $author = explode( '|', $this->dataMap['author']->toString() );
+        if (isset( $this->dataMap['author'] )
+            && $this->dataMap['author']->hasContent()
+        ) {
+            $author = explode('|', $this->dataMap['author']->toString());
+
             return $author[0];
         }
 
@@ -217,11 +220,11 @@ class Converter implements \OcOpenDataConverterInterface
 
     protected function getAuthorEmail()
     {
-        if ( isset( $this->dataMap['author'] )
-             && $this->dataMap['author']->hasContent()
-        )
-        {
-            $author = explode( '|', $this->dataMap['author']->toString() );
+        if (isset( $this->dataMap['author'] )
+            && $this->dataMap['author']->hasContent()
+        ) {
+            $author = explode('|', $this->dataMap['author']->toString());
+
             return $author[1];
         }
 
@@ -230,11 +233,11 @@ class Converter implements \OcOpenDataConverterInterface
 
     protected function getMaintainerName()
     {
-        if ( isset( $this->dataMap['maintainer'] )
-             && $this->dataMap['maintainer']->hasContent()
-        )
-        {
-            $maintainer = explode( '|', $this->dataMap['maintainer']->toString() );
+        if (isset( $this->dataMap['maintainer'] )
+            && $this->dataMap['maintainer']->hasContent()
+        ) {
+            $maintainer = explode('|', $this->dataMap['maintainer']->toString());
+
             return $maintainer[0];
         }
 
@@ -243,11 +246,11 @@ class Converter implements \OcOpenDataConverterInterface
 
     protected function getMaintainerEmail()
     {
-        if ( isset( $this->dataMap['maintainer'] )
-             && $this->dataMap['maintainer']->hasContent()
-        )
-        {
-            $maintainer = explode( '|', $this->dataMap['maintainer']->toString() );
+        if (isset( $this->dataMap['maintainer'] )
+            && $this->dataMap['maintainer']->hasContent()
+        ) {
+            $maintainer = explode('|', $this->dataMap['maintainer']->toString());
+
             return $maintainer[1];
         }
 
@@ -256,50 +259,52 @@ class Converter implements \OcOpenDataConverterInterface
 
     protected function getLicenseId()
     {
-        if ( isset( $this->dataMap['license_id'] ) && $this->dataMap['license_id']->hasContent() )
-        {
-            return strtolower( $this->dataMap['license_id']->toString() );
+        if (isset( $this->dataMap['license_id'] ) && $this->dataMap['license_id']->hasContent()) {
+            return strtolower($this->dataMap['license_id']->toString());
         }
+
         return null;
     }
 
     protected function getNotes()
     {
-        if ( isset( $this->dataMap['notes'] ) && $this->dataMap['notes']->hasContent() )
-        {
+        if (isset( $this->dataMap['notes'] ) && $this->dataMap['notes']->hasContent()) {
             return $this->dataMap['notes']->toString();
         }
+
         return null;
     }
 
     protected function getUrl()
     {
-        $url = $this->object->attribute( 'main_node' )->attribute( 'url_alias' );
-        \eZURI::transformURI( $url, false, 'full' );
+        $url = $this->object->attribute('main_node')->attribute('url_alias');
+        \eZURI::transformURI($url, false, 'full');
 
         return $url;
     }
 
     protected function getVersion()
     {
-        if ( isset( $this->dataMap['versione'] ) )
-        {
-            if ( $this->dataMap['versione']->hasContent() )
+        if (isset( $this->dataMap['versione'] )) {
+            if ($this->dataMap['versione']->hasContent()) {
                 return $this->dataMap['versione']->toString();
+            }
 
             /** @var \eZContentClassAttribute $classAttribute */
             $classAttribute = $this->dataMap['versione']->contentClassAttribute();
-            if ( $classAttribute->hasAttribute( \eZStringType::DEFAULT_STRING_FIELD )
-                 && !empty( $classAttribute->attribute( \eZStringType::DEFAULT_STRING_FIELD ) ) )
-                return $classAttribute->attribute( \eZStringType::DEFAULT_STRING_FIELD );
+            if ($classAttribute->hasAttribute(\eZStringType::DEFAULT_STRING_FIELD)
+                && !empty( $classAttribute->attribute(\eZStringType::DEFAULT_STRING_FIELD) )
+            ) {
+                return $classAttribute->attribute(\eZStringType::DEFAULT_STRING_FIELD);
+            }
         }
 
-        return $this->object->attribute( 'current_version' );
+        return $this->object->attribute('current_version');
     }
 
     protected function getState()
     {
-        return null;
+        return 'active';
     }
 
     protected function getType()
@@ -310,41 +315,30 @@ class Converter implements \OcOpenDataConverterInterface
     protected function getResources()
     {
         $resources = array();
-        foreach ( array_keys( $this->dataMap ) as $attributeIdentifier )
-        {
-            if ( strpos( $attributeIdentifier, 'resource' ) !== false )
-            {
-                list( $resource, $number, $resourceIdentifier ) = explode('_',$attributeIdentifier);
-                $resources[intval( $number )][$resourceIdentifier] = $this->dataMap[$attributeIdentifier];
+        foreach (array_keys($this->dataMap) as $attributeIdentifier) {
+            if (strpos($attributeIdentifier, 'resource') !== false) {
+                list( $resource, $number, $resourceIdentifier ) = explode('_', $attributeIdentifier);
+                $resources[intval($number)][$resourceIdentifier] = $this->dataMap[$attributeIdentifier];
             }
         }
 
         $unset = array();
         /** @var eZContentObjectAttribute[] $resource */
-        foreach ( $resources as $number => $resource )
-        {
-            if ( isset( $resource['url'] ) && $resource['url']->attribute( 'content' ) != '' )
-            {
+        foreach ($resources as $number => $resource) {
+            if (isset( $resource['url'] ) && $resource['url']->attribute('content') != '') {
                 unset( $resources[$number]['file'] );
                 unset( $resources[$number]['api'] );
-            }
-            elseif ( isset( $resource['file'] ) && $resource['file']->attribute( 'has_content' ) )
-            {
+            } elseif (isset( $resource['file'] ) && $resource['file']->attribute('has_content')) {
                 unset( $resources[$number]['url'] );
                 unset( $resources[$number]['api'] );
-            }
-            elseif ( isset( $resource['api'] ) && $resource['api']->attribute( 'content' ) != '' )
-            {
+            } elseif (isset( $resource['api'] ) && $resource['api']->attribute('content') != '') {
                 unset( $resources[$number]['url'] );
                 unset( $resources[$number]['file'] );
-            }
-            else
-            {
+            } else {
                 $unset[] = $number;
             }
         }
-        foreach ( $unset as $number )
-        {
+        foreach ($unset as $number) {
             unset( $resources[$number] );
         }
 
@@ -362,72 +356,62 @@ class Converter implements \OcOpenDataConverterInterface
         );
 
         $resourceList = array();
-        foreach( $resources as $number => $resource )
-        {
+        foreach ($resources as $number => $resource) {
             $data = $resourceAttributes;
-            $data['hash'] = $this->getResourceGuid( $number );
-            foreach( array_keys( $resourceAttributes ) as $resourceAttribute )
-            {
-                switch( $resourceAttribute )
-                {
+            $data['hash'] = $this->getResourceGuid($number);
+            foreach (array_keys($resourceAttributes) as $resourceAttribute) {
+                switch ($resourceAttribute) {
                     case 'url':
-                        if ( isset( $resource['file'] ) )
-                        {
-                            $url = $resource['file']->content()->attribute( 'filepath' );
-                            \eZURI::transformURI( $url, false, 'full' );
+                        if (isset( $resource['file'] )) {
+                            $url = $resource['file']->content()->attribute('filepath');
+                            \eZURI::transformURI($url, false, 'full');
                             $data["url"] = $url;
                             $data["resource_type"] = 'file';
-                            $data["size"] = $resource['file']->content()->attribute( 'filesize' );
-                            $data["mimetype"] = $resource['file']->content()->attribute( 'mime_type' );
-                            $data["format"] = \eZFile::suffix( $resource['file']->content()->attribute( 'filepath' ) );
-                        }
-                        elseif ( isset( $resource['api'] ) )
-                        {
+                            $data["size"] = $resource['file']->content()->attribute('filesize');
+                            $data["mimetype"] = $resource['file']->content()->attribute('mime_type');
+                            $data["format"] = \eZFile::suffix($resource['file']->content()->attribute('filepath'));
+                        } elseif (isset( $resource['api'] )) {
                             $url = $resource['api']->toString();
-                            \eZURI::transformURI( $url, false, 'full' );
+                            \eZURI::transformURI($url, false, 'full');
                             $data["url"] = $url;
                             $data["resource_type"] = 'api';
-                        }
-                        elseif ( isset( $resource['url'] ) )
-                        {
-                            $url = explode( '|', $resource['url']->toString() );
+                        } elseif (isset( $resource['url'] )) {
+                            $url = explode('|', $resource['url']->toString());
                             $url = $url[0];
-                            \eZURI::transformURI( $url, false, 'full' );
+                            \eZURI::transformURI($url, false, 'full');
                             $data["url"] = $url;
                             $data["resource_type"] = 'file';
                         }
                         break;
 
                     default:
-                        if ( isset( $resource[$resourceAttribute] ) && $resource[$resourceAttribute]->attribute( 'has_content' ) )
-                        {
+                        if (isset( $resource[$resourceAttribute] ) && $resource[$resourceAttribute]->attribute('has_content')) {
                             $string = $resource[$resourceAttribute]->toString();
-                            if ( $resourceAttribute == 'description' )
-                            {
-                                $string = str_replace( ";", "", $string );
+                            if ($resourceAttribute == 'description') {
+                                $string = str_replace(";", "", $string);
                             }
                             $data[$resourceAttribute] = $string;
                         }
                         break;
                 }
             }
-            $resourceList[] = Resource::fromArray( $data );
+            $resourceList[] = Resource::fromArray($data);
         }
+
         return $resourceList;
     }
 
-    protected function getResourceGuid( $suffix )
+    protected function getResourceGuid($suffix)
     {
-        return md5( \eZSolr::installationID() . '-' . $this->object->attribute( 'id' ) . '-' . $suffix );
+        return md5(\eZSolr::installationID() . '-' . $this->object->attribute('id') . '-' . $suffix);
     }
 
     protected function getTags()
     {
-        if ( isset( $this->dataMap['tags'] ) && $this->dataMap['tags']->attribute( 'has_content' ) )
-        {
+        if (isset( $this->dataMap['tags'] ) && $this->dataMap['tags']->attribute('has_content')) {
             $tagList = array();
-            $tags = explode( ', ', $this->dataMap['tags']->toString() );
-            foreach( $tags as $tag ){
+            $tags = explode(', ', $this->dataMap['tags']->toString());
+            foreach ($tags as $tag) {
                 $tagList[] = array(
                     'vocabulary_id' => null,
                     'name' => $tag
@@ -443,11 +427,9 @@ class Converter implements \OcOpenDataConverterInterface
     protected function getExtras()
     {
         $extras = array();
-        foreach ( Dataset::getCustomFieldKeys() as $key )
-        {
-            $value = $this->getCustomField( $key );
-            if ( $value )
-            {
+        foreach (Dataset::getCustomFieldKeys() as $key) {
+            $value = $this->getCustomField($key);
+            if ($value) {
                 $extras[] = array(
                     'key' => $key,
                     'value' => $value
@@ -458,6 +440,7 @@ class Converter implements \OcOpenDataConverterInterface
             'key' => 'Language',
             'value' => $this->object->currentLanguage()
         );
+
         return $extras;
     }
 
