@@ -4,9 +4,10 @@ interface OcOpendataDatasetGeneratorInterface
 {
     /**
      * @param $classIdentifier
+     * @param array $parameters
      * @param bool $dryRun
      *
-     * @return eZContentObject
+     * @return mixed
      */
-    public function createFromClassIdentifier( $classIdentifier, $dryRun = null );
+    public function createFromClassIdentifier( $classIdentifier, $parameters = array(), $dryRun = null);
 }

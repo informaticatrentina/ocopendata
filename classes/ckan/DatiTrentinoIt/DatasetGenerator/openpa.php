@@ -22,7 +22,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         'container' => 'opendata_datasetcontainer'
     );
 
-    public function createFromClassIdentifier( $classIdentifier, $dryRun = null )
+    public function createFromClassIdentifier( $classIdentifier, $parameters = array(), $dryRun = null )
     {
         $tools = new OCOpenDataTools();
 
@@ -55,13 +55,14 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $contentEnvironment = EnvironmentLoader::loadPreset( 'content' );
         $geoEnvironment = EnvironmentLoader::loadPreset( 'geo' );
 
-        $query = urlencode("classes '$classIdentifier'");
+        $undecodeQuery = "classes '$classIdentifier'";
+        $query = urlencode($undecodeQuery);
 
         $hasResource = false;
         $hasGeoResource = false;
 
         $contentSearch->setEnvironment($contentEnvironment);
-        if ( $this->anonymousSearch( $contentSearch, $query ) ) {
+        if ( $this->anonymousSearch( $contentSearch, $undecodeQuery ) ) {
             $resourceFieldPrefix = 'resource_1_';
             $attributeList[$resourceFieldPrefix.'api'] = "http://$siteUrl/api/opendata/v2/content/search/$query";
             $attributeList[$resourceFieldPrefix.'name'] = 'Contenuti di tipo ' . $class->attribute('name') . ' in formato JSON';
@@ -80,7 +81,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
 
         $resourceFieldPrefix = 'resource_3_';
         $contentSearch->setEnvironment($geoEnvironment);
-        if ( $this->anonymousSearch( $contentSearch, "classes '$classIdentifier'" ) ) {
+        if ( $this->anonymousSearch( $contentSearch, $undecodeQuery ) ) {
             $attributeList[$resourceFieldPrefix.'api'] = "http://$siteUrl/api/opendata/v2/content/geo/$query";
             $attributeList[$resourceFieldPrefix.'name'] = 'Contenuti di tipo ' . $class->attribute('name') . ' in formato GeoJSON';
             $attributeList[$resourceFieldPrefix.'description'] = $class->attribute('description');
