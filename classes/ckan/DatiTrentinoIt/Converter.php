@@ -42,13 +42,13 @@ class Converter implements \OcOpenDataConverterInterface
         }
 
         $dataset->name = $this->getName();
-        $dataset->title = $this->getTitle();
-        $dataset->author = $this->getAuthorName();
+        $dataset->title = $this->fixText($this->getTitle());
+        $dataset->author = $this->fixText($this->getAuthorName());
         $dataset->author_email = $this->getAuthorEmail();
-        $dataset->maintainer = $this->getMaintainerName();
+        $dataset->maintainer = $this->fixText($this->getMaintainerName());
         $dataset->maintainer_email = $this->getMaintainerEmail();
         $dataset->license_id = $this->getLicenseId();
-        $dataset->notes = $this->getNotes();
+        $dataset->notes = $this->fixText($this->getNotes());
         $dataset->url = $this->getUrl();
         $dataset->version = $this->getVersion();
         $dataset->state = $this->getState();
@@ -64,13 +64,19 @@ class Converter implements \OcOpenDataConverterInterface
         return $dataset;
     }
 
-    protected function fixUrl( $url ){
-        $url = ltrim( $url, '/' );
-        $siteUrl = rtrim( \eZINI::instance()->variable('SiteSettings', 'SiteURL'), '/' ) . '/';
-        if ( strpos( $url, $siteUrl ) === false ){
+    protected function fixText($string)
+    {
+        return str_replace(';', '', $string);
+    }
+
+    protected function fixUrl($url)
+    {
+        $url = ltrim($url, '/');
+        $siteUrl = rtrim(\eZINI::instance()->variable('SiteSettings', 'SiteURL'), '/') . '/';
+        if (strpos($url, $siteUrl) === false) {
             $url = $siteUrl . $url;
         }
-        if ( strpos( $url, 'http' ) === false ){
+        if (strpos($url, 'http') === false) {
             $url = 'http://' . $url;
         }
 
@@ -170,7 +176,7 @@ class Converter implements \OcOpenDataConverterInterface
                         $url = explode('|', $this->dataMap['fields_description']->toString());
                         $url = $url[0];
 
-                        return $this->fixUrl( $url );
+                        return $this->fixUrl($url);
                     } else {
                         return $this->dataMap['fields_description']->toString();
                     }
@@ -193,7 +199,7 @@ class Converter implements \OcOpenDataConverterInterface
                     $url = explode('|', $this->dataMap['url_website']->toString());
                     $url = $url[0];
 
-                    return $this->fixUrl( $url );
+                    return $this->fixUrl($url);
                 }
                 break;
 
@@ -290,7 +296,7 @@ class Converter implements \OcOpenDataConverterInterface
     {
         $url = $this->object->attribute('main_node')->attribute('url_alias');
 
-        return $this->fixUrl( $url );
+        return $this->fixUrl($url);
     }
 
     protected function getVersion()
@@ -374,19 +380,19 @@ class Converter implements \OcOpenDataConverterInterface
                     case 'url':
                         if (isset( $resource['file'] )) {
                             $url = $resource['file']->content()->attribute('filepath');
-                            $data["url"] = $this->fixUrl( $url );
+                            $data["url"] = $this->fixUrl($url);
                             $data["resource_type"] = 'file';
                             $data["size"] = $resource['file']->content()->attribute('filesize');
                             $data["mimetype"] = $resource['file']->content()->attribute('mime_type');
                             $data["format"] = \eZFile::suffix($resource['file']->content()->attribute('filepath'));
                         } elseif (isset( $resource['api'] )) {
                             $url = $resource['api']->toString();
-                            $data["url"] = $this->fixUrl( $url );
+                            $data["url"] = $this->fixUrl($url);
                             $data["resource_type"] = 'api';
                         } elseif (isset( $resource['url'] )) {
                             $url = explode('|', $resource['url']->toString());
                             $url = $url[0];
-                            $data["url"] = $this->fixUrl( $url );
+                            $data["url"] = $this->fixUrl($url);
                             $data["resource_type"] = 'file';
                         }
                         break;
@@ -438,8 +444,8 @@ class Converter implements \OcOpenDataConverterInterface
             $value = $this->getCustomField($key);
             if ($value) {
                 $extras[] = array(
-                    'key' => $key,
-                    'value' => $value
+                    'key' => $this->fixText($key),
+                    'value' => $this->fixText($value)
                 );
             }
         }

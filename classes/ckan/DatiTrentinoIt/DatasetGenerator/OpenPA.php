@@ -179,7 +179,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $attributeList['notes'] = $notes;
         $attributeList['tech_documentation'] = null;
         $linkHelp = "http://$siteUrl/opendata/help/classes/$classIdentifier";
-        $attributeList['fields_description_text'] = "I dati di questo dataset vengono erogati in modalità *as a service*; per maggiori informazioni sulle modalità di utilizzo del servizio si rimanda alla [guida delle API di ComunWeb](https://github.com/opendatatrentino/openservices) e [alla pagina di descrizione dei campi]($linkHelp).";
+        $attributeList['fields_description_text'] = "I dati di questo dataset vengono erogati in modalità *as a service*: per maggiori informazioni sulle modalità di utilizzo del servizio si rimanda alla [guida delle API di ComunWeb](https://github.com/opendatatrentino/openservices) e [alla pagina di descrizione dei campi]($linkHelp).";
         $attributeList['geo'] = str_replace('Comune di', '', $siteName);
         $attributeList['frequency'] = 'Continuo';
         $attributeList['license_id'] = 'CC-BY';
