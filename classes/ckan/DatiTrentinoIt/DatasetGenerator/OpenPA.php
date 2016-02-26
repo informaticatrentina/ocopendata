@@ -22,7 +22,29 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         'container' => 'opendata_datasetcontainer'
     );
 
-    public static $parameters =  array(
+    public static $parameters = array(
+        'accordo' => array('Plurale' => 'Accordi', 'Descrizione' => 'Tutti gli accordi'),
+        'convenzione' => array('Plurale' => 'Convenzioni', 'Descrizione' => 'Tutte le convenzioni'),
+        'concessioni' => array('Plurale' => 'Concessioni', 'Descrizione' => 'Elenchi delle concessioni'),
+        'event' => array('Plurale' => 'Eventi', 'Descrizione' => 'Tutti gli eventi'),
+        'procedimento' => array('Plurale' => 'Procedimenti', 'Descrizione' => 'Tutti i procedimenti'),
+        'tasso_assenza' => array('Plurale' => 'Tassi di assenza', 'Descrizione' => 'Tassi di assenza'),
+        'area_tematica' => array('Plurale' => 'Aree tematiche', 'Descrizione' => 'Tutte le aree tematiche'),
+        'associazione' => array('Plurale' => 'Associazioni', 'Descrizione' => 'Tutte le associazioni'),
+        'ente' => array('Plurale' => 'Enti', 'Descrizione' => 'Tutti gli enti'),
+        'ente_controllato' => array('Plurale' => 'Enti controllati', 'Descrizione' => 'Tutti gli enti controllati'),
+        'interpellanza' => array('Plurale' => 'Interpellanze', 'Descrizione' => 'Tutte le interpellanze'),
+        'interrogazione' => array('Plurale' => 'Interrogazioni', 'Descrizione' => 'Tutte le interrogazioni'),
+        'mozione' => array('Plurale' => 'Mozioni', 'Descrizione' => 'Tutte le mozioni'),
+        'sovvenzione_contributo' => array(
+            'Plurale' => 'Sovvenzioni e contributi',
+            'Descrizione' => 'Tutte le sovvenzioni ed i contributi'
+        ),
+        'seduta_consiglio' => array(
+            'Plurale' => 'Sedute di consiglio',
+            'Descrizione' => 'Tutte le sedute di consiglio'
+        ),
+        'rapporto' => array('Plurale' => 'Rapporti', 'Descrizione' => 'Tutti i rapporti'),
         'albo_elenco' => array('Plurale' => 'Albi ed elenchi', 'Descrizione' => 'Tutti gli albi ed elenchi'),
         'avviso' => array('Plurale' => 'Avvisi', 'Descrizione' => 'Tutti gli avvisi'),
         'bando' => array('Plurale' => 'Bandi di gara', 'Descrizione' => 'Tutti i bandi'),
@@ -36,17 +58,11 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
             'Descrizione' => 'Tutti i conferimenti di incarico'
         ),
         'consulenza' => array('Plurale' => 'Consulenze', 'Descrizione' => 'Tutte le consulenze'),
-        'decreto_sindacale' => array(
-            'Plurale' => 'Decreti sindacali',
-            'Descrizione' => 'Tutti i decreti sindacali'
-        ),
+        'decreto_sindacale' => array('Plurale' => 'Decreti sindacali', 'Descrizione' => 'Tutti i decreti sindacali'),
         'dipendente' => array('Plurale' => 'Dipendenti', 'Descrizione' => 'Tutti i dipendenti'),
         'disciplinare' => array('Plurale' => 'Disciplinari', 'Descrizione' => 'Tutti i disciplinari'),
         'documento' => array('Plurale' => 'Documenti', 'Descrizione' => 'Tutti i documenti'),
-        'gruppo_consiliare' => array(
-            'Plurale' => 'Gruppi consiliari',
-            'Descrizione' => 'Tutti i gruppi consiliari'
-        ),
+        'gruppo_consiliare' => array('Plurale' => 'Gruppi consiliari', 'Descrizione' => 'Tutti i gruppi consiliari'),
         'modulo' => array('Plurale' => 'Moduli', 'Descrizione' => 'Tutti i moduli'),
         'organo_politico' => array('Plurale' => 'Organi politici', 'Descrizione' => 'Tutti gli organi politici'),
         'piano_progetto' => array('Plurale' => 'Piani e progetti', 'Descrizione' => 'Tutti i piani e progetti'),
@@ -68,7 +84,6 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         'statuto' => array('Plurale' => 'Statuti', 'Descrizione' => 'Tutti gli statuti')
     );
 
-
     public function createFromClassIdentifier($classIdentifier, $parameters = array(), $dryRun = null)
     {
         $tools = new OCOpenDataTools();
@@ -78,7 +93,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         }
 
         //controllo se l'organizzazione è valida
-        $data = $tools->getOrganizationBuilder()->build();
+        $tools->getOrganizationBuilder()->build();
 
         $pagedata = new \OpenPAPageData();
         $contacts = $pagedata->getContactsData();
