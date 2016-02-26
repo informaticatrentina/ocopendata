@@ -190,9 +190,15 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $attributeList[$resourceFieldPrefix . 'format'] = 'JSON';
         $attributeList[$resourceFieldPrefix . 'charset'] = 'UTF-8';
 
+        $email = '';
+        if ( isset( $contacts['email'] ) )
+            $email = $contacts['email'];
+        elseif ( isset( $contacts['pec'] ) )
+            $email = $contacts['pec'];
+
         $attributeList['title'] = $title;
-        $attributeList['author'] = $siteName . '|' . $contacts['email'];
-        $attributeList['maintainer'] = $siteName . '|' . $contacts['email'];;
+        $attributeList['author'] = $siteName . '|' . $email;
+        $attributeList['maintainer'] = $siteName . '|' . $email;;
         $attributeList['url_website'] = 'http://' . $siteUrl . '/' . $area->attribute('main_node')->attribute('url_alias') . '|' . $area->attribute('name');
         $attributeList['notes'] = $notes;
         $attributeList['tech_documentation'] = null;
