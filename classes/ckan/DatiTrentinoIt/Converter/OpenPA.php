@@ -37,7 +37,7 @@ class OpenPA extends Converter
         if (!empty($string)) {
             $geonameId = self::getStoredGeonameById( $string );
             if (!$geonameId){
-                $searchUri = "http://api.geonames.org/search?username=" . self::$geoUserName . "&q=" . $string;
+                $searchUri = "http://api.geonames.org/search?username=" . self::$geoUserName . "&q=" . trim($string);
                 try {
                     $data = \OpenPABase::getDataByURL( $searchUri );
                     $searchXML = new SimpleXMLElement($data);
