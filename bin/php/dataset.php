@@ -11,7 +11,7 @@ $script = eZScript::instance(array(
 $script->startup();
 
 $options = $script->getOptions(
-    '[id:][show][push][delete][purge][generate_from_class:][dry-run]',
+    '[id:][show][push][delete][purge][generate_from_class:][dry-run][repush_all]',
     '',
     array(
         'generate_from_class' => 'Genera un oggetto dataset in eZ dato p\'identificativo di classe specificato',
@@ -20,7 +20,8 @@ $options = $script->getOptions(
         'show' => 'Mostra le info sul dataset',
         'push' => 'Salva o aggiorna il dataset in Ckan',
         'delete' => 'Marca il dataset come \'deleted\' in Ckan',
-        'purge' => 'Elimina il dataset da Ckan'
+        'purge' => 'Elimina il dataset da Ckan',
+        'repush_all' => 'Aggiorna tutti i dataset in ckan'
     )
 );
 $script->initialize();
@@ -36,7 +37,21 @@ try {
     print_r($tools->getSettings());
     $cli->notice();
 
-    if ($options['generate_from_class']) {
+    if ($options['repush_all']) {
+        foreach( $tools->getDatasetObjects() as $object ){
+            $cli->notice($object->attribute('name') . ' ',false);
+            if (!$options['dry-run']) {
+                try{
+                    $tools->pushObject($object);
+                    $cli->warning('OK');
+                }catch(Exception $e){
+                    $cli->error('KO ' . $e->getMessage());
+                }
+            }else{
+                $cli->notice();
+            }
+        }
+    } elseif ($options['generate_from_class']) {
         $generator = $tools->getDatasetGenerator();
         if ($generator instanceof OcOpendataDatasetGeneratorInterface) {
             $object = $generator->createFromClassIdentifier(
@@ -52,6 +67,7 @@ try {
         } else {
             throw new Exception('Generator not found');
         }
+
     } else {
 
 

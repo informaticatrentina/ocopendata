@@ -552,6 +552,9 @@ class OCOpenDataTools
         return $this->client->getLicenseList();
     }
 
+    /**
+     * @return eZContentObject[]
+     */
     public static function getDatasetObjects(){
         $objects = array();
         /** @var eZContentObjectTreeNode[] $nodes */
