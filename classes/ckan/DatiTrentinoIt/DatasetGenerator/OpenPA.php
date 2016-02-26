@@ -169,7 +169,7 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
         $resourceFieldPrefix = 'resource_3_';
         $contentSearch->setEnvironment($geoEnvironment);
         if ($this->anonymousSearch($contentSearch, $undecodeQuery)) {
-            $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/api/opendata/v2/content/geo/$query";
+            $attributeList[$resourceFieldPrefix . 'api'] = "http://$siteUrl/api/opendata/v2/geo/search/$query";
             $attributeList[$resourceFieldPrefix . 'name'] = $resourceTitle . ' in formato GeoJSON';
             $attributeList[$resourceFieldPrefix . 'description'] = $class->attribute('description');
             $attributeList[$resourceFieldPrefix . 'format'] = 'GeoJSON';
@@ -233,6 +233,8 @@ class OpenPA implements OcOpendataDatasetGeneratorInterface
             $object = eZContentObject::fetch( $object->attribute('id') );
         } else {
             $object = eZContentFunctions::createAndPublishObject($params);
+            eZContentObject::clearCache();
+            $object = eZContentObject::fetch( $object->attribute('id') );
         }
         if ($object instanceof eZContentObject) {
             $mainNode = $object->attribute('main_node');
