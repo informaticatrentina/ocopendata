@@ -19,7 +19,7 @@ class OpenPA extends Converter
             'key' => 'Generator',
             'value' => 'http://www.comunweb.it'
         );
-        $geoNames = \eZINI::instance('geonames.ini')->hasGroup('GeoNamesId');
+        $geoNames = \eZINI::instance('geonames.ini')->hasGroup('GeoNamesId') ? \eZINI::instance('geonames.ini')->group('GeoNamesId') : array();
         $instanceId = \OpenPAInstance::current()->getIdentifier();
         if (isset($geoNames[$instanceId])) {
             $extras[] = array(
