@@ -552,4 +552,18 @@ class OCOpenDataTools
         return $this->client->getLicenseList();
     }
 
+    public static function getDatasetObjects(){
+        $objects = array();
+        /** @var eZContentObjectTreeNode[] $nodes */
+        $nodes = eZContentObjectTreeNode::subTreeByNodeID(array(
+            'ClassFilterType' => 'include',
+            'ClassFilterArray' => array( eZINI::instance('ocopendata.ini')->variable('GeneralSettings','DatasetClassIdentifier') ),
+            'Limitation' => array()
+        ),1);
+        foreach( $nodes as $node ){
+            $objects[] = $node->object();
+        }
+        return $objects;
+    }
+
 }
