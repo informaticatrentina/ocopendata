@@ -82,7 +82,9 @@ class OpenPA extends Converter
             $emptyData = json_encode(array());
             eZDB::instance()->query( "INSERT INTO ezsite_data ( name, value ) values( 'geonames_id', '$emptyData' )" );
             $siteData = eZSiteData::fetchByName( 'geonames_id' );
-            var_dump('empty');
+            if ( self::$debug ){
+                \eZCLI::instance()->output('(new)', false);
+            }
         }
 
         if ( $siteData instanceof eZSiteData ){
@@ -95,6 +97,9 @@ class OpenPA extends Converter
             eZDB::instance()->query( "INSERT INTO ezsite_data ( name, value ) values( 'geonames_id', '$jsonData' )" );
             $siteData = eZSiteData::fetchByName( 'geonames_id' );
             $data = json_decode( $siteData->attribute('value'), 1);
+            if ( self::$debug ){
+                \eZCLI::instance()->output('(stored)', false);
+            }
         }
 
         if ( isset( $data[$key] ) )
