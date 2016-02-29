@@ -113,7 +113,7 @@
     <script>
     $(function() {ldelim}
         var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no,full)}/";
-        {if ($use_current_user)}
+        {if $use_current_user}
             var contentEndpoint = "{'opendata/api/content/read'|ezurl(no,full)}/";
             var searchEndpoint = "{'opendata/api/content/search'|ezurl(no,full)}/";
             var geoEndpoint = "{'opendata/api/geo/search'|ezurl(no,full)}/";
