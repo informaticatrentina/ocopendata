@@ -260,7 +260,7 @@
                 dataType: "json",
                 success: function(response) {
                     if( 'error_message' in response )
-                        loadError('GEO: '+error.error_message);
+                        loadError('GEO: '+response.error_message);
                     else {
 
                         $.ajax({
