@@ -88,7 +88,7 @@ class EnvironmentSettings
      */
     public function filterSearchResult(SearchResults $searchResults, \ArrayObject $query, QueryBuilder $builder)
     {
-        if ($searchResults->nextPageQuery != null) {
+        if ($searchResults->nextPageQuery != null && $this->requestBaseUri != null) {
             $searchResults->nextPageQuery = $this->requestBaseUri . 'search/' . urlencode($searchResults->nextPageQuery);
         }
 
