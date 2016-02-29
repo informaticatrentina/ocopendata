@@ -30,7 +30,7 @@ $ViewList['api'] = array(
 $ViewList['console'] = array(
     'functions' => array( 'console' ),
     'script' => 'console.php',
-    'params' => array(),
+    'params' => array( 'UseCurrentUser' ),
     'unordered_params' => array()
 );
 $ViewList['analyzer'] = array(

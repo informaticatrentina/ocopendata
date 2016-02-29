@@ -113,9 +113,15 @@
     <script>
     $(function() {ldelim}
         var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no,full)}/";
-        var contentEndpoint = "{'api/opendata/v2/content/read'|ezurl(no,full)}/";
-        var searchEndpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
-        var geoEndpoint = "{'api/opendata/v2/geo/search'|ezurl(no,full)}/";
+        {if ($use_current_user)}
+            var contentEndpoint = "{'opendata/api/content/read'|ezurl(no,full)}/";
+            var searchEndpoint = "{'opendata/api/content/search'|ezurl(no,full)}/";
+            var geoEndpoint = "{'opendata/api/geo/search'|ezurl(no,full)}/";
+        {else}
+            var contentEndpoint = "{'api/opendata/v2/content/read'|ezurl(no,full)}/";
+            var searchEndpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
+            var geoEndpoint = "{'api/opendata/v2/geo/search'|ezurl(no,full)}/";
+        {/if}
         var classEndpoint = "{'api/opendata/v2/classes'|ezurl(no,full)}/";
         var availableTokens = [{foreach $tokens as $token}'{$token}'{delimiter},{/delimiter}{/foreach}];
         {literal}

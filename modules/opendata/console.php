@@ -3,6 +3,7 @@
 $module = $Params['Module'];
 $tpl = eZTemplate::factory();
 $http = eZHTTPTool::instance();
+$useCurrentUser = $Params['UseCurrentUser'];
 
 $query = null;
 $error = null;
@@ -33,6 +34,7 @@ catch ( Exception $e )
     $error = $e->getMessage();
 }
 
+$tpl->setVariable( 'use_current_user', $useCurrentUser );
 $tpl->setVariable( 'error', $error );
 $tpl->setVariable( 'query', $query );
 $tpl->setVariable( 'tokens', $tokens );
