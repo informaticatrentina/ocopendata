@@ -23,6 +23,10 @@ try
     $contentRepository->setEnvironment( $currentEnvironment );
     $contentBrowser->setEnvironment( $currentEnvironment );
     $contentSearch->setEnvironment( $currentEnvironment );
+    
+    $parser = new ezpRestHttpRequestParser();
+    $request = $parser->createRequest();
+    $currentEnvironment->__set('request', $request);
 
     $data = array();
 

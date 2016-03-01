@@ -260,6 +260,7 @@ class SentenceConverter
                 $value = '"' . $value . '"';
                 break;
 
+            case 'meta_name':
             case 'sub_string':
                 $value = '"' . $value . '"';
                 break;

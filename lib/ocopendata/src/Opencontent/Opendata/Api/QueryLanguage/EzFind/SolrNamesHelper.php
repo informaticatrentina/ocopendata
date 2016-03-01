@@ -71,6 +71,8 @@ class SolrNamesHelper
                 $field = 'section_id';
             } elseif ($field == 'state') {
                 $field = 'object_states';
+            } elseif ($field == 'author') {
+                $field = 'owner_id';
             } elseif ($field == 'class') {
                 return array('meta_class' => 'meta_class_identifier_ms');
             }
@@ -108,17 +110,11 @@ class SolrNamesHelper
 
         $dataTypes = $this->getDatatypesByIdentifier((string)$field);
         foreach ($dataTypes as $dataType) {
-            if ($dataType == 'ezobjectrelationlist' || $dataType == 'ezobjectrelation') {
-                $subField = $this->tokenFactory->createQueryToken('name');
-                $subField->data('is_meta_field', true);
-                $data = array_merge($data, $this->getSubFieldNames($field, $subField, $context));
-            } else {
-                $type = $this->getSolrType($dataType, $context);
-                $data[$field . '.' . $type] = $this->generateSolrFieldName(
-                    (string)$field,
-                    $type
-                );
-            }
+            $type = $this->getSolrType($dataType, $context);
+            $data[$field . '.' . $type] = $this->generateSolrFieldName(
+                (string)$field,
+                $type
+            );
         }
 
         if (empty( $data )) {
@@ -130,6 +126,10 @@ class SolrNamesHelper
 
     protected function getSubFieldNames(Token $field, Token $subField, $context)
     {
+        if ( $context == 'sort' ){
+            return $this->getFieldNames($field, $context);
+        }
+        
         $data = array();
         $dataTypes = $this->getDatatypesByIdentifier((string)$field);
         foreach ($dataTypes as $dataType) {

@@ -20,7 +20,8 @@ class QueryBuilder extends BaseQueryBuilder
         'modified',
         'section',
         'state',
-        'class'
+        'class',
+        'owner_id'
     );
 
     public $parameters = array(
