@@ -49,11 +49,14 @@ class OCOpenDataTools
 
     protected $settings;
 
+    protected $currentEndpointIdentifier;
+
     public function __construct(array $organizationParameters = null)
     {
         $this->openDataIni = eZINI::instance('ocopendata.ini');
 
         $alias = $this->openDataIni->variable('CkanSettings', 'Alias');
+        $this->currentEndpointIdentifier = $alias;
 
         if (!$this->openDataIni->hasGroup($alias)) {
             throw new Exception("Setting $alias not found in ocopendata.ini");
@@ -94,6 +97,14 @@ class OCOpenDataTools
         $this->client = new $clientClassName($apiKey, $baseUrl, $apiVersion);
         $this->converter = new $converterClassName();
         $this->converter->setOrganizationBuilder($this->organizationBuilder);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrentEndpointIdentifier()
+    {
+        return $this->currentEndpointIdentifier;
     }
 
     public function getClient()
