@@ -2,40 +2,15 @@
 
 class OCOpenDataContentModel extends ezpRestContentModel
 {    
-    /**
-     * Chiamando questo metodo viene gestito un eventuale redirect 302.
-     * 
-     * @param type $url
-     * @return $url con redirezione.
-     */
-    private static function getUrlRedirect( $url ){
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        
-        $a = curl_exec($ch);
-        
-        $url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-        
-        curl_close($ch);
-        
-        return $url;
-    }
-    
     public static function getMetadataByLocation( ezpContentLocation $location )
     {
         $url = $location->url_alias;
         eZURI::transformURI( $url, false, 'full' ); // $url is passed as a reference
         
-        // manage redirect
-        $redirect_url = OCOpenDataContentModel::getUrlRedirect($url);
-        
         $aMetadata = array(
             'nodeId'        => (int)$location->node_id,
             'nodeRemoteId'  => $location->remote_id,
-            'fullUrl'       => $redirect_url
+            'fullUrl'       => $url
         );
         
         try
@@ -315,10 +290,6 @@ class OCOpenDataContentModel extends ezpRestContentModel
         $protocol = substr( $request->protocol, 0, $protocolIndex );
         $protocol .= $request->isEncrypted ? 's' : '';
         $hostUri = $protocol.'://'.$request->host;
-	
-        // manage redirect
-        $hostUri = OCOpenDataContentModel::getUrlRedirect($hostUri);
-        
         return $hostUri;
     }
     
