@@ -31,6 +31,7 @@ class DefaultEnvironmentSettings extends EnvironmentSettings
                 'remoteId' => $content->metadata->remoteId,
                 'classIdentifier' => $content->metadata->classIdentifier,
                 'class' => str_replace( '/content', '/classes', $this->requestBaseUri ) . $content->metadata->classIdentifier,
+                'ownerId' => $content->metadata->ownerId,
                 'mainNodeId' => (int) $content->metadata->mainNodeId,
                 'sectionIdentifier' => $content->metadata->sectionIdentifier,
                 'stateIdentifiers' => $content->metadata->stateIdentifiers,

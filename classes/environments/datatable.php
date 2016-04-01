@@ -1,5 +1,6 @@
 <?php
 
+use Opencontent\Opendata\Api\Values\Content;
 
 class DatatableEnvironmentSettings extends DefaultEnvironmentSettings
 {
@@ -31,20 +32,21 @@ class DatatableEnvironmentSettings extends DefaultEnvironmentSettings
         
         $columns = $parameters['columns'];
         $order = $parameters['order'];
-        $search = $parameters['search'];
-        
-        foreach( $columns as $index => $column ){
-            $columns[$index]['fieldNames'] = $builder->getSolrNamesHelper()->generateFieldNames( $column['name'] );
-            $columns[$index]['sortNames'] = $builder->getSolrNamesHelper()->generateSortNames( $column['name'] );
-            if ( !empty($column['search']['value']) ){
-                //@todo
-            }            
+        $search = $parameters['search'];        
+        foreach( $columns as $index => $column ){            
+            if ( $column['searchable'] == 'true' || $column['searchable'] === true ){                
+                $columns[$index]['fieldNames'] = $builder->getSolrNamesHelper()->generateFieldNames( $column['name'] );
+                $columns[$index]['sortNames'] = $builder->getSolrNamesHelper()->generateSortNames( $column['name'] );
+                if ( !empty($column['search']['value']) ){
+                    //@todo
+                }
+            }
         }
         
         $query['SortBy'] = array();
         foreach( $order as $orderParam ){
-            $column = $columns[$orderParam['column']];
-            if ( $column['orderable'] ){
+            $column = $columns[$orderParam['column']];            
+            if ( $column['orderable'] == 'true' || $column['orderable'] === true ){                
                 foreach( $column['sortNames'] as $field){
                     $query['SortBy'][$field] = $orderParam['dir'];
                 }

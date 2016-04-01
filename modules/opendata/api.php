@@ -4,9 +4,9 @@ use Opencontent\Opendata\Api\EnvironmentLoader;
 use Opencontent\Opendata\Api\ContentBrowser;
 use Opencontent\Opendata\Api\ContentRepository;
 use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\ClassRepository;
 
 $Module = $Params['Module'];
-$Environment = $Params['Environment'];
 $Environment = $Params['Environment'];
 $Action = $Params['Action'];
 $Param = $Params['Param'];
@@ -18,25 +18,32 @@ try
     $contentRepository = new ContentRepository();
     $contentBrowser = new ContentBrowser();
     $contentSearch = new ContentSearch();
+    $classRepository = new ClassRepository();
 
-    $currentEnvironment = EnvironmentLoader::loadPreset( $Environment );
-    $contentRepository->setEnvironment( $currentEnvironment );
-    $contentBrowser->setEnvironment( $currentEnvironment );
-    $contentSearch->setEnvironment( $currentEnvironment );
-    
-    $parser = new ezpRestHttpRequestParser();
-    $request = $parser->createRequest();
-    $currentEnvironment->__set('request', $request);
-
-    $data = array();
-
-    if ( $Action == 'read' )
-    {
-        $data = (array)$contentRepository->read( $Param );
+    if ( $Environment == 'classes' ){
+        $data = (array) $classRepository->load($Action);
     }
-    elseif ( $Action == 'search' )
+    else
     {
-        $data = (array)$contentSearch->search( $Param );
+        $currentEnvironment = EnvironmentLoader::loadPreset( $Environment );
+        $contentRepository->setEnvironment( $currentEnvironment );
+        $contentBrowser->setEnvironment( $currentEnvironment );
+        $contentSearch->setEnvironment( $currentEnvironment );
+        
+        $parser = new ezpRestHttpRequestParser();
+        $request = $parser->createRequest();
+        $currentEnvironment->__set('request', $request);
+    
+        $data = array();
+    
+        if ( $Action == 'read' )
+        {
+            $data = (array)$contentRepository->read( $Param );
+        }
+        elseif ( $Action == 'search' )
+        {
+            $data = (array)$contentSearch->search( $Param );
+        }
     }
 }
 catch( Exception $e )

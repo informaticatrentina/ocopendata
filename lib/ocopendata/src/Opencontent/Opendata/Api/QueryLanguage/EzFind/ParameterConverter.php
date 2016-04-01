@@ -90,7 +90,11 @@ class ParameterConverter extends SentenceConverter
                 if (!in_array($order, array('asc', 'desc'))) {
                     throw new Exception("Can not convert sort order value: $order");
                 }
-                $fieldNames = $this->solrNamesHelper->generateSortNames($field);
+                if ( $field == 'score' ) {
+                    $fieldNames = array( 'score' );
+                } else {
+                    $fieldNames = $this->solrNamesHelper->generateSortNames($field);
+                }
                 foreach ($fieldNames as $name) {
                     $data[$name] = $order;
                 }
