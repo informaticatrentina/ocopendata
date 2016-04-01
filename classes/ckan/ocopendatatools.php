@@ -197,6 +197,9 @@ class OCOpenDataTools
         if ($object->attribute('class_identifier') != $this->openDataIni->variable('GeneralSettings','DatasetClassIdentifier')) {
             throw new Exception('Object invalid');
         }
+        if ( strpos($object->attribute('remote_id'), 'nockan' ) !== false ){
+            throw new Exception('Can not validate object: the remote id contains \'nockan\'');
+        }        
         return $object;
     }
 
@@ -216,9 +219,10 @@ class OCOpenDataTools
 
     public function deleteOrganization($purge = false)
     {
-        $data = $this->organizationBuilder->getStoresOrganizationId();
+        //$data = $this->organizationBuilder->getStoresOrganizationId();
+        $data = $this->organizationBuilder->build();
         try {
-            $returnData = $this->client->deleteOrganization($data, $purge);
+            $returnData = $this->client->deleteOrganization($data->name, $purge);
             $this->organizationBuilder->removeStoresOrganizationId();
 
             return $returnData;

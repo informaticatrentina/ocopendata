@@ -27,12 +27,21 @@ class OpenPA implements OcOpendataOrganizationBuilderInterface
         $title = \eZINI::instance()->variable( 'SiteSettings', 'SiteName' );
 
         $trans = \eZCharTransform::instance();
-        $name = $trans->transformByGroup( $title, 'identifier' );
+        $name = $trans->transformByGroup( $title, 'urlalias_dataset' );
         $description = "Dati di cui è titolare il " . $title;
 
         //$imageUrl = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' ) . '/extension/ocopendata/design/standard/images/comunweb-cloud.png';
-        $imageUrl = null;
-
+        
+        $stemma = \OpenPaFunctionCollection::fetchStemma();
+        if( is_array($stemma))
+        {
+            $imageUrl = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' ) . '/' . $stemma['full_path'];
+        }
+        else
+        {
+            $imageUrl = 'http://dati.trentino.it/images/logo.png';    
+        }
+        
         if ( !isset($contacts['web']) ){
             $contacts['web'] = 'http://' . rtrim( \eZINI::instance()->variable( 'SiteSettings', 'SiteURL' ), '/' );
         }
