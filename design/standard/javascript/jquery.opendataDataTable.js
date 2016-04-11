@@ -102,9 +102,11 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
     switch(templateType) {
         case 'array of id or remoteId or file or image':
             var names = [];
-            $.each(data, function(){
-                names.push(this.name[currentLanguage]);
-            });
+            if (data.length > 0) {
+                $.each(data, function () {
+                    names.push(this.name[currentLanguage]);
+                });
+            }
             data = names.join(', ');
             break;
 
@@ -116,25 +118,31 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
 
         case 'multifile':
             var files = [];
-            $.each(data, function(){
-                files.push('<a href="'+this.url+'">'+this.filename+'</a>');
-            });
+            if (data.length > 0) {
+                $.each(data, function () {
+                    files.push('<a href="' + this.url + '">' + this.filename + '</a>');
+                });
+            }
             return files.join(', ');
             break;
 
         case 'array of objects':
             var authors = [];
-            $.each(data, function(){
-                authors.push('<a href="mailto:'+this.email+'">'+this.name+'</a>');
-            });
+            if (data.length > 0) {
+                $.each(data, function () {
+                    authors.push('<a href="mailto:' + this.email + '">' + this.name + '</a>');
+                });
+            }
             return authors.join(', ');
             break;
 
         case 'user':
             var value = [];
-            $.each(data, function(){
-                value.push('<a href="mailto:'+this.email+'">'+this.login+'</a>');
-            });
+            if (data.length > 0) {
+                $.each(data, function () {
+                    value.push('<a href="mailto:' + this.email + '">' + this.login + '</a>');
+                });
+            }
             return value.join(', ');
             break;
 
