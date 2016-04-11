@@ -44,7 +44,7 @@
                         {"data": "metadata.name.ita-IT", "name": 'name', "title": 'Name'}
                     ]
                 }
-            }).data('opendataDataTable').loadDataTable();;
+            }).data('opendataDataTable').loadDataTable();
         });
         {/literal}
     </script>

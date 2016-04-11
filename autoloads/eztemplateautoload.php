@@ -8,6 +8,7 @@ $eZTemplateOperatorArray[] = array(
         'fetch_licenses',
         'fetch_charsets',
         'api_search',
-        'api_read'
+        'api_read',
+        'api_class'
     )
 );
