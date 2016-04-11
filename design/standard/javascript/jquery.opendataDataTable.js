@@ -23,7 +23,7 @@
                         "render": function ( data, type, row, meta ) {
                             var validDate = moment(data,moment.ISO_8601);
                             if ( validDate.isValid() ){
-                                return '<span style="white-space:nowrap">'+validDate.format("d MMMM YYYY, hh:mm")+'</span>';
+                                return '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY, hh:mm")+'</span>';
                             }else{
                                 return data;
                             }
@@ -147,9 +147,14 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
             break;
 
         case 'ISO 8601 date':
-            var validDate = moment(data,moment.ISO_8601);
+            var validDate = moment(data);
             if ( validDate.isValid() ){
-                data = '<span style="white-space:nowrap">'+validDate.format("d MMMM YYYY, hh:mm")+'</span>';
+                if (dataType == 'ezdate') {
+                    data = '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY")+'</span>';
+                }else{
+                    data = '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY, hh:mm")+'</span>';
+                }
+
             }
             break;
 
