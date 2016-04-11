@@ -114,12 +114,20 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
             }
             break;
 
+        case 'multifile':
+            var files = [];
+            $.each(data, function(){
+                files.push('<a href="'+this.url+'">'+this.filename+'</a>');
+            });
+            return files.join(', ');
+            break;
+
         case 'array of objects':
             var authors = [];
             $.each(data, function(){
                 authors.push('<a href="mailto:'+this.email+'">'+this.name+'</a>');
             });
-            data = authors.join(', ');
+            return authors.join(', ');
             break;
 
         case 'user':
@@ -127,7 +135,7 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
             $.each(data, function(){
                 value.push('<a href="mailto:'+this.email+'">'+this.login+'</a>');
             });
-            data = value.join(', ');
+            return value.join(', ');
             break;
 
         case 'ISO 8601 date':
