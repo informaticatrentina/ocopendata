@@ -7,17 +7,17 @@
 
     <title>OCQL Console</title>
 
-    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-    <script src="http://code.jquery.com/jquery-1.12.0.min.js" type="application/javascript"></script>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <script src="//code.jquery.com/jquery-1.12.0.min.js" type="application/javascript"></script>
+    <link rel="stylesheet" href="/extension/ocopendata/design/standard/stylesheets/leaflet.css" />
     <link rel="stylesheet" href="/extension/ocopendata/design/standard/stylesheets/MarkerCluster.css">
     <link rel="stylesheet" href="/extension/ocopendata/design/standard/stylesheets/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 
-    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-    <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
-    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="//getbootstrap.com/dist/js/bootstrap.min.js"></script>
+    <script src="/extension/ocopendata/design/standard/javascript/leaflet.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/leaflet.markercluster.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/leaflet.makimarkers.js"></script>
 
@@ -119,10 +119,10 @@
             var geoEndpoint = "{'opendata/api/geo/search'|ezurl(no,full)}/";
 			var classEndpoint = "{'opendata/api/classes'|ezurl(no,full)}/";
         {else}
-            var contentEndpoint = "{'api/opendata/v2/content/read'|ezurl(no,full)}/";
-            var searchEndpoint = "{'api/opendata/v2/content/search'|ezurl(no,full)}/";
-            var geoEndpoint = "{'api/opendata/v2/geo/search'|ezurl(no,full)}/";
-			var classEndpoint = "{'api/opendata/v2/classes'|ezurl(no,full)}/";
+            var contentEndpoint = "/api/opendata/v2/content/read/";
+            var searchEndpoint = "/api/opendata/v2/content/search/";
+            var geoEndpoint = "/api/opendata/v2/geo/search/";
+			var classEndpoint = "/api/opendata/v2/classes/";
         {/if}        
         var availableTokens = [{foreach $tokens as $token}'{$token}'{delimiter},{/delimiter}{/foreach}];
         {literal}
@@ -130,7 +130,7 @@
         // https://gist.github.com/comp615/2288108
         L.NumberedDivIcon = L.Icon.extend({
             options: {
-                iconUrl: 'http://cdn.leafletjs.com/leaflet/v0.7.7/images/marker-icon.png',
+                iconUrl: '/extension/ocopendata/design/standard/images/marker-icon.png',
                 number: '',
                 shadowUrl: null,
                 iconSize: new L.Point(25, 41),
