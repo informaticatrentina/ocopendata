@@ -51,4 +51,9 @@ class Tags extends Base
             throw new InvalidInputException( 'Invalid data', $identifier, $data );
         }
     }
+
+    public function toCSVString($content, $params = null)
+    {
+        return implode(',', $content);
+    }
 }

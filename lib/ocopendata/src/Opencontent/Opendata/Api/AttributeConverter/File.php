@@ -121,4 +121,9 @@ class File extends Base
         return eZDir::path( array( eZSys::cacheDirectory(), 'tmp' ), true );
     }
 
+    public function toCSVString($content, $params = null)
+    {
+        return $content;
+    }
+
 }

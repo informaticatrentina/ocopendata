@@ -84,4 +84,17 @@ class Matrix extends Base
         }
         return $format;
     }
+
+    public function toCSVString($content, $columnIdentifier = null)
+    {
+        $data = array();
+        foreach( $content as $row ){
+            foreach( $row as $key => $column ) {
+                if ($key == $columnIdentifier) {
+                    $data[] = $column;
+                }
+            }
+        }
+        return implode("\n", $data);
+    }
 }   

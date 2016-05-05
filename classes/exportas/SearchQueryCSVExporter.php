@@ -1,6 +1,8 @@
 <?php
 
 use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\ClassRepository;
+use Opencontent\Opendata\Api\AttributeConverterLoader;
 
 class SearchQueryCSVExporter extends AbstarctExporter
 {
@@ -10,27 +12,42 @@ class SearchQueryCSVExporter extends AbstarctExporter
      */
     protected $contentSearch;
 
+    /**
+     * @var ClassRepository
+     */
+    protected $classRepository;
+
     protected $queryString;
 
     protected $CSVheaders;
 
-    public function __construct( $parentNodeId, $queryString )
+    protected $uniqueClassIdentifier;
+
+    protected $language;
+
+    protected $classFields = array();
+
+    public function __construct($parentNodeId, $queryString)
     {
         $this->functionName = 'csv';
 
-        $this->ini = eZINI::instance( 'exportas.ini' );
-        $this->setOptions( $this->ini->group( 'Settings' ) );
+        $this->ini = eZINI::instance('exportas.ini');
+        $this->setOptions($this->ini->group('Settings'));
 
         $currentEnvironment = new CsvEnvironmentSettings;
-        $currentEnvironment->__set( 'identifier', 'csv' );
-        $currentEnvironment->__set( 'debug', false );
+        $currentEnvironment->__set('identifier', 'csv');
+        $currentEnvironment->__set('debug', false);
         $this->contentSearch = new ContentSearch();
-        $this->contentSearch->setEnvironment( $currentEnvironment );
+        $this->contentSearch->setEnvironment($currentEnvironment);
         $this->queryString = $queryString;
         $this->filename = uniqid('export_');
+
+        $this->classRepository = new ClassRepository();
+
+        $this->language = eZLocale::currentLocaleCode();
     }
 
-    function transformNode( eZContentObjectTreeNode $node )
+    function transformNode(eZContentObjectTreeNode $node)
     {
         return null;
     }
@@ -43,52 +60,127 @@ class SearchQueryCSVExporter extends AbstarctExporter
     public function fetchCount()
     {
         $result = $this->contentSearch->search($this->queryString);
+
         return $result->totalCount;
     }
 
-    function transformItem( $item )
+    protected function csvHeaders()
     {
-        $language = $item['metadata']['languages'][0];
-        $data = $item['data'][$language];
-        if ( $this->CSVheaders == null){
-            $this->CSVheaders = array_keys( $data );
+        $class = $this->classRepository->load($this->uniqueClassIdentifier);
+        $this->CSVheaders = array();
+        foreach ($class->fields as $field) {
+
+            $header = $this->csvHeader($field);
+
+            if (is_string($header)) {
+                $this->CSVheaders[] = $header;
+                $this->classFields[$field['identifier']] = $field['identifier'];
+            } else {
+                $this->CSVheaders = array_merge($this->CSVheaders, $header);
+            }
         }
+
+        return $this->CSVheaders;
+    }
+
+    protected function csvHeader($field)
+    {
+        $header = $field['name'][$this->language];
+        switch ($field['dataType']) {
+
+            case 'ezmatrix': {
+                $baseHeader = $header;
+                $header = array();
+                $fieldIdentifiers = array();
+                foreach ($field['template']['format'][0][0] as $key => $value) {
+                    $columnHeader = str_replace('string (', ' (', $value);
+                    $header[] = $baseHeader . $columnHeader;
+                    $fieldIdentifiers[] = $key;
+                }
+                $this->classFields[$field['identifier']] = $fieldIdentifiers;
+            }
+                break;
+        }
+
+        return $header;
+    }
+
+    function transformItem($item)
+    {
+        $data = $item['data'][$this->language];
+
+        if ($this->uniqueClassIdentifier === null) {
+            $this->uniqueClassIdentifier = $item['metadata']['classIdentifier'];
+        } else {
+            if ($this->uniqueClassIdentifier != $item['metadata']['classIdentifier']) {
+                throw new Exception("Multiple class export not allowed");
+            }
+        }
+
         $stringData = array();
-        foreach( $data as $key => $value ){
-            $stringData[$key] = is_string( $value ) ? strip_tags( $value ) : '';
+        foreach ($data as $key => $field) {
+            list( $classIdentifier, $identifier ) = explode('/', $field['identifier']);
+            $converter = AttributeConverterLoader::load(
+                $classIdentifier,
+                $identifier,
+                $field['datatype']
+            );
+            switch ($field['dataType']) {
+
+                case 'ezmatrix': {
+                    foreach ($this->classFields[$field['identifier']] as $columnIdentifier) {
+                        $stringData[$key . '.' . $columnIdentifier] = $converter->toCSVString(
+                            $field['content'],
+                            $columnIdentifier
+                        );
+                    }
+                }
+                    break;
+
+                default: {
+                    $stringData[$key] = $converter->toCSVString($field['content']);
+                }
+                    break;
+            }
         }
+
         return $stringData;
     }
 
     function handleDownload()
     {
-        $filename = $this->filename . '.csv';
-        header( 'X-Powered-By: eZ Publish' );
-        header( 'Content-Description: File Transfer' );
-        header( 'Content-Type: text/csv; charset=utf-8' );
-        header( "Content-Disposition: attachment; filename=$filename" );
-        header( "Pragma: no-cache" );
-        header( "Expires: 0" );
+        try {
 
-        $output = fopen('php://output', 'w');
-        $runOnce = false;
-        do
-        {
-            $result = $this->fetch();
+            $filename = $this->filename . '.csv';
+            header('X-Powered-By: eZ Publish');
+            header('Content-Description: File Transfer');
+            header('Content-Type: text/csv; charset=utf-8');
+            header("Content-Disposition: attachment; filename=$filename");
+            header("Pragma: no-cache");
+            header("Expires: 0");
 
-            foreach ( $result->searchHits as $item )
-            {
-                $values = $this->transformItem( $item );
-                if ( !$runOnce )
-                {
-                    fputcsv( $output, array_values( $this->CSVheaders ), $this->options['CSVDelimiter'], $this->options['CSVEnclosure'] );
-                    $runOnce = true;
+            $output = fopen('php://output', 'w');
+            $runOnce = false;
+
+            do {
+                $result = $this->fetch();
+                foreach ($result->searchHits as $item) {
+                    $values = $this->transformItem($item);
+                    if (!$runOnce) {
+                        fputcsv($output, array_values($this->csvHeaders()), $this->options['CSVDelimiter'],
+                            $this->options['CSVEnclosure']);
+                        $runOnce = true;
+                    }
+                    fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+                    flush();
                 }
-                fputcsv( $output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure'] );
-                flush();
-            }
-            $this->queryString = $result->nextPageQuery;
+                $this->queryString = $result->nextPageQuery;
 
-        } while ( $this->queryString != null );
+            } while ($this->queryString != null);
+
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
+
     }
 }

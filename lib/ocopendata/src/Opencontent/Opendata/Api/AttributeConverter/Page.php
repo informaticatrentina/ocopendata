@@ -73,4 +73,9 @@ class Page extends Base
             'identifier' => 'readonly'
         );
     }
+
+    public function toCSVString($content, $params = null)
+    {
+        return ''; //todo
+    }
 }

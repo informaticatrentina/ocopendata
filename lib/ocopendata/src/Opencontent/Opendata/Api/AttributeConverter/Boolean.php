@@ -24,4 +24,9 @@ class Boolean extends Base
     {
         return array( 'identifier' => 'boolean' );
     }
+
+    public function toCSVString($content, $params = null)
+    {
+        return $content;
+    }
 }

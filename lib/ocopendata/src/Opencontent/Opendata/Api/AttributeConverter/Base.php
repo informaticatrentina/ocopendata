@@ -23,8 +23,7 @@ class Base
     public function __construct(
         $classIdentifier,
         $identifier
-    )
-    {
+    ) {
         $this->classIdentifier = $classIdentifier;
         $this->identifier = $identifier;
     }
@@ -39,28 +38,29 @@ class Base
      *
      * @return array|string|int|null|\JsonSerializable
      */
-    public function get( eZContentObjectAttribute $attribute )
+    public function get(eZContentObjectAttribute $attribute)
     {
         $data = array(
-            'id' => intval( $attribute->attribute( 'id' ) ),
-            'version' => intval( $attribute->attribute( 'version' ) ),
+            'id' => intval($attribute->attribute('id')),
+            'version' => intval($attribute->attribute('version')),
             'identifier' => $this->classIdentifier . '/' . $this->identifier,
-            'datatype' => $attribute->attribute( 'data_type_string' ),
+            'datatype' => $attribute->attribute('data_type_string'),
             'content' => $attribute->hasContent() ? $attribute->toString() : null
         );
 
         return $data;
     }
 
-    public function set( $data, PublicationProcess $process )
+    public function set($data, PublicationProcess $process)
     {
         return $data;
     }
 
-    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
+    public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        if ( $data !== null && !is_string( $data ) )
-            throw new InvalidInputException( 'Invalid type', $identifier, $data );
+        if ($data !== null && !is_string($data)) {
+            throw new InvalidInputException('Invalid type', $identifier, $data);
+        }
     }
 
     /**
@@ -68,20 +68,31 @@ class Base
      *
      * @return string|null
      */
-    public function help( eZContentClassAttribute $attribute )
+    public function help(eZContentClassAttribute $attribute)
     {
         return null;
     }
 
-    public function type( eZContentClassAttribute $attribute )
+    public function type(eZContentClassAttribute $attribute)
     {
-        if ( $attribute->attribute( 'is_information_collector' ) )
-            return array( 'identifier' => 'readonly' );
-        return array( 'identifier' => 'string' );
+        if ($attribute->attribute('is_information_collector')) {
+            return array('identifier' => 'readonly');
+        }
+
+        return array('identifier' => 'string');
     }
 
     public static function clean()
     {
 
+    }
+
+    public function toCSVString($content, $params = null)
+    {
+        if (is_array($content) && isset( $content['url'] )) {
+            return $content['url'];
+        }
+
+        return '';
     }
 }

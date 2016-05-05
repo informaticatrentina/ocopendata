@@ -11,26 +11,32 @@ use Opencontent\Opendata\Api\PublicationProcess;
 class Keywords extends Base
 {
 
-    public function get( eZContentObjectAttribute $attribute )
+    public function get(eZContentObjectAttribute $attribute)
     {
-        $content = parent::get( $attribute );
+        $content = parent::get($attribute);
         /** @var \eZKeyword $attributeContent */
         $attributeContent = $attribute->content();
         $content['content'] = $attributeContent->KeywordArray;
+
         return $content;
     }
 
-    public function set( $data, PublicationProcess $process )
+    public function set($data, PublicationProcess $process)
     {
-        $data = implode( ', ', $data );
-        return parent::set( $data, $process );
+        $data = implode(', ', $data);
+
+        return parent::set($data, $process);
     }
 
-    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
+    public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        if ( !is_array( $data ) )
-        {
-            throw new InvalidInputException( 'Invalid data', $identifier, $data );
+        if (!is_array($data)) {
+            throw new InvalidInputException('Invalid data', $identifier, $data);
         }
+    }
+
+    public function toCSVString($content, $params = null)
+    {
+        return implode(',', $content);
     }
 }
