@@ -164,7 +164,7 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(dataTyp
                 data = parseFloat(number).toFixed(2);
                 break;
             }else{
-                data = data.value;
+                data = parseFloat(data.value).toFixed(2);
             }
 
     }

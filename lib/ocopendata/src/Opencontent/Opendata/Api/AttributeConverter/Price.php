@@ -15,6 +15,13 @@ class Price extends Base
              && $attribute->hasContent()
         )
         {
+            /** @var \eZPrice $price */
+            $price = $attribute->content();
+            $content['content'] = array(
+                'value' => $price->attribute( 'price' ),
+                'vat_id' => $price->attribute( 'id' ),
+                'is_vat_included' => (int)$price->attribute( 'is_vat_included' )
+            );
         }
 
         return $content;
@@ -22,7 +29,12 @@ class Price extends Base
 
     public function set( $data, PublicationProcess $process )
     {
-        return date( "U", strtotime( $data ) );
+        return $data['value'] . '|' . $data['vat_id'] . '|' . $data['is_vat_included'];
+    }
+
+    public static function validate($identifier, $data, eZContentClassAttribute $attribute)
+    {
+        //@todo
     }
 
     public function type( eZContentClassAttribute $attribute )
@@ -35,41 +47,6 @@ class Price extends Base
                 'is_vat_included' => 'boolean'
             )
         );
-    }
-
-    public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
-    {
-        if ( is_array( $data ) )
-        {
-            if ( !isset( $data['filename'] ) )
-            {
-                throw new InvalidInputException( 'Missing filename', $identifier, $data );
-            }
-
-            if ( isset( $data['url'] ) && !eZHTTPTool::getDataByURL( trim( $data['url'] ), true ) )
-            {
-                throw new InvalidInputException( 'Url not responding', $identifier, $data );
-            }
-
-            if ( isset( $data['file'] )
-                 && !( base64_encode( base64_decode( $data['file'], true ) ) === $data['file'] )
-            )
-            {
-                throw new InvalidInputException( 'Invalid base64 encoding', $identifier, $data );
-            }
-
-            if ( !isset( $data['url'] ) )
-            {
-                $data['url'] = null;
-            }
-
-            if ( !isset( $data['file'] ) )
-            {
-                $data['file'] = null;
-            }
-
-        }
-        throw new InvalidInputException( 'Invalid data format', $identifier, $data );
     }
 
     public function toCSVString($content, $params = null)
