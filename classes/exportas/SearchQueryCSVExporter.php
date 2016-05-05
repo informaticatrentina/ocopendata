@@ -138,6 +138,12 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 }
                     break;
 
+                case 'ezobjectrelation':
+                case 'ezobjectrelationlist': {
+                    $stringData[$key] = $converter->toCSVString($field['content'], $this->language);
+                }
+                    break;
+
                 default: {
                     $stringData[$key] = $converter->toCSVString($field['content']);
                 }

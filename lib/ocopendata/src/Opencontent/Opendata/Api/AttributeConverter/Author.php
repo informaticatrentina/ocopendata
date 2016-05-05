@@ -68,4 +68,13 @@ class Author extends Base
             )
         );
     }
+
+    public function toCSVString($content, $language = null)
+    {
+        $data = array();
+        foreach( $content as $authorList ){
+            $data[] = $authorList['name'] . ' ' . $authorList['email'];
+        }
+        return implode("\n", $data);
+    }
 }

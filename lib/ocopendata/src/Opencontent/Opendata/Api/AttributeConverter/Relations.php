@@ -121,4 +121,13 @@ class Relations extends Base
             'identifier' => 'array of id or remoteId or file or image'
         );
     }
+
+    public function toCSVString($content, $language = null)
+    {
+        $data = array();
+        foreach( $content as $metadata ){
+            $data[] = $metadata['name'][$language];
+        }
+        return implode("\n", $data);
+    }
 }

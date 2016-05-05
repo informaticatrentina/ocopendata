@@ -123,7 +123,12 @@ class File extends Base
 
     public function toCSVString($content, $params = null)
     {
-        return $content;
+        if (is_array($content) && isset( $content['url'] )) {
+            return $content['url'];
+        }
+
+        return '';
     }
+
 
 }
