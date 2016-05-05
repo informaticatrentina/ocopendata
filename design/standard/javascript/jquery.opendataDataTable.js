@@ -159,9 +159,14 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(dataTyp
 
     switch (dataType) {
         case 'ezprice':
-            var number = data.split('|')[0];
-            data = parseFloat(number).toFixed(2);
-            break;
+            if (Query.type(data) == 'string'){
+                var number = data.split('|')[0];
+                data = parseFloat(number).toFixed(2);
+                break;
+            }else{
+                data = data.value;
+            }
+
     }
 
     if (link) {
