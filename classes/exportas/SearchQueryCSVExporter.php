@@ -64,8 +64,9 @@ class SearchQueryCSVExporter extends AbstarctExporter
         return $result->totalCount;
     }
 
-    protected function csvHeaders()
+    protected function csvHeaders($item)
     {
+        $this->uniqueClassIdentifier = $item['metadata']['classIdentifier'];
         $class = $this->classRepository->load($this->uniqueClassIdentifier);
         $this->CSVheaders = array();
         foreach ($class->fields as $field) {
@@ -125,10 +126,10 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 $identifier,
                 $field['datatype']
             );
-            switch ($field['dataType']) {
+            switch ($field['datatype']) {
 
                 case 'ezmatrix': {
-                    foreach ($this->classFields[$field['identifier']] as $columnIdentifier) {
+                    foreach ($this->classFields[$identifier] as $columnIdentifier) {
                         $stringData[$key . '.' . $columnIdentifier] = $converter->toCSVString(
                             $field['content'],
                             $columnIdentifier
@@ -143,7 +144,6 @@ class SearchQueryCSVExporter extends AbstarctExporter
                     break;
             }
         }
-
         return $stringData;
     }
 
@@ -165,12 +165,17 @@ class SearchQueryCSVExporter extends AbstarctExporter
             do {
                 $result = $this->fetch();
                 foreach ($result->searchHits as $item) {
-                    $values = $this->transformItem($item);
                     if (!$runOnce) {
-                        fputcsv($output, array_values($this->csvHeaders()), $this->options['CSVDelimiter'],
-                            $this->options['CSVEnclosure']);
+                        $this->csvHeaders($item);
+                        fputcsv(
+                            $output,
+                            $this->csvHeaders($item),
+                            $this->options['CSVDelimiter'],
+                            $this->options['CSVEnclosure']
+                        );
                         $runOnce = true;
                     }
+                    $values = $this->transformItem($item);
                     fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
                     flush();
                 }

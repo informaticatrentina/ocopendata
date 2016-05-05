@@ -89,10 +89,6 @@ class Base
 
     public function toCSVString($content, $params = null)
     {
-        if (is_array($content) && isset( $content['url'] )) {
-            return $content['url'];
-        }
-
-        return '';
+        return is_string($content) ? $content : '';
     }
 }
