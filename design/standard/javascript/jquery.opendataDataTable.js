@@ -1,12 +1,12 @@
-(function ( $, window, document, undefined ) {
+(function ($, window, document, undefined) {
     "use strict";
     var pluginName = "opendataDataTable",
         defaults = {
-            "builder":{
+            "builder": {
                 "query": null,
                 "filters": {}
             },
-            "table":{
+            "table": {
                 "id": 'exemple',
                 "template": '<table class="table table-striped table-bordered" cellspacing="0" width="100%"></table>'
             },
@@ -20,11 +20,11 @@
                 },
                 "columnDefs": [
                     {
-                        "render": function ( data, type, row, meta ) {
-                            var validDate = moment(data,moment.ISO_8601);
-                            if ( validDate.isValid() ){
-                                return '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY, hh:mm")+'</span>';
-                            }else{
+                        "render": function (data, type, row, meta) {
+                            var validDate = moment(data, moment.ISO_8601);
+                            if (validDate.isValid()) {
+                                return '<span style="white-space:nowrap">' + validDate.format("D MMMM YYYY, hh:mm") + '</span>';
+                            } else {
                                 return data;
                             }
                         },
@@ -36,9 +36,9 @@
         };
 
     // The actual plugin constructor
-    function opendataDataTable ( element, options ) {
+    function OpendataDataTable(element, options) {
         this.element = element;
-        this.settings = $.extend( true, {}, defaults, options );
+        this.settings = $.extend(true, {}, defaults, options);
         this._defaults = defaults;
         this._name = pluginName;
         this._ajaxUrl = this.settings.datatable.ajax.url;
@@ -46,7 +46,7 @@
         this.init();
     }
 
-    $.extend(opendataDataTable.prototype, {
+    $.extend(OpendataDataTable.prototype, {
         init: function () {
             //this.loadDataTable();
         },
@@ -54,21 +54,21 @@
             this.settings.datatable.prevQuery = this.settings.datatable.ajax.query;
             var buildedQuery = this.buildQuery();
             this.settings.datatable.ajax.url = this._ajaxUrl + buildedQuery;
-            this.settings.datatable.ajax.query = buildedQuery
+            this.settings.datatable.ajax.query = buildedQuery;
             var id = this.settings.table.id;
-            var table = $(this.settings.table.template).attr( 'id', id );
+            var table = $(this.settings.table.template).attr('id', id);
             $(this.element).append(table);
             if (this.datatable != null) {
                 this.datatable.destroy(true);
             }
             this.datatable = table.DataTable(this.settings.datatable);
         },
-        buildQuery: function(){
+        buildQuery: function () {
             var query = '';
-            $.each(this.settings.builder.filters, function(){
+            $.each(this.settings.builder.filters, function () {
                 if (this != null) {
                     if ($.isArray(this.value)) {
-                        query += this.field + " "+ this.operator +" ['" + this.value.join("','") + "']";
+                        query += this.field + " " + this.operator + " ['" + this.value.join("','") + "']";
                         query += ' and ';
                     }
                 }
@@ -79,27 +79,25 @@
         }
     });
 
-    $.fn[ pluginName ] = function ( options ) {
-        return this.each(function() {
-            if ( !$.data( this, pluginName ) ) {
-                $.data( this, pluginName, new opendataDataTable ( this, options ) );
+    $.fn[pluginName] = function (options) {
+        return this.each(function () {
+            if (!$.data(this, pluginName)) {
+                $.data(this, pluginName, new OpendataDataTable(this, options));
             }
         });
     };
 
-})( jQuery, window, document );
+})(jQuery, window, document);
 
-var opendataDataTableRenderField = function opendataDataTableRenderField(
-    dataType,
-    templateType,
-    currentLanguage,
-    data,
-    type,
-    row,
-    meta,
-    link
-){
-    switch(templateType) {
+var opendataDataTableRenderField = function opendataDataTableRenderField(dataType,
+                                                                         templateType,
+                                                                         currentLanguage,
+                                                                         data,
+                                                                         type,
+                                                                         row,
+                                                                         meta,
+                                                                         link) {
+    switch (templateType) {
         case 'array of id or remoteId or file or image':
             var names = [];
             if (data.length > 0) {
@@ -112,7 +110,7 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
 
         case 'file':
             if (data.url) {
-                return '<a href="'+data.url+'">'+data.filename+'</a>';
+                return '<a href="' + data.url + '">' + data.filename + '</a>';
             }
             break;
 
@@ -148,20 +146,26 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(
 
         case 'ISO 8601 date':
             var validDate = moment(data);
-            if ( validDate.isValid() ){
+            if (validDate.isValid()) {
                 if (dataType == 'ezdate') {
-                    data = '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY")+'</span>';
-                }else{
-                    data = '<span style="white-space:nowrap">'+validDate.format("D MMMM YYYY, hh:mm")+'</span>';
+                    data = '<span style="white-space:nowrap">' + validDate.format("D MMMM YYYY") + '</span>';
+                } else {
+                    data = '<span style="white-space:nowrap">' + validDate.format("D MMMM YYYY, hh:mm") + '</span>';
                 }
 
             }
             break;
+    }
 
+    switch (dataType) {
+        case 'ezprice':
+            var number = data.split('|')[0];
+            data = parseFloat(number).toFixed(2);
+            break;
     }
 
     if (link) {
-        data = '<a href="'+link+'">'+data+'</a>'
+        data = '<a href="' + link + '">' + data + '</a>'
     }
 
     return data;
