@@ -18,8 +18,8 @@ class Price extends Base
             /** @var \eZPrice $price */
             $price = $attribute->content();
             $content['content'] = array(
-                'value' => $price->attribute( 'price' ),
-                'vat_id' => $price->attribute( 'id' ),
+                'value' => floatval($price->attribute( 'price' )),
+                'vat_id' => (int)$price->attribute( 'selected_vat_type' )->attribute( 'id' ),
                 'is_vat_included' => (int)$price->attribute( 'is_vat_included' )
             );
         }
