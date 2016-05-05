@@ -66,6 +66,7 @@ class AttributeConverterLoader
     public static function attributeConverters()
     {
         $converters = array(
+            'ezprice' => '\Opencontent\Opendata\Api\AttributeConverter\Price',
             'ezkeyword' => '\Opencontent\Opendata\Api\AttributeConverter\Keywords',
             'eztags' => '\Opencontent\Opendata\Api\AttributeConverter\Tags',
             'ezgmaplocation' => '\Opencontent\Opendata\Api\AttributeConverter\Geo',
