@@ -125,13 +125,31 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(dataTyp
             break;
 
         case 'array of objects':
-            var authors = [];
-            if (data.length > 0) {
-                $.each(data, function () {
-                    authors.push('<a href="mailto:' + this.email + '">' + this.name + '</a>');
-                });
+            if (dataType == 'ezmatrix') {
+                if (data.length > 0) {
+                    var $container = $('<div>');
+                    var $table = $('<table class="table table-condensed">');
+                    $.each(data, function () {
+                        var row = this;
+                        var $row = $('<tr>');
+                        $.each(row, function (index, value) {
+                            var $cell = $('<td>' + value + '</td>');
+                            $row.append($cell);
+                        });
+                        $table.append($row);
+                    });
+                    $container.append($table);
+                    return $container.html();
+                }
+            } else if (dataType == 'ezauthor') {
+                var authors = [];
+                if (data.length > 0) {
+                    $.each(data, function () {
+                        authors.push('<a href="mailto:' + this.email + '">' + this.name + '</a>');
+                    });
+                }
+                return authors.join(', ');
             }
-            return authors.join(', ');
             break;
 
         case 'user':
@@ -159,14 +177,14 @@ var opendataDataTableRenderField = function opendataDataTableRenderField(dataTyp
 
     switch (dataType) {
         case 'ezprice':
-            if ($.type(data) == 'string'){
+            if ($.type(data) == 'string') {
                 var number = data.split('|')[0];
                 data = parseFloat(number).toFixed(2);
                 break;
-            }else{
+            } else {
                 data = parseFloat(data.value).toFixed(2);
             }
-
+            break;
     }
 
     if (link) {
