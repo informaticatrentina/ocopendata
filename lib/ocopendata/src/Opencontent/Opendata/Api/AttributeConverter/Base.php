@@ -45,7 +45,7 @@ class Base
             'version' => intval($attribute->attribute('version')),
             'identifier' => $this->classIdentifier . '/' . $this->identifier,
             'datatype' => $attribute->attribute('data_type_string'),
-            'content' => $attribute->hasContent() ? $attribute->toString() : null
+            'content' => $attribute->toString()
         );
 
         return $data;
