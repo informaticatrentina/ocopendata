@@ -63,7 +63,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
         if ($http->hasGetVariable('download_id')){
             $this->downloadId = $http->getVariable('download_id');
             $this->filename = $this->downloadId;
-            $this->iteration = (int)$http->getVariable('iteration');
+            $this->iteration = intval( $http->getVariable('iteration') );
             if ($http->hasGetVariable('download')){
                 $this->download = true;
             }
@@ -215,7 +215,6 @@ class SearchQueryCSVExporter extends AbstarctExporter
                         $result = $this->fetch();
                         foreach ($result->searchHits as $item) {
                             if (!$runOnce) {
-                                $this->csvHeaders($item);
                                 fputcsv(
                                     $output,
                                     $this->csvHeaders($item),
@@ -225,7 +224,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
                                 $runOnce = true;
                             }
                             $values = $this->transformItem($item);
-                            fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+                            fputcsv($output, array_values($values), $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
                             flush();
                         }
                         $this->queryString = $result->nextPageQuery;
@@ -242,6 +241,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
     protected function startPaginateDownload()
     {
         $this->tempFile($this->filename);
+
         echo $this->getPaginateTemplate(array(
             'query' => $this->queryString,
             'download_id' => $this->filename,
@@ -290,7 +290,6 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
         foreach ($result->searchHits as $item) {
             if ($makeHeaders) {
-                $this->csvHeaders($item);
                 fputcsv(
                     $output,
                     $this->csvHeaders($item),
@@ -299,7 +298,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 );
             }
             $values = $this->transformItem($item);
-            fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+            fputcsv($output, array_values($values), $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
         }
         $this->queryString = $result->nextPageQuery;
 
@@ -360,6 +359,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found' );
             }
 
+            $file->purge();
             eZExecution::cleanExit();
         }else{
             eZDebug::writeError( $e->getMessage, __METHOD__ );
