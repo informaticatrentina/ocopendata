@@ -7,6 +7,8 @@ use Opencontent\Opendata\Api\AttributeConverterLoader;
 class SearchQueryCSVExporter extends AbstarctExporter
 {
 
+    const MAX_DIRECT_DOWNLOAD_ITEMS = 1000;
+
     /**
      * @var ContentSearch
      */
@@ -27,6 +29,16 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
     protected $classFields = array();
 
+    protected $download;
+
+    protected $downloadId;
+
+    protected $iteration;
+
+    protected $count;
+
+    protected $maxSearchLimit;
+
     public function __construct($parentNodeId, $queryString)
     {
         $this->functionName = 'csv';
@@ -37,6 +49,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
         $currentEnvironment = new CsvEnvironmentSettings;
         $currentEnvironment->__set('identifier', 'csv');
         $currentEnvironment->__set('debug', false);
+        $this->maxSearchLimit = $currentEnvironment->getMaxSearchLimit();
         $this->contentSearch = new ContentSearch();
         $this->contentSearch->setEnvironment($currentEnvironment);
         $this->queryString = $queryString;
@@ -45,6 +58,16 @@ class SearchQueryCSVExporter extends AbstarctExporter
         $this->classRepository = new ClassRepository();
 
         $this->language = eZLocale::currentLocaleCode();
+
+        $http = eZHTTPTool::instance();
+        if ($http->hasGetVariable('download_id')){
+            $this->downloadId = $http->getVariable('download_id');
+            $this->filename = $this->downloadId;
+            $this->iteration = (int)$http->getVariable('iteration');
+            if ($http->hasGetVariable('download')){
+                $this->download = true;
+            }
+        }
     }
 
     function transformNode(eZContentObjectTreeNode $node)
@@ -59,9 +82,12 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
     public function fetchCount()
     {
-        $result = $this->contentSearch->search($this->queryString);
+        if ($this->count === null) {
+            $result = $this->contentSearch->search($this->queryString);
 
-        return $result->totalCount;
+            $this->count = $result->totalCount;
+        }
+        return $this->count;
     }
 
     protected function csvHeaders($item)
@@ -155,43 +181,191 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
     function handleDownload()
     {
-        try {
+        if ($this->download == true) {
+            $fileHandler = $this->tempFile($this->filename);
+            $this->downloadTempFile($fileHandler, $this->tempFileName($this->filename));
+        }else {
 
-            $filename = $this->filename . '.csv';
-            header('X-Powered-By: eZ Publish');
-            header('Content-Description: File Transfer');
+            $this->fetchCount();
+
+            if ($this->downloadId !== null) {
+
+                $this->handlePaginateDownload();
+
+            } elseif ($this->count > self::MAX_DIRECT_DOWNLOAD_ITEMS) {
+
+                $this->startPaginateDownload();
+
+            } else {
+
+                try {
+
+                    $filename = $this->filename . '.csv';
+                    header('X-Powered-By: eZ Publish');
+                    header('Content-Description: File Transfer');
+                    header('Content-Type: text/csv; charset=utf-8');
+                    header("Content-Disposition: attachment; filename=$filename");
+                    header("Pragma: no-cache");
+                    header("Expires: 0");
+
+                    $output = fopen('php://output', 'w');
+                    $runOnce = false;
+
+                    do {
+                        $result = $this->fetch();
+                        foreach ($result->searchHits as $item) {
+                            if (!$runOnce) {
+                                $this->csvHeaders($item);
+                                fputcsv(
+                                    $output,
+                                    $this->csvHeaders($item),
+                                    $this->options['CSVDelimiter'],
+                                    $this->options['CSVEnclosure']
+                                );
+                                $runOnce = true;
+                            }
+                            $values = $this->transformItem($item);
+                            fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+                            flush();
+                        }
+                        $this->queryString = $result->nextPageQuery;
+
+                    } while ($this->queryString != null);
+
+                } catch (Exception $e) {
+                    echo $e->getMessage();
+                }
+            }
+        }
+    }
+
+    protected function startPaginateDownload()
+    {
+        $this->tempFile($this->filename);
+        echo $this->getPaginateTemplate(array(
+            'query' => $this->queryString,
+            'download_id' => $this->filename,
+            'iteration' => 0,
+            'count' => $this->count,
+            'last' => 0,
+            'limit' => $this->maxSearchLimit
+        ));
+    }
+
+    protected function getPaginateTemplate($variables)
+    {
+        $tpl = eZTemplate::factory();
+        foreach($variables as $key => $value){
+            $tpl->setVariable($key, $value);
+        }
+        return $tpl->fetch('design:exportas/download_paginate.tpl');
+    }
+
+    protected function tempFile($filename)
+    {
+        $filename = $this->tempFileName($filename);
+        $fileHandler = eZClusterFileHandler::instance($filename);
+        if (!$fileHandler->exists()) {
+            $fileHandler->storeContents('', 'exportas-temp', 'text/csv');
+        }
+        return $fileHandler;
+    }
+
+    protected function tempFileName($filename)
+    {
+        return eZSys::cacheDirectory() . '/tmp/' . $filename . '.csv';
+    }
+
+    protected function handlePaginateDownload()
+    {
+        $fileHandler = $this->tempFile($this->filename);
+
+        $tempFilename = eZSys::cacheDirectory() . '/' . uniqid('exportaspaginate_') . '.temp';
+        eZFile::create($tempFilename, false, $fileHandler->fetchContents());
+
+        $output = fopen($tempFilename, 'a');
+        $result = $this->fetch();
+
+        $makeHeaders = $this->iteration == 0;
+
+        foreach ($result->searchHits as $item) {
+            if ($makeHeaders) {
+                $this->csvHeaders($item);
+                fputcsv(
+                    $output,
+                    $this->csvHeaders($item),
+                    $this->options['CSVDelimiter'],
+                    $this->options['CSVEnclosure']
+                );
+            }
+            $values = $this->transformItem($item);
+            fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+        }
+        $this->queryString = $result->nextPageQuery;
+
+        $fileHandler->storeContents( file_get_contents($tempFilename) );
+        unlink($tempFilename);
+
+        header('Content-Type: application/json');
+        echo json_encode( array(
+            'query' => $this->queryString,
+            'download_id' => $this->filename,
+            'iteration' => ++$this->iteration,
+            'last' => count( $result->searchHits ),
+            'count' => $this->count,
+            'limit' => $this->maxSearchLimit
+        ) );
+        eZExecution::cleanExit();
+    }
+
+    /**
+     * @param eZClusterFileHandlerInterface $file
+     * @param string $filename
+     */
+    protected function downloadTempFile( $file, $filename )
+    {
+        if ( $file->exists() )
+        {
+            $fileSize = $file->size();
+            if ( isset( $_SERVER['HTTP_RANGE'] ) && preg_match( "/^bytes=(\d+)-(\d+)?$/", trim( $_SERVER['HTTP_RANGE'] ), $matches ) )
+            {
+                $fileOffset = $matches[1];
+                $contentLength = isset( $matches[2] ) ? $matches[2] - $matches[1] + 1 : $fileSize - $matches[1];
+            }
+            else
+            {
+                $fileOffset = 0;
+                $contentLength = $fileSize;
+            }
+
+            eZFile::downloadHeaders(
+                $filename,
+                true,
+                basename($filename),
+                $fileOffset,
+                $contentLength,
+                $fileSize
+            );
             header('Content-Type: text/csv; charset=utf-8');
-            header("Content-Disposition: attachment; filename=$filename");
             header("Pragma: no-cache");
             header("Expires: 0");
 
-            $output = fopen('php://output', 'w');
-            $runOnce = false;
+            try
+            {
+                $file->passthrough( $fileOffset, $contentLength );
+            }
+            catch ( Exception $e )
+            {
+                eZDebug::writeError( $e->getMessage, __METHOD__ );
+                header( $_SERVER["SERVER_PROTOCOL"] . ' 404 Not Found' );
+            }
 
-            do {
-                $result = $this->fetch();
-                foreach ($result->searchHits as $item) {
-                    if (!$runOnce) {
-                        $this->csvHeaders($item);
-                        fputcsv(
-                            $output,
-                            $this->csvHeaders($item),
-                            $this->options['CSVDelimiter'],
-                            $this->options['CSVEnclosure']
-                        );
-                        $runOnce = true;
-                    }
-                    $values = $this->transformItem($item);
-                    fputcsv($output, $values, $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
-                    flush();
-                }
-                $this->queryString = $result->nextPageQuery;
-
-            } while ($this->queryString != null);
-
-        } catch (Exception $e) {
-            echo $e->getMessage();
+            eZExecution::cleanExit();
+        }else{
+            eZDebug::writeError( $e->getMessage, __METHOD__ );
+            header( $_SERVER["SERVER_PROTOCOL"] . ' 500 Internal Server Error' );
+            eZExecution::cleanExit();
         }
-
     }
+
 }
