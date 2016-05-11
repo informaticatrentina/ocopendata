@@ -299,6 +299,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
             }
             $values = $this->transformItem($item);
             fputcsv($output, array_values($values), $this->options['CSVDelimiter'], $this->options['CSVEnclosure']);
+            $makeHeaders = false;
         }
         $this->queryString = $result->nextPageQuery;
 
