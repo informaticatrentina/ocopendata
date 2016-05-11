@@ -6,9 +6,9 @@ use Opencontent\Opendata\Api\Values\Content;
 
 class CsvEnvironmentSettings extends DefaultEnvironmentSettings
 {
-    protected $maxSearchLimit = 500;
+    protected $maxSearchLimit = 200;
 
-    protected $defaultSearchLimit = 500;
+    protected $defaultSearchLimit = 200;
 
     public function filterContent( Content $content )
     {
