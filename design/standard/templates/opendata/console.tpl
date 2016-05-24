@@ -112,12 +112,12 @@
 
     <script>
     $(function() {ldelim}
-        var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no,full)}/";
+        var analyzerEndpoint = "{'opendata/analyzer'|ezurl(no)}/";
         {if $use_current_user}
-            var contentEndpoint = "{'opendata/api/content/read'|ezurl(no,full)}/";
-            var searchEndpoint = "{'opendata/api/content/search'|ezurl(no,full)}/";
-            var geoEndpoint = "{'opendata/api/geo/search'|ezurl(no,full)}/";
-			var classEndpoint = "{'opendata/api/classes'|ezurl(no,full)}/";
+            var contentEndpoint = "{'opendata/api/content/read'|ezurl(no)}/";
+            var searchEndpoint = "{'opendata/api/content/search'|ezurl(no)}/";
+            var geoEndpoint = "{'opendata/api/geo/search'|ezurl(no)}/";
+			var classEndpoint = "{'opendata/api/classes'|ezurl(no)}/";
         {else}
             var contentEndpoint = "/api/opendata/v2/content/read/";
             var searchEndpoint = "/api/opendata/v2/content/search/";
