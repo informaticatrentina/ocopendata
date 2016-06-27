@@ -34,12 +34,23 @@ class Image extends File
 
     public function set( $data, PublicationProcess $process )
     {
-        $path = $this->getTemporaryFilePath( $data['filename'], $data['url'], $data['image'] );
-        if ( isset( $data['alt'] ) )
+        if ( !isset( $data['url'] ) )
         {
-            $path .= '|' . $data['alt'];
+            $data['url'] = null;
         }
 
+        if ( !isset( $data['file'] ) )
+        {
+            $data['file'] = null;
+        }
+        $path = null;
+
+        if ( isset( $data['filename'] ) ) {
+            $path = $this->getTemporaryFilePath($data['filename'], $data['url'], $data['file']);
+            if (isset( $data['alt'] )) {
+                $path .= '|' . $data['alt'];
+            }
+        }
         return $path;
     }
 

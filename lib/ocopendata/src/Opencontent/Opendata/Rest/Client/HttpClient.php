@@ -3,6 +3,9 @@
 namespace Opencontent\Opendata\Rest\Client;
 
 
+use Opencontent\Opendata\Api\ClassRepository;
+use Opencontent\Opendata\Api\ContentRepository;
+
 class HttpClient
 {
     protected $server;
@@ -29,19 +32,20 @@ class HttpClient
 
     public static $processTimeout = 60;
 
+    public $logger;
+
     public function __construct(
         $server,
-        $login,
-        $password,
+        $login = null,
+        $password = null,
         $apiEnvironmentPreset = 'content',
         $apiEndPointBase = '/api/opendata/v2'
-    )
-    {
-        $this->server = rtrim( $server, '/' );
+    ) {
+        $this->server = rtrim($server, '/');
         $this->login = $login;
         $this->password = $password;
         $this->apiEnvironmentPreset = $apiEnvironmentPreset;
-        $this->apiEndPointBase = rtrim( $apiEndPointBase, '/' );
+        $this->apiEndPointBase = rtrim($apiEndPointBase, '/');
     }
 
     public function setProxy(
@@ -50,8 +54,7 @@ class HttpClient
         $proxyLogin = null,
         $proxyPassword = null,
         $proxyAuthType = 1
-    )
-    {
+    ) {
         $this->proxy = $proxy;
         $this->proxyPort = $proxyPort;
         $this->proxyLogin = $proxyLogin;
@@ -59,98 +62,177 @@ class HttpClient
         $this->proxyAuthType = $proxyAuthType;
     }
 
-    public function create( $data )
+    public function create($data)
     {
-        return $this->request( 'POST', '/create', json_encode( $data ) );
+        return $this->request('POST', $this->buildUrl('/create'), json_encode($data));
     }
 
-    public function update( $data )
+    public function createUpdate($data)
     {
-        return $this->request( 'POST', '/update', json_encode( $data ) );
+        try {
+            $result = $this->create($data);
+        } catch (\Exception $e) {
+            $result = $this->update($data);
+        }
+
+        return $result;
     }
 
-    public function delete( $data )
+    public function getPayload($data)
     {
-        return $this->request( 'POST', '/delete', json_encode( $data ) );
+        if (is_numeric($data) || is_string($data)) {
+            $data = $this->read($data);
+        }
+        unset( $data['metadata']['id'] );
+        unset( $data['metadata']['class'] );
+        unset( $data['metadata']['sectionIdentifier'] );
+        unset( $data['metadata']['ownerId'] );
+        unset( $data['metadata']['mainNodeId'] );
+        unset( $data['metadata']['published'] );
+        unset( $data['metadata']['modified'] );
+        unset( $data['metadata']['name'] );
+        unset( $data['metadata']['link'] );
+        unset( $data['metadata']['stateIdentifiers'] );
+
+        return new PayloadBuilder($data);
     }
 
-    public function request( $method, $path, $data = null )
+    public function read($id)
     {
-        $credentials = "{$this->login}:{$this->password}";
-        $url = $this->server . $this->apiEndPointBase . $path;
+        return $this->request('GET', $this->buildUrl('/read/' . $id));
+    }
 
-        $headers = array( "Authorization: Basic " . base64_encode( $credentials ) );
+    public function update($data)
+    {
+        return $this->request('POST', $this->buildUrl('/update'), json_encode($data));
+    }
+
+    public function delete($data)
+    {
+        return $this->request('POST', $this->buildUrl('/delete'), json_encode($data));
+    }
+
+    public function findAll($query, \Closure $paginationCallback = null)
+    {
+        $collectData = array();
+        $nextPageQuery = $this->buildUrl('/search/' . urlencode($query));
+        while($nextPageQuery){
+            $data = $this->request('GET', $nextPageQuery);
+            $collectData = array_merge($collectData, $data['searchHits']);
+            $nextPageQuery = $data['nextPageQuery'];
+            if ($paginationCallback instanceof \Closure){
+                $paginationCallback($data);
+            }
+        }
+        return $collectData;
+    }
+
+    public function find($query, \Closure $callback = null)
+    {
+        $result = $this->request('GET', $this->buildUrl('/search/' . urlencode($query)));
+        if ($callback instanceof \Closure){
+            $result = $callback($result);
+        }
+        return $result;
+    }
+
+    protected function buildUrl($path)
+    {
+        return $this->server . $this->apiEndPointBase . '/' . $this->apiEnvironmentPreset . $path;
+    }
+
+    public function request($method, $url, $data = null)
+    {
+        $headers = array();
+
+        if ($this->login && $this->password) {
+            $credentials = "{$this->login}:{$this->password}";
+            $headers[] = "Authorization: Basic " . base64_encode($credentials);
+        }
 
         $ch = curl_init();
-        if ( $method == "POST" )
-        {
-            curl_setopt( $ch, CURLOPT_POST, 1 );
+        if ($method == "POST") {
+            curl_setopt($ch, CURLOPT_POST, 1);
         }
-        if ( $data !== null )
-        {
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, $data );
+        if ($data !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             $headers[] = 'Content-Type: application/json';
-            $headers[] = 'Content-Length: ' . strlen( $data );
+            $headers[] = 'Content-Length: ' . strlen($data);
         }
-        curl_setopt( $ch, CURLOPT_HEADER, 1 );
-        curl_setopt( $ch, CURLOPT_URL, $url );
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-        curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers );
-        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, self::$connectionTimeout );
-        curl_setopt( $ch, CURLOPT_TIMEOUT, self::$processTimeout );
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::$connectionTimeout);
+        curl_setopt($ch, CURLOPT_TIMEOUT, self::$processTimeout);
+        curl_setopt($ch, CURLINFO_HEADER_OUT, true);
 
-        if ( $this->proxy !== null )
-        {
-            curl_setopt( $ch, CURLOPT_PROXY, $this->proxy . ':' . $this->proxyPort );
-            if ( $this->proxyLogin !== null )
-            {
+        if ($this->proxy !== null) {
+            curl_setopt($ch, CURLOPT_PROXY, $this->proxy . ':' . $this->proxyPort);
+            if ($this->proxyLogin !== null) {
                 curl_setopt(
                     $ch,
                     CURLOPT_PROXYUSERPWD,
                     $this->proxyLogin . ':' . $this->proxyPassword
                 );
-                curl_setopt( $ch, CURLOPT_PROXYAUTH, $this->proxyAuthType );
+                curl_setopt($ch, CURLOPT_PROXYAUTH, $this->proxyAuthType);
             }
         }
 
-        $data = curl_exec( $ch );
+        $data = curl_exec($ch);
 
-        if ( $data === false )
-        {
-            $errorCode = curl_errno( $ch ) * -1;
-            $errorMessage = curl_error( $ch );
-            curl_close( $ch );
-            throw new \Exception( $errorString, $errorNumber );
+        if ($data === false) {
+            $errorCode = curl_errno($ch) * -1;
+            $errorMessage = curl_error($ch);
+            curl_close($ch);
+            throw new \Exception($errorMessage, $errorCode);
         }
 
-        $info = curl_getinfo( $ch );
-        curl_close( $ch );
-        $headers = substr( $data, 0, $info['header_size'] );
-        $body = substr( $data, -$info['download_content_length'] );
+        $info = curl_getinfo($ch);
+        if (class_exists('\eZDebug')){
+            \eZDebug::writeDebug($info['request_header'], __METHOD__);
+        }
 
-        return $this->parseResponse( $info, $headers, $body );
+        curl_close($ch);
+
+        $headers = substr($data, 0, $info['header_size']);
+        $body = substr($data, -$info['download_content_length']);
+
+        return $this->parseResponse($info, $headers, $body);
     }
 
-    protected function parseResponse( $info, $headers, $body )
+    protected function parseResponse($info, $headers, $body)
     {
-        $data = json_decode( $body );
+        $data = json_decode($body);
 
-        if ( isset( $data->errorCode ) )
-        {
-            $errorCode = $data->errorCode;
+        if (isset( $data->error_message )) {
             $errorMessage = '';
-            if ( isset( $data->errorMessage ) )
-            {
-                $errorMessage = $data->errorMessage;
+            if (isset( $data->error_type )) {
+                $errorMessage = $data->error_type . ': ';
             }
-            throw new \Exception( $errorMessage, $errorCode );
+            $errorMessage .= $data->error_message;
+            throw new \Exception($errorMessage);
         }
 
-        if ( !in_array( $info['http_code'], array( 100, 200, 201, 202 ) ) )
-        {
-            throw new \Exception( "Unknown error" );
+        if ($info['http_code'] == 401) {
+            throw new \Exception("Authorization Required");
         }
+
+        if (!in_array($info['http_code'], array(100, 200, 201, 202))) {
+            throw new \Exception("Unknown error");
+        }
+        $data = json_decode($body, true);
 
         return $data;
+    }
+
+    public function import($data, ContentRepository $repository, \Closure $payloadFilterClosure = null)
+    {
+        $payload = $this->getPayload($data);
+        if ($payloadFilterClosure instanceof \Closure){
+            $payload = $payloadFilterClosure($payload, $this, $repository);
+        }
+        return $repository->createUpdate((array)$payload);
     }
 }

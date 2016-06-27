@@ -3,9 +3,12 @@
 namespace Opencontent\Opendata\Api\Structs;
 
 use Opencontent\Opendata\Api\ClassRepository;
+use Opencontent\Opendata\Api\Exception\CreateContentException;
+use Opencontent\Opendata\Api\Exception\ForbiddenException;
+use Opencontent\Opendata\Api\Exception\UpdateContentException;
+use Opencontent\Opendata\Api\Exception\DuplicateRemoteIdException;
 use Opencontent\Opendata\Api\StateRepository;
 use Opencontent\Opendata\Api\SectionRepository;
-use Opencontent\Opendata\Api\Exception\CreateContentException as Exception;
 use eZContentObject;
 use eZContentObjectTreeNode;
 use eZContentLanguage;
@@ -15,8 +18,13 @@ use Opencontent\Opendata\Api\Values\ContentSection;
 use Opencontent\Opendata\Api\Values\ContentState;
 
 
-class MetadataCreateStruct implements \ArrayAccess
+class MetadataStruct implements \ArrayAccess
 {
+    const METHOD_CREATE = 1;
+    const METHOD_UPDATE = 2;
+
+    public $id;
+
     public $remoteId;
 
     public $classIdentifier;
@@ -28,6 +36,8 @@ class MetadataCreateStruct implements \ArrayAccess
     public $parentNodes;
 
     public $languages;
+
+    public $creatorId;
 
     /**
      * @var ContentClass
@@ -48,7 +58,7 @@ class MetadataCreateStruct implements \ArrayAccess
     /**
      * @var eZContentObjectTreeNode[]
      */
-    protected $nodes = array();
+    protected $parentTreeNodes = array();
 
 
     /**
@@ -66,7 +76,14 @@ class MetadataCreateStruct implements \ArrayAccess
      */
     protected $classRepository;
 
+    /**
+     * @var eZContentObject
+     */
+    protected $contentObject;
+
     protected $useDefaultLanguage = false;
+
+    protected $method;
 
     public function __construct(array $properties)
     {
@@ -76,6 +93,10 @@ class MetadataCreateStruct implements \ArrayAccess
             } else {
                 throw new OutOfRangeException($property);
             }
+        }
+
+        if ($this->creatorId == null) {
+            $this->creatorId = (int)\eZUser::currentUserID();
         }
 
         $this->stateRepository = new StateRepository();
@@ -180,35 +201,53 @@ class MetadataCreateStruct implements \ArrayAccess
         $this->states = $states;
     }
 
+    /**
+     * @return \eZContentObjectTreeNode[]
+     */
+    public function getParentTreeNodes()
+    {
+        return $this->parentTreeNodes;
+    }
+
+    /**
+     * @return eZContentObject
+     */
+    public function getContentObject()
+    {
+        return $this->contentObject;
+    }
+
     public function useDefaultLanguage()
     {
         return $this->useDefaultLanguage;
     }
 
-    public function validate()
+    protected function throwException( $message )
     {
-        // remoteId univoco
-        if ($this->remoteId !== null && eZContentObject::fetchByRemoteID($this->remoteId)) {
-            throw new Exception("Remote '{$this->remoteId}' already exists");
-        }
+        if ( $this->method == self::METHOD_UPDATE)
+            throw new UpdateContentException( $message );
+        elseif ( $this->method == self::METHOD_CREATE)
+            throw new CreateContentException( $message );
+        else
+            throw new \Exception( $message );
+    }
 
+    protected function validate()
+    {
         // classe
-        if ($this->classIdentifier === null) {
-            throw new Exception("Missing parameter 'classIdentifier'");
-        }
         $this->class = $this->classRepository->load($this->classIdentifier);
         if (!$this->class instanceof ContentClass) {
-            throw new Exception("Class '{$this->classIdentifier}' not found");
+            $this->throwException("Class '{$this->classIdentifier}' not found");
         }
 
         // sezione
         if ($this->sectionIdentifier !== null) {
             if (!is_string($this->sectionIdentifier)) {
-                throw  new Exception("sectionIdentifier must be a string: a single section for a single content");
+                $this->throwException("sectionIdentifier must be a string: a single section for a single content");
             }
             $this->section = $this->sectionRepository->load($this->sectionIdentifier);
             if (!$this->section instanceof ContentSection) {
-                throw new Exception("Section '{$this->sectionIdentifier}' not found");
+                $this->throwException("Section '{$this->sectionIdentifier}' not found");
             }
         }
 
@@ -221,10 +260,10 @@ class MetadataCreateStruct implements \ArrayAccess
             foreach ($this->stateIdentifiers as $stateIdentifier) {
                 $this->states[$stateIdentifier] = $this->stateRepository->load($stateIdentifier);
                 if (!$this->states[$stateIdentifier] instanceof ContentState) {
-                    throw new Exception("Section '{$stateIdentifier}' not found");
+                    $this->throwException("Section '{$stateIdentifier}' not found");
                 }
             }
-        }else{
+        } else {
             $this->stateIdentifiers = array();
         }
 
@@ -233,7 +272,7 @@ class MetadataCreateStruct implements \ArrayAccess
             $languages = eZContentLanguage::fetchLocaleList();
             foreach ($this->languages as $language) {
                 if (!in_array($language, $languages)) {
-                    throw new Exception("Language '{$language}' not found");
+                    $this->throwException("Language '{$language}' not found");
                 }
             }
         } else {
@@ -243,28 +282,90 @@ class MetadataCreateStruct implements \ArrayAccess
         }
 
         //parent nodes
-        if ($this->parentNodes == null) {
-            throw new Exception("Missing parameter 'parentNodes'");
-        }
-
-        if (!is_array($this->parentNodes)) {
-            $this->parentNodes = array($this->parentNodes);
-        }
-
-        foreach ($this->parentNodes as $nodeId) {
+        $normalizedParentNodes = array();
+        foreach ((array)$this->parentNodes as $nodeId) {
             $node = eZContentObjectTreeNode::fetch((int)$nodeId);
             if ($node instanceof eZContentObjectTreeNode) {
-                $this->nodes[] = $node;
+                $this->parentTreeNodes[] = $node;
+                $normalizedParentNodes[] = (int)$nodeId;
             } else {
-                throw new Exception("Node '{$nodeId}' not found");
+                $node = eZContentObjectTreeNode::fetchByRemoteID($nodeId);
+                if ($node instanceof eZContentObjectTreeNode) {
+                    $this->parentTreeNodes[] = $node;
+                    $normalizedParentNodes[] = (int)$node->attribute( 'node_id' );
+                } else {
+                    $this->throwException("Node '{$nodeId}' not found");
+                }
             }
         }
+        $this->parentNodes = $normalizedParentNodes;
 
     }
 
-    public function checkAccess()
+    public function validateOnCreate()
     {
-        foreach ($this->nodes as $parentNode) {
+        $this->method = self::METHOD_CREATE;
+
+        // remoteId univoco
+        if ($this->remoteId !== null && eZContentObject::fetchByRemoteID($this->remoteId)) {
+            throw new DuplicateRemoteIdException("Remote '{$this->remoteId}' already exists");
+        }
+
+        if ($this->id !== null){
+            $this->throwException("Invalid parameter 'id' in create method");
+        }
+
+        // classe
+        if ($this->classIdentifier === null) {
+            $this->throwException("Missing parameter 'classIdentifier'");
+        }
+
+        //parent nodes
+        if ($this->parentNodes == null) {
+            $this->throwException("Missing parameter 'parentNodes'");
+        }
+        if ($this->parentNodes && !is_array($this->parentNodes)) {
+            $this->parentNodes = array($this->parentNodes);
+        }
+
+        $this->validate();
+    }
+
+    public function validateOnUpdate()
+    {
+        $this->method = self::METHOD_UPDATE;
+
+        if ($this->remoteId !== null) {
+            $this->contentObject = eZContentObject::fetchByRemoteID($this->remoteId);
+            if (!$this->contentObject instanceof eZContentObject) {
+                $this->throwException("Object with remoteId '{$this->remoteId}' not found");
+            }
+        }elseif ($this->id !== null) {
+            $this->contentObject = eZContentObject::fetch((int)$this->id);
+            if (!$this->contentObject instanceof eZContentObject) {
+                $this->throwException("Object with id '{$this->id}' not found");
+            }
+        }else{
+            $this->throwException("Parameter remoteId or id is required. Which content should you modify?");
+        }
+
+        //parent nodes
+        if ($this->parentNodes == null) {
+            $this->parentNodes = array();
+        }
+
+        if ($this->classIdentifier === null) {
+            $this->classIdentifier = $this->contentObject->attribute('class_identifier');
+        } elseif( $this->classIdentifier != $this->contentObject->attribute('class_identifier') ) {
+            $this->throwException("Can not switch class in existing content");
+        }
+
+        $this->validate();
+    }
+
+    public function checkAccess(\eZUser $user)
+    {
+        foreach ($this->parentTreeNodes as $parentNode) {
             $parentObject = $parentNode->object();
             foreach ($this->languages as $languageCode) {
                 if ($parentObject->checkAccess(
@@ -274,16 +375,15 @@ class MetadataCreateStruct implements \ArrayAccess
                         false,
                         $languageCode) != '1'
                 ) {
-                    throw new Exception("Current user can not create '{$this->class->identifier}' objects in language '$languageCode' in node #{$parentNode->attribute( 'node_id' )}");
+                    throw new ForbiddenException("'{$this->class->identifier}' in language '$languageCode' in node #{$parentNode->attribute( 'node_id' )}", 'create');
                 }
             }
         }
 
         $allowedAssignStateList = $this->getAllowedAssignStateList();
-        foreach( $this->stateIdentifiers as $stateIdentifier )
-        {
-            if ( !in_array( $stateIdentifier, $allowedAssignStateList ) ){
-                throw new Exception("Current user can not create object in state '$stateIdentifier'");
+        foreach ($this->stateIdentifiers as $stateIdentifier) {
+            if (!in_array($stateIdentifier, $allowedAssignStateList)) {
+                throw new ForbiddenException( "'{$this->class->identifier}' in state '$stateIdentifier'", 'create');
             }
         }
 
@@ -361,7 +461,7 @@ class MetadataCreateStruct implements \ArrayAccess
                         //This case is based on the similar if statement in the method : classListFromPolicy
                         case 'User_Subtree': {
                             $allowed = false;
-                            foreach ($this->nodes as $assignedNode) {
+                            foreach ($this->parentTreeNodes as $assignedNode) {
                                 $path = $assignedNode->attribute('path_string');
                                 foreach ($policy['User_Subtree'] as $subtreeString) {
                                     if (strpos($path, $subtreeString) !== false) {
@@ -405,12 +505,12 @@ class MetadataCreateStruct implements \ArrayAccess
         $allowedStateIDList = array_unique($allowedStateIDList);
 
         $allowedStateList = array();
-        foreach( $allowedStateIDList as $allowedStateID )
-        {
-            $allowedState = $this->stateRepository->load( $allowedStateID );
+        foreach ($allowedStateIDList as $allowedStateID) {
+            $allowedState = $this->stateRepository->load($allowedStateID);
             $allowedStateList[] = $allowedState['identifier'];
         }
-        sort( $allowedStateList );
+        sort($allowedStateList);
+
         return $allowedStateList;
     }
 

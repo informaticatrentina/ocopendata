@@ -55,7 +55,7 @@ class Relations extends Base
     {
         $data = self::findContents( $data );
         //@todo handle image and files
-        return implode( '-', $data['ids'] );
+        return empty($data['ids']) ? null : implode( '-', $data['ids'] );
     }
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
@@ -66,12 +66,25 @@ class Relations extends Base
             {
                 if ( is_array( $item ) )
                 {
-                    if ( isset( $data['image'] ) )
-                        Image::validate( $identifier, $data, $attribute );
-                    elseif ( isset( $data['file'] ) )
-                        File::validate( $identifier, $data, $attribute );
-                    else
-                        throw new InvalidInputException( 'Invalid input', $identifier, array( $item ) );
+                    if (isset( $data['image'] )) {
+                        Image::validate($identifier, $data, $attribute);
+                    } elseif (isset( $data['file'] )) {
+                        File::validate($identifier, $data, $attribute);
+                    } elseif (isset( $data['remoteId'] )) {
+                        try {
+                            self::gateway()->loadContent($data['remoteId']);
+                        } catch (\Exception $e) {
+                            throw new InvalidInputException('Invalid content identifier', $identifier, array($item));
+                        }
+                    } elseif (isset( $data['id'] )) {
+                        try {
+                            self::gateway()->loadContent($data['id']);
+                        } catch (\Exception $e) {
+                            throw new InvalidInputException('Invalid content identifier', $identifier, array($item));
+                        }
+                    } else {
+                        throw new InvalidInputException('Invalid input', $identifier, array($item));
+                    }
                 }
                 else
                 {
@@ -101,10 +114,11 @@ class Relations extends Base
         {
             if ( is_array( $item ) )
             {
-                if ( isset( $data['image'] ) )
+                if (isset( $data['image'] )) {
                     $result['images'][] = $item;
-                elseif ( isset( $data['file'] ) )
+                } elseif (isset( $data['file'] )) {
                     $result['files'][] = $item;
+                }
             }
             else
             {

@@ -31,7 +31,7 @@ class Author extends Base
         $stringItems = array();
         foreach( $data as $author )
         {
-            $stringItems[] = implode( '|', $author );
+            $stringItems[] = implode( '|', $author ) . '|-1';
         }
         return implode( '&', $stringItems );
     }
@@ -49,7 +49,7 @@ class Author extends Base
             {
                 throw new InvalidInputException( 'Invalid type', $identifier, $data );
             }
-            if ( !eZMail::validate( $data['email'] ) )
+            if ( !eZMail::validate( $item['email'] ) )
             {
                 throw new InvalidInputException( 'Invalid email', $identifier, $data );
             }

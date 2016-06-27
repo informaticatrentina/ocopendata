@@ -7,6 +7,9 @@ use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\Opendata\Api\Values\ContentClass;
 use Opencontent\Opendata\Api\Values\SearchResults;
 use Opencontent\QueryLanguage\QueryBuilder;
+use Opencontent\Opendata\Api\Structs\ContentCreateStruct;
+use Opencontent\Opendata\Api\Structs\ContentUpdateStruct;
+
 
 
 class EnvironmentSettings
@@ -115,6 +118,34 @@ class EnvironmentSettings
         }
 
         return $query;
+    }
+
+    /**
+     * @param $data
+     *
+     * @return ContentCreateStruct
+     */
+    public function instanceCreateStruct( $data )
+    {
+        return ContentCreateStruct::fromArray( $data ) ;
+    }
+
+    public function afterCreate( $contentId, ContentCreateStruct $struct )
+    {
+    }
+
+    /**
+     * @param $data
+     *
+     * @return ContentUpdateStruct
+     */
+    public function instanceUpdateStruct( $data )
+    {
+        return ContentUpdateStruct::fromArray( $data );
+    }
+
+    public function afterUpdate( $contentId, ContentUpdateStruct $struct )
+    {
     }
 
 }

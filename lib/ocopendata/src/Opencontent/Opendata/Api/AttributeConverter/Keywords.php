@@ -23,15 +23,20 @@ class Keywords extends Base
 
     public function set($data, PublicationProcess $process)
     {
-        $data = implode(', ', $data);
+        $data = implode(', ', (array)$data);
 
         return parent::set($data, $process);
     }
 
     public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        if (!is_array($data)) {
-            throw new InvalidInputException('Invalid data', $identifier, $data);
+        if ( is_array( $data ) )
+        {
+            foreach($data as $item){
+                if (!is_string($item)){
+                    throw new InvalidInputException( 'Invalid data', $identifier, $data );
+                }
+            }
         }
     }
 

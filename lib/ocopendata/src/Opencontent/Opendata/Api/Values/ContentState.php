@@ -56,4 +56,9 @@ class ContentState implements \IteratorAggregate, \ArrayAccess
         return $this->data;
     }
 
+    public function getStateObject()
+    {
+        return \eZContentObjectState::fetchById( $this->data['id'] );
+    }
+
 }

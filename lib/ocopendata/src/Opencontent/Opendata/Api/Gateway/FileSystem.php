@@ -40,13 +40,17 @@ class FileSystem extends Database
      */
     protected static function findContent( $contentObjectIdentifier )
     {
-        $contentObjectIdentifierAsInt = (int) $contentObjectIdentifier;
+        if ( is_numeric( $contentObjectIdentifier ) ) {
+            $contentObjectIdentifierAsInt = (int)$contentObjectIdentifier;
+            $whereSql = "ezcontentobject.id='$contentObjectIdentifierAsInt'";
+        }else{
+            $whereSql = "ezcontentobject.remote_id='$contentObjectIdentifier'";
+        }
         $fetchSQLString = "SELECT ezcontentobject.id, ezcontentobject.modified
                            FROM
                                ezcontentobject
                            WHERE
-                               ezcontentobject.id='$contentObjectIdentifierAsInt' OR
-                               ezcontentobject.remote_id='$contentObjectIdentifier'";
+                               $whereSql";
         $resArray = eZDB::instance()->arrayQuery( $fetchSQLString );
         if ( count( $resArray ) == 1 && $resArray !== false )
         {

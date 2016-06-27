@@ -7,16 +7,16 @@ use Opencontent\Opendata\Api\Exception\OutOfRangeException;
 class ContentCreateStruct implements \ArrayAccess
 {
     /**
-     * @var MetadataCreateStruct
+     * @var MetadataStruct
      */
     public $metadata;
 
     /**
-     * @var ContentDataCreateStruct
+     * @var ContentDataStruct
      */
     public $data;
 
-    public function __construct(MetadataCreateStruct $metadata, ContentDataCreateStruct $data)
+    public function __construct(MetadataStruct $metadata, ContentDataStruct $data)
     {
         $this->metadata = $metadata;
         $this->data = $data;
@@ -24,8 +24,8 @@ class ContentCreateStruct implements \ArrayAccess
 
     public function validate()
     {
-        $this->metadata->validate();
-        $this->data->validate( $this->metadata );
+        $this->metadata->validateOnCreate();
+        $this->data->validateOnCreate( $this->metadata );
     }
 
     public static function fromArray(array $array)
@@ -39,15 +39,15 @@ class ContentCreateStruct implements \ArrayAccess
             $data = $array['data'];
         }
 
-        return new self(
-            new MetadataCreateStruct($metadata),
-            new ContentDataCreateStruct($data)
+        return new static(
+            new MetadataStruct($metadata),
+            new ContentDataStruct($data)
         );
     }
 
     public function checkAccess( \eZUser $user )
     {
-        $this->metadata->checkAccess();
+        $this->metadata->checkAccess( $user );
     }
 
     public function offsetExists($property)

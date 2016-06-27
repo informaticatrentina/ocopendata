@@ -5,6 +5,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use Opencontent\Opendata\Api\PublicationProcess;
+use Opencontent\Opendata\Api\Exception\InvalidInputException;
 
 class Boolean extends Base
 {
@@ -25,8 +26,10 @@ class Boolean extends Base
         return array( 'identifier' => 'boolean' );
     }
 
-    public function toCSVString($content, $params = null)
+    public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        return $content;
+        if ($data !== null && !is_bool($data) && !is_integer($data)) {
+            throw new InvalidInputException('Invalid type', $identifier, $data);
+        }
     }
 }

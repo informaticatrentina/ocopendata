@@ -6,7 +6,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 use eZContentClassAttribute;
 use eZContentObjectAttribute;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
-use eZTagsFunctionCollection;
+use eZTagsObject;
 use Opencontent\Opendata\Api\PublicationProcess;
 
 class Tags extends Base
@@ -21,18 +21,22 @@ class Tags extends Base
 
     public function set( $data, PublicationProcess $process )
     {
-        $tagIDs = '';
-        $tagKeywords = '';
-        $tagParents = '';
+        $tagIDs = array();
+        $tagKeywords = array();
+        $tagParents = array();
 
-        foreach ($data as $keyword) {
+        foreach ((array)$data as $keyword) {
 
-            $keywordsFound = eZTagsFunctionCollection::fetchTagsByKeyword($keyword);
+            $keywordsFound = eZTagsObject::fetchByKeyword($keyword);
             if ( !empty( $keywordsFound ) )
             {
-                $tagIDs .= $keywordsFound['result'][0]->ID.'|#';
-                $tagKeywords .= $keywordsFound['result'][0]->Keyword.'|#';
-                $tagParents .= $keywordsFound['result'][0]->ParentID.'|#';
+                $tagIDs[] = $keywordsFound[0]->ID;
+                $tagKeywords[] = $keywordsFound[0]->Keyword;
+                $tagParents[] = $keywordsFound[0]->ParentID;
+            }else{
+                $tagIDs[] = 0;
+                $tagKeywords[] = $keyword;
+                $tagParents[] = 0;
             }
         }
 
@@ -46,9 +50,13 @@ class Tags extends Base
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
-        if ( !is_array( $data ) )
+        if ( is_array( $data ) )
         {
-            throw new InvalidInputException( 'Invalid data', $identifier, $data );
+            foreach($data as $item){
+                if (!is_string($item)){
+                    throw new InvalidInputException( 'Invalid data', $identifier, $data );
+                }
+            }
         }
     }
 

@@ -13,7 +13,9 @@ class EzXml extends Base
     {
         // avoid php notice in kernel/common/ezmoduleparamsoperator.php on line 71
         if ( !isset( $GLOBALS['eZRequestedModuleParams'] ) )
-            $GLOBALS['eZRequestedModuleParams'] = array();
+            $GLOBALS['eZRequestedModuleParams'] = array( 'module_name' => null,
+                                                         'function_name' => null,
+                                                         'parameters' => null );
         $content = parent::get( $attribute );
         $content['content'] = str_replace( '&nbsp;', ' ', $attribute->content()->attribute( 'output' )->attribute( 'output_text' ) );
         return $content;

@@ -11,21 +11,21 @@ use Opencontent\Opendata\Api\PublicationProcess;
 class Geo extends Base
 {
 
-    public function get(eZContentObjectAttribute $attribute)
+    public function get( eZContentObjectAttribute $attribute )
     {
-        $content = parent::get($attribute);
+        $content = parent::get( $attribute );
         /** @var \eZGmapLocation $attributeContent */
         $attributeContent = $attribute->content();
         $content['content'] = array(
-            'latitude' => (float)$attributeContent->attribute('latitude'),
-            'longitude' => (float)$attributeContent->attribute('longitude'),
-            'address' => $attributeContent->attribute('address')
+            'latitude' => (float)$attributeContent->attribute( 'latitude' ),
+            'longitude' => (float)$attributeContent->attribute( 'longitude' ),
+            'address' => $attributeContent->attribute( 'address' )
         );
 
         return $content;
     }
 
-    public function set($data, PublicationProcess $process)
+    public function set( $data, PublicationProcess $process )
     {
         $data = "1|#{$data['latitude']}|#{$data['longitude']}|#{$data['address']}";
 
@@ -42,8 +42,9 @@ class Geo extends Base
             if (!isset( $data['address'] )) {
                 $data['address'] = '';
             }
+        } else {
+            throw new InvalidInputException('Invalid data', $identifier, $data);
         }
-        throw new InvalidInputException('Invalid data', $identifier, $data);
     }
 
     public function toCSVString($content, $params = null)

@@ -45,7 +45,7 @@ class Base
             'version' => intval($attribute->attribute('version')),
             'identifier' => $this->classIdentifier . '/' . $this->identifier,
             'datatype' => $attribute->attribute('data_type_string'),
-            'content' => $attribute->toString()
+            'content' => $attribute->hasContent() ? $attribute->toString() : null
         );
 
         return $data;
@@ -58,9 +58,19 @@ class Base
 
     public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        if ($data !== null && !is_string($data)) {
+        if ($data !== null && $data !== false && !is_string($data)) {
             throw new InvalidInputException('Invalid type', $identifier, $data);
         }
+    }
+
+    public function validateOnCreate($identifier, $data, eZContentClassAttribute $attribute)
+    {
+        $this->validate($identifier, $data, $attribute);
+    }
+
+    public function validateOnUpdate($identifier, $data, eZContentClassAttribute $attribute)
+    {
+        $this->validate($identifier, $data, $attribute);
     }
 
     /**
