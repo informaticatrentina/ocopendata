@@ -18,6 +18,7 @@
     <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/jquery.dataTables.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/jquery.opendataDataTable.js"></script>
+    <script src="/extension/ocopendata/design/standard/javascript/jquery.opendataTools.js"></script>
     <script src="/extension/ocopendata/design/standard/javascript/dataTables.bootstrap.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.1/moment.min.js"></script>
 
@@ -25,7 +26,7 @@
         {literal}
 
         $(document).ready(function () {
-            $('.container-fluid').opendataDataTable({                
+            $('.container-fluid').opendataDataTable({
                 "builder":{
                   "query": '*'
                 },

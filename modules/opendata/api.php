@@ -9,7 +9,7 @@ use Opencontent\Opendata\Api\ClassRepository;
 $Module = $Params['Module'];
 $Environment = $Params['Environment'];
 $Action = $Params['Action'];
-$Param = $Params['Param'];
+$Param = isset( $_GET['q'] ) ? urldecode($_GET['q']) : $Params['Param'];
 
 $Debug = isset( $_GET['debug'] );
 

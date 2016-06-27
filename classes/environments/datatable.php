@@ -24,6 +24,12 @@ class DatatableEnvironmentSettings extends DefaultEnvironmentSettings
         return $content;
     }
 
+    /**
+     * @param ArrayObject $query
+     * @param \Opencontent\Opendata\Api\QueryLanguage\EzFind\QueryBuilder $builder
+     *
+     * @return ArrayObject
+     */
     public function filterQuery(
         \ArrayObject $query,
         \Opencontent\QueryLanguage\QueryBuilder $builder
