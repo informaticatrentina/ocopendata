@@ -34,6 +34,13 @@ class Image extends File
 
     public function set( $data, PublicationProcess $process )
     {
+        if (!is_array($data)){
+            $data = array(
+                'url' => null,
+                'file' => null,
+                'filename' => null
+            );
+        }
         if ( !isset( $data['url'] ) )
         {
             $data['url'] = null;
