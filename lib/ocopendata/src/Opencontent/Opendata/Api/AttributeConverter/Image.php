@@ -5,6 +5,7 @@ namespace Opencontent\Opendata\Api\AttributeConverter;
 use eZContentObjectAttribute;
 use eZContentClassAttribute;
 use eZURI;
+use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\Exception\InvalidInputException;
 use Opencontent\Opendata\Api\PublicationProcess;
 
@@ -20,7 +21,7 @@ class Image extends File
             $attributeContent = $attribute->content();
             $image = $attributeContent->attribute( 'original' );
             $url = $image['full_path'];
-            eZURI::transformURI( $url, false, 'full' );
+            eZURI::transformURI( $url, true, 'full' );
 
             $content['content'] = array(
                 'filename' => $image['original_filename'],
@@ -63,6 +64,9 @@ class Image extends File
 
     public static function validate( $identifier, $data, eZContentClassAttribute $attribute )
     {
+        if (is_string($data)){
+            $data = null;
+        }
         if ( is_array( $data ) && isset( $data['image'] ) )
         {
             $data['file'] = $data['image'];

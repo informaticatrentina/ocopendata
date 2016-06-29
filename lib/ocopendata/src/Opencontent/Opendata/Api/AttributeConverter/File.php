@@ -27,7 +27,7 @@ class File extends Base
                    . '/' . $attribute->attribute('id')
                    . '/' . $attribute->attribute('version')
                    . '/' . $file->attribute('original_filename');
-            eZURI::transformURI($url, false, 'full');
+            eZURI::transformURI($url, true, 'full');
 
             $content['content'] = array(
                 'filename' => $file->attribute('original_filename'),
@@ -66,22 +66,24 @@ class File extends Base
 
     public static function validate($identifier, $data, eZContentClassAttribute $attribute)
     {
-        if (is_array($data)) {
-            if (!isset( $data['filename'] )) {
-                throw new InvalidInputException('Missing filename', $identifier, $data);
-            }
+        if ($data) {
+            if (is_array($data)) {
+                if (!isset( $data['filename'] )) {
+                    throw new InvalidInputException('Missing filename', $identifier, $data);
+                }
 
-            if (isset( $data['url'] ) && !eZHTTPTool::getDataByURL(trim($data['url']), true)) {
-                throw new InvalidInputException('Url not responding', $identifier, $data);
-            }
+                if (isset( $data['url'] ) && !eZHTTPTool::getDataByURL(trim($data['url']), true)) {
+                    throw new InvalidInputException('Url not responding', $identifier, $data);
+                }
 
-            if (isset( $data['file'] )
-                && !( base64_encode(base64_decode($data['file'], true)) === $data['file'] )
-            ) {
-                throw new InvalidInputException('Invalid base64 encoding', $identifier, $data);
+                if (isset( $data['file'] )
+                    && !( base64_encode(base64_decode($data['file'], true)) === $data['file'] )
+                ) {
+                    throw new InvalidInputException('Invalid base64 encoding', $identifier, $data);
+                }
+            } else {
+                throw new InvalidInputException('Invalid data format', $identifier, $data);
             }
-        } else {
-            throw new InvalidInputException('Invalid data format', $identifier, $data);
         }
     }
 

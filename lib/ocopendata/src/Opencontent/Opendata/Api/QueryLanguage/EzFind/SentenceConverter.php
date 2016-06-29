@@ -183,7 +183,7 @@ class SentenceConverter
         }
 
         if ( $operator != '=' )
-            throw new Exception( "The operator of function field 'calendar' must be '\"' (e.g: calendar[from_time, to_time] = [yesterday, today])" );
+            throw new Exception( "The operator of function field 'calendar' must be '=' (e.g: calendar[from_time, to_time] = [yesterday, today])" );
 
         if ( !is_array( $value ) || ( is_array( $value ) && count( $value ) != 2 ) )
             throw new Exception( "The value of function field 'calendar' requires a two elements array (e.g: calendar[from_time, to_time] = [yesterday, today])" );

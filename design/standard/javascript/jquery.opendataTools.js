@@ -1,16 +1,18 @@
 ;(function ($) {
-    var defaults = {
-        language: 'ita-IT',
-        endpoint: {
-            geo: '/opendata/api/geo/search/',
-            search: '/opendata/api/content/search/',
-            class: '/opendata/api/classes/'
-        }
-    };
 
-    $.opendataTools = function (options) {
+    var OpendataTools = function (options) {
 
-        var settings = $.extend({}, defaults, options);
+        var defaults = {
+            language: 'ita-IT',
+            accessPath: '/',
+            endpoint: {
+                geo: '/opendata/api/geo/search/',
+                search: '/opendata/api/content/search/',
+                class: '/opendata/api/classes/'
+            }
+        };
+
+        var settings = $.extend({}, defaults, defaults);
 
         var map, markers, userMarker, markerBuilder, lastMapQuery;
 
@@ -495,5 +497,25 @@
                 }
             }
         }
-    }
+    };
+
+    var OpendataToolsSingleton = (function () {
+        var instance;
+
+        function createInstance() {
+            return OpendataTools();
+        }
+
+        return {
+            getInstance: function () {
+                if (!instance) {
+                    instance = createInstance();
+                }
+                return instance;
+            }
+        };
+    })();
+
+    $.opendataTools = OpendataToolsSingleton.getInstance();
+
 }(jQuery));
