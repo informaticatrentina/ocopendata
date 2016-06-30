@@ -9,12 +9,25 @@
                 geo: '/opendata/api/geo/search/',
                 search: '/opendata/api/content/search/',
                 class: '/opendata/api/classes/'
+            },
+            onError: function(errorCode,errorMessage,jqXHR){
+                alert(errorMessage + ' (error: '+errorCode+')');
             }
         };
 
         var settings = $.extend({}, defaults, defaults);
 
         var map, markers, userMarker, markerBuilder, lastMapQuery;
+
+        var detectError = function(response,jqXHR){
+            if(response.error_message || response.error_code){
+                if ($.isFunction(settings.onError)) {
+                    settings.onError(response.error_code, response.error_message,jqXHR);
+                }
+                return true;
+            }
+            return false;
+        };
 
         var setUserMarker = function(latlng, cb, context){
             var customIcon = L.MakiMarkers.icon({icon: "star", color: "#f00", size: "l"});
@@ -73,11 +86,17 @@
                 data: {q: encodeURIComponent(query)},
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: function (data) {
-                    cb.call(context, data);
+                success: function (data,textStatus,jqXHR) {
+                    if (!detectError(data,jqXHR)){
+                        cb.call(context, data);
+                    }
                 },
-                error: function (data) {
-                    cb.call(context, data);
+                error: function (jqXHR) {
+                    var error = {
+                        error_code: jqXHR.status,
+                        error_message: jqXHR.statusText
+                    };
+                    detectError(error,jqXHR);
                 }
             });
         };
@@ -112,11 +131,17 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 cache: true,
-                success: function (data) {
-                    cb.call(context, data.searchHits[0]);
+                success: function (data,textStatus,jqXHR) {
+                    if (!detectError(data,jqXHR)){
+                        cb.call(context, data.searchHits[0]);
+                    }
                 },
-                error: function (data) {
-                    cb.call(context, data);
+                error: function (jqXHR) {
+                    var error = {
+                        error_code: jqXHR.status,
+                        error_message: jqXHR.statusText
+                    };
+                    detectError(error,jqXHR);
                 }
             });
         };
@@ -187,11 +212,17 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 cache: true,
-                success: function (data) {
-                    cb.call(context, data);
+                success: function (data,textStatus,jqXHR) {
+                    if (!detectError(data,jqXHR)){
+                        cb.call(context, data);
+                    }
                 },
-                error: function (data) {
-                    cb.call(context, data);
+                error: function (jqXHR) {
+                    var error = {
+                        error_code: jqXHR.status,
+                        error_message: jqXHR.statusText
+                    };
+                    detectError(error,jqXHR);
                 }
             });
         };
@@ -203,19 +234,19 @@
                 data: {q: encodeURIComponent(query)},
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: function (response) {
-                    if ('error_message' in response) {
-                        // @todo handle error
-                        console.log(response);
-                    } else {
+                success: function (response,textStatus,jqXHR) {
+                    if (!detectError(response,jqXHR)){
                         if ($.isFunction(cb)) {
                             cb.call(context, response);
                         }
                     }
                 },
-                error: function (data) {
-                    // @todo handle error
-                    console.log(data);
+                error: function (jqXHR) {
+                    var error = {
+                        error_code: jqXHR.status,
+                        error_message: jqXHR.statusText
+                    };
+                    detectError(error,jqXHR);
                 }
             });
         };
