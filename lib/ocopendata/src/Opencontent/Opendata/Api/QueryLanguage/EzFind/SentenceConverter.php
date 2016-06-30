@@ -271,12 +271,13 @@ class SentenceConverter
             {
                 if ( $value != '*' )
                 {
-                    $time = strtotime( $value );
-                    if ( !$time )
+                    $time = new \DateTime( $value, new \DateTimeZone('UTC') );
+                    
+                    if ( !$time instanceof \DateTime)
                     {
                         throw new Exception( "Problem with date $value" );
                     }
-                    $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( $time ) . '"';
+                    $value = '"' . ezfSolrDocumentFieldBase::convertTimestampToDate( $time->format('U') ) . '"';
                 }
             }
                 break;
