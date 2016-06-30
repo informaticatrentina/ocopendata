@@ -61,6 +61,28 @@
             if (map) {
                 markers.clearLayers();
                 lastMapQuery = query;
+                geoJsonFindAll(query, function (response) {
+                    if (response.features.length > 0) {
+                        var geoJsonLayer = $.isFunction(geoJsonBuilder) ? geoJsonBuilder(response) : markerBuilder(response);
+                        markers.addLayer(geoJsonLayer);
+                        if (typeof userMarker == 'object') {
+                            var group = new L.FeatureGroup([markers, userMarker]);
+                            map.fitBounds(group.getBounds());
+                        } else {
+                            map.fitBounds(markers.getBounds());
+                        }
+                        if ($.isFunction(onLoad)) {
+                            onLoad.call(context, response);
+                        }
+                    }
+                });
+            }
+        };
+
+        var loadAndCacheMarkersInMap =  function(query, onLoad, geoJsonBuilder, context){
+            if (map) {
+                markers.clearLayers();
+                lastMapQuery = query;
                 geoJsonCacheAll(query, function (response) {
                     if (response.features.length > 0) {
                         var geoJsonLayer = $.isFunction(geoJsonBuilder) ? geoJsonBuilder(response) : markerBuilder(response);
@@ -514,6 +536,10 @@
 
             loadMarkersInMap:  function(query, onLoad, geoJsonBuilder, context){
                 loadMarkersInMap(query, onLoad, geoJsonBuilder, context);
+            },
+
+            loadAndCacheMarkersInMap:  function(query, onLoad, geoJsonBuilder, context){
+                loadAndCacheMarkersInMap(query, onLoad, geoJsonBuilder, context);
             },
 
             refreshMap: function(){
