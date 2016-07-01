@@ -131,7 +131,7 @@ class SolrNamesHelper
         }
         
         $data = array();
-        $dataTypes = $this->getDatatypesByIdentifier((string)$field);
+        $dataTypes = $this->getDatatypesByIdentifier((string)$field);        
         foreach ($dataTypes as $dataType) {
             if ($subField && ( $dataType == 'ezobjectrelationlist' || $dataType == 'ezobjectrelation' )) {
                 if ($subField->data('is_meta_field')) {
@@ -150,8 +150,6 @@ class SolrNamesHelper
                         );
                     }
                 }
-            } else {
-                throw new Exception("Field $subField not allowed as sub field of $field");
             }
         }
         if (empty( $data )) {

@@ -191,17 +191,20 @@
         var cacheAllItems = {
             items: [],
             instance: function (id, generator, cb, context) {
+                var exists = false;
                 for (var i = 0, len = this.items.length; i < len; i++) {
                     if (this.items[i].id === id) {
                         if ($.isFunction(cb)) {
                             cb.call(context, this.items[i].data);
-                            return true;
+                            exists = true;
                         }
                     }
                 }
-                var newItem = generator();
-                this.items.push(newItem);
-                newItem.load(cb, context);
+                if (!exists) {
+                  var newItem = generator();
+                  this.items.push(newItem);
+                  newItem.load(cb, context);
+                }                
             }
         };
 
@@ -215,7 +218,7 @@
                     options.cache = false; //remove jQuery cache as we have our own sessionStorage
                     options.beforeSend = function () {
                         if (sessionStorage.getItem(url)) {
-                            success(sessionStorage.getItem(url));
+                            success(JSON.parse(sessionStorage.getItem(url)));
                             return false;
                         }
                         return true;
@@ -235,9 +238,9 @@
                 dataType: "json",
                 cache: true,
                 success: function (data,textStatus,jqXHR) {
-                    if (!detectError(data,jqXHR)){
-                        cb.call(context, data);
-                    }
+                    if (!detectError(data,jqXHR) && $.isFunction(cb)){
+                      cb.call(context, data);
+                    }                    
                 },
                 error: function (jqXHR) {
                     var error = {
@@ -422,8 +425,22 @@
                 });
                 return facetStringList.join(',');
             },
-
+            
             buildFilterInput: function (facets, facet, datatable, cb, context) {
+                
+                var escapeValue = function(value){              
+                  return value
+                    .replace(/'/g, "\\'")
+                    .replace('/', '::');
+                };
+                
+                var quoteValue = function(facetDefinition,value){              
+                  if (facetDefinition.field.search("raw") > -1 )
+                    return encodeURIComponent('"' + value + '"') 
+                  else
+                    return value;
+                };
+                
                 for (var i = 0, len = facets.length; i < len; i++) {
                     var currentFilters = datatable.settings.builder.filters;
                     var facetDefinition = facets[i];
@@ -442,8 +459,8 @@
 
                         $.each(facetDefinition.data, function (value, count) {
                             if (value.length > 0) {
-                                var quotedValue = facetDefinition.field.search("extra_") > -1 ? encodeURIComponent('"' + value + '"') : value;
-                                var option = $('<option value="' + quotedValue + '">' + value + ' (' + count + ')</option>');
+                                var quotedValue = quoteValue(facetDefinition,value);
+                                var option = $('<option data-value="' + value + '" value="' + escapeValue(quotedValue) + '">' + value + ' (' + count + ')</option>');                                
                                 if (currentFilters[facetDefinition.field]
                                     && currentFilters[facetDefinition.field].value
                                     && $.inArray(quotedValue, currentFilters[facetDefinition.field].value) > -1) {
@@ -488,11 +505,13 @@
                 var select = $('[data-field="' + facet.name + '"]');
                 var data = facet.data;
                 select.find('option').attr('disabled', 'disabled');
+                select.find('option').each(function(){
+                  $(this).text($(this).data('value'));
+                });
                 select.find('option[value=""]').removeAttr('disabled');
                 $.each(data, function (value, count) {
-                    if (value.length > 0) {
-                        var quotedValue = facet.name.search("extra_") > -1 ? encodeURIComponent('"' + value + '"') : value;
-                        var xpath = 'option[value="' + quotedValue + '"]';
+                    if (value.length > 0) {                        
+                        var xpath = 'option[data-value="' + value + '"]';
                         var newText = value + ' (' + count + ')';
                         $(xpath, select).text(newText).removeAttr('disabled').show();
                     }

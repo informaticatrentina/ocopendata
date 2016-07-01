@@ -28,11 +28,21 @@ class ContentSearch
     {
         $this->currentEnvironmentSettings = $environmentSettings;
     }
+    
+    public function encodeQuery($query)
+    {
+        return str_replace("/", "::", $query);
+    }
+    
+    public function decodeQuery($query)
+    {
+        return str_replace("::", "/", $query);
+    }
 
     public function search( $query )
     {
         $builder = new EzFindQueryBuilder();
-        $queryObject = $builder->instanceQuery( $query );
+        $queryObject = $builder->instanceQuery( $this->decodeQuery( $query ) );
         $ezFindQueryObject = $queryObject->convert();
 
         if ( !$ezFindQueryObject instanceof ArrayObject )
@@ -92,7 +102,7 @@ class ContentSearch
         {
             $nextPageQuery = clone $queryObject;
             $nextPageQuery->setParameter( 'offset', ( $ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset'] ) );
-            $searchResults->nextPageQuery = (string)$nextPageQuery;
+            $searchResults->nextPageQuery = $this->encodeQuery( (string)$nextPageQuery );
         }
 
         $fileSystemGateway = new FileSystem();
