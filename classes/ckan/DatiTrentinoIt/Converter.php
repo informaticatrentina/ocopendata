@@ -72,12 +72,14 @@ class Converter implements \OcOpenDataConverterInterface
     protected function fixUrl($url)
     {
         $url = ltrim($url, '/');
-        $siteUrl = rtrim(\eZINI::instance()->variable('SiteSettings', 'SiteURL'), '/') . '/';
-        if (strpos($url, $siteUrl) === false) {
-            $url = $siteUrl . $url;
-        }
         if (strpos($url, 'http') === false) {
-            $url = 'http://' . $url;
+            $siteUrl = rtrim(\eZINI::instance()->variable('SiteSettings', 'SiteURL'), '/') . '/';
+            if (strpos($url, $siteUrl) === false) {
+                $url = $siteUrl . $url;
+            }
+            if (strpos($url, 'http') === false) {
+                $url = 'http://' . $url;
+            }
         }
 
         return $url;
