@@ -127,6 +127,12 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 $this->classFields[$field['identifier']] = $fieldIdentifiers;
             }
                 break;
+
+            case 'ezgmaplocation': {
+                $header = array('lat','lon','address');
+                $this->classFields[$field['identifier']] = $header;
+            }
+                break;
         }
 
         return $header;
@@ -160,6 +166,18 @@ class SearchQueryCSVExporter extends AbstarctExporter
                             $field['content'],
                             $columnIdentifier
                         );
+                    }
+                }
+                    break;
+
+                case 'ezgmaplocation': {
+                    foreach ($this->classFields[$identifier] as $columnIdentifier) {
+                        if ($columnIdentifier == 'lat')
+                            $stringData[$key . '.' . $columnIdentifier] = $field['content']['latitude'];
+                        elseif ($columnIdentifier == 'lon')
+                            $stringData[$key . '.' . $columnIdentifier] = $field['content']['longitude'];
+                        elseif ($columnIdentifier == 'address')
+                            $stringData[$key . '.' . $columnIdentifier] = $field['content']['address'];
                     }
                 }
                     break;
