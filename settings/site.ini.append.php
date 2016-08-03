@@ -17,5 +17,6 @@ id=ocopendata
 tags[]=ocopendata
 path=ocopendata/class
 isClustered=true
+class=OCOpenDataClassRepositoryCache
 
 */ ?>
