@@ -32,7 +32,8 @@
                     }
                 ],
                 "columns": []
-            }
+            },
+            "loadDatatableCallback": null
         };
 
     // The actual plugin constructor
@@ -53,7 +54,7 @@
         loadDataTable: function () {
             this.settings.datatable.prevQuery = this.settings.datatable.ajax.query;
             var buildedQuery = this.buildQuery();
-            this.settings.datatable.ajax.url = this._ajaxUrl + buildedQuery;
+            this.settings.datatable.ajax.url = this._ajaxUrl + '?q=' + buildedQuery;
             this.settings.datatable.ajax.query = buildedQuery;
             var id = this.settings.table.id;
             var table = $(this.settings.table.template).attr('id', id);
@@ -62,8 +63,11 @@
                 this.datatable.destroy(true);
             }
             this.datatable = table.DataTable(this.settings.datatable);
+            if($.isFunction(this.settings.loadDatatableCallback)){
+                this.settings.loadDatatableCallback(this);
+            }
         },
-        buildQuery: function () {
+        buildQuery: function (notEncoded) {
             var query = '';
             $.each(this.settings.builder.filters, function () {
                 if (this != null) {
@@ -75,7 +79,7 @@
             });
             query += this.settings.builder.query;
             //console.log( ' -- Query: ' + query);
-            return encodeURIComponent(query);
+            return !notEncoded ? encodeURIComponent(query) : query;
         }
     });
 

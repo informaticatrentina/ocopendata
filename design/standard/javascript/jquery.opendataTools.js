@@ -15,7 +15,7 @@
             }
         };
 
-        var settings = $.extend({}, defaults, defaults);
+        var settings = $.extend({}, defaults, options);
 
         var map, markers, userMarker, markerBuilder, lastMapQuery;
 
@@ -128,7 +128,7 @@
             $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
                 if (options.cache && window.sessionStorage !== undefined) {
                     var success = originalOptions.success || $.noop,
-                        url = originalOptions.url;
+                        url = JSON.stringify(originalOptions.data);
 
                     options.cache = false; //remove jQuery cache as we have our own sessionStorage
                     options.beforeSend = function () {
