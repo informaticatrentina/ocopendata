@@ -12,6 +12,7 @@ class DataImportSchedulerType extends eZWorkflowEventType
     
     function execute( $process, $event )
     {
+
         $parameterList = $process->attribute( 'parameter_list' );
 
         $objectID = $parameterList['object_id'];

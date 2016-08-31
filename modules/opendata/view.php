@@ -19,6 +19,4 @@ catch( Exception $error )
 eZDisplayDebug();
 eZExecution::cleanExit();
 
-
-
 ?>

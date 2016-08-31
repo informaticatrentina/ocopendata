@@ -78,6 +78,16 @@ class PayloadBuilder extends \ArrayObject
         $this['metadata']['creatorId'] = $value;
     }
 
+    public function setPublished($value)
+    {
+        $this['metadata']['published'] = $value;
+    }
+
+    public function setModified($value)
+    {
+        $this['metadata']['modified'] = $value;
+    }
+
     public function getMetadaData($identifier = null)
     {
         if ($identifier == null) {
