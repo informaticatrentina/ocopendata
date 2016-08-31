@@ -98,6 +98,25 @@ class PayloadBuilder extends \ArrayObject
         return null;
     }
 
+    public function unSetLanguage($language)
+    {
+        if (in_array($language, $this['metadata']['languages'])){
+            $languages = array();
+            foreach($this['metadata']['languages'] as $item){
+                if ($item != $language){
+                    $languages[] = $item;
+                }
+            }
+            if (count($languages) > 0) {
+                $this['metadata']['languages'] = $languages;
+
+                if (isset( $this['data'][$language] )) {
+                    unset( $this['data'][$language] );
+                }
+            }
+        }
+    }
+
     public function unSetData($identifier = null, $language = null)
     {
         if ($identifier == null){
