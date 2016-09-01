@@ -52,13 +52,6 @@ $ViewList['help'] = array(
     'unordered_params' => array()
 );
 
-$ViewList['test'] = array(
-    'functions' => array( 'view' ),
-    'script' => 'test.php',
-    'params' => array( ),
-    'unordered_params' => array()
-);
-
 $FunctionList = array();
 $FunctionList['api'] = array();
 $FunctionList['console'] = array();
