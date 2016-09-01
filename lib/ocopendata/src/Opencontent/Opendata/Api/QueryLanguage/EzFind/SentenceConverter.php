@@ -194,6 +194,7 @@ class SentenceConverter
         $filter = array();
         foreach( $fieldCouples as $fieldCouple )
         {
+            $toValueAndCondition = $toValue == '*' ? $fromValue : $toValue;
             $item = array(
                 'or',
                 $fieldCouple['from'] . ':[' . $fromValue . ' TO ' . $toValue . ']',
@@ -201,7 +202,7 @@ class SentenceConverter
                 array(
                     'and',
                     $fieldCouple['from'] . ':[* TO ' . $fromValue . ']',
-                    $fieldCouple['to'] . ':[' . $toValue . ' TO *]'
+                    $fieldCouple['to'] . ':[' . $toValueAndCondition . ' TO *]'
                 )
             );
             $filter[] = $item;
