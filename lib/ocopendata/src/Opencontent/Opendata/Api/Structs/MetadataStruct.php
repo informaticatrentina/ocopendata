@@ -39,6 +39,10 @@ class MetadataStruct implements \ArrayAccess
 
     public $creatorId;
 
+    public $published;
+
+    public $modified;
+
     /**
      * @var ContentClass
      */
@@ -298,6 +302,17 @@ class MetadataStruct implements \ArrayAccess
                 }
             }
         }
+
+        //publish date if is passed or nowdate
+        if ($this->published == null){
+            $this->published = time();
+        }
+
+        //modified date if is passed or nowdate
+        if ($this->modified == null){
+            $this->modified = time();
+        }
+
         $this->parentNodes = $normalizedParentNodes;
 
     }

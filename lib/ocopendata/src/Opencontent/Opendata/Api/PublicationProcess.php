@@ -82,8 +82,9 @@ class PublicationProcess
                 $content->getRawContentObject()->assignState($state->getStateObject());
             }
 
-            // force modified to now to clear opendata cache @todo
-            $content->getRawContentObject()->setAttribute('modified', time());
+            //publish date
+            $content->getRawContentObject()->setAttribute('published', $this->currentStruct->metadata->published);
+            $content->getRawContentObject()->setAttribute('modified', $this->currentStruct->metadata->modified);
 
             // force change section (in update mode)
             if ($section instanceof ContentSection && $content->getRawContentObject()->attribute('section_id') !== $section['id']) {
