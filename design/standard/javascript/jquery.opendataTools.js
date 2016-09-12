@@ -215,7 +215,7 @@
                     options.cache = false; //remove jQuery cache as we have our own sessionStorage
                     options.beforeSend = function () {
                         if (sessionStorage.getItem(url)) {
-                            success(sessionStorage.getItem(url));
+                            success(JSON.parse(sessionStorage.getItem(url)));
                             return false;
                         }
                         return true;

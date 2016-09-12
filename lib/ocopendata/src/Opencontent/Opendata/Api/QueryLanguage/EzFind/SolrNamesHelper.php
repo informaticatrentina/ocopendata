@@ -94,7 +94,7 @@ class SolrNamesHelper
         } elseif ($field->data('is_function_field') && $field->data('function') == 'raw') {
             $fieldName = trim(str_replace('raw', '', (string)$field), '[]');
 
-            return array($fieldName);
+            return array($fieldName=>$fieldName);
         }
         throw new Exception("Can not convert field $field");
     }

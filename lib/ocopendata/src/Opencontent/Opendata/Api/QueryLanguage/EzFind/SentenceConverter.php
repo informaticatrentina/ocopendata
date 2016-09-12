@@ -89,6 +89,7 @@ class SentenceConverter
 
                 case 'raw':
                     $fieldNames = Sentence::parseString( str_replace( 'raw', '', (string)$field ) );
+                    $fieldNames = array_combine($fieldNames, $fieldNames);
                     break;
             }
         }
@@ -261,6 +262,7 @@ class SentenceConverter
                 $value = '"' . $value . '"';
                 break;
 
+            case 'meta_class_name_ms':
             case 'meta_name':
             case 'sub_string':
                 $value = '"' . $value . '"';
