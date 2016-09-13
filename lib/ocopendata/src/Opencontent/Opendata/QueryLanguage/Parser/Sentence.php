@@ -108,11 +108,13 @@ class Sentence
         } else {
             $arrayValue = array();
             if (strpos($variableValue, "'") !== false) {
+                $variableValue = str_replace("\'", "$", $variableValue);
                 $parts = explode("'", $variableValue);
                 foreach ($parts as $part) {
                     if (!empty( $part )) {
                         $value = trim($part);
                         if ($value != ',') {
+                            $value = str_replace("$", "'", $value);
                             $arrayValue[] = "'$value'";
                         }
                     }
