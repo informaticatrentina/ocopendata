@@ -82,7 +82,8 @@ class AttributeConverterLoader
             'ezimage' => '\Opencontent\Opendata\Api\AttributeConverter\Image',
             'ezpage' => '\Opencontent\Opendata\Api\AttributeConverter\Page',
             'ezboolean' => '\Opencontent\Opendata\Api\AttributeConverter\Boolean',
-            'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User'
+            'ezuser' => '\Opencontent\Opendata\Api\AttributeConverter\User',
+            'ezfloat' => '\Opencontent\Opendata\Api\AttributeConverter\Float'            
         );
 
         if ( EnvironmentLoader::ini()->hasVariable( 'AttributeConverters', 'Converters' ) )

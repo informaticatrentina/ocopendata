@@ -151,7 +151,8 @@ class SearchQueryCSVExporter extends AbstarctExporter
         }
 
         $stringData = array();
-        foreach ($data as $key => $field) {
+        foreach (array_keys($this->classFields) as $key) {
+            $field = $data[$key];
             list( $classIdentifier, $identifier ) = explode('/', $field['identifier']);
             $converter = AttributeConverterLoader::load(
                 $classIdentifier,
@@ -193,7 +194,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 }
                     break;
             }
-        }
+        }        
         return $stringData;
     }
 

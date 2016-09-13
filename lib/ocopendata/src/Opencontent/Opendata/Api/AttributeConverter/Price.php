@@ -42,7 +42,7 @@ class Price extends Base
         return array(
             'identifier' => 'price',
             'format' => array(
-                'value' => 'integer',
+                'value' => 'flat',
                 'vat_id' => 'integer',
                 'is_vat_included' => 'boolean'
             )
@@ -52,7 +52,8 @@ class Price extends Base
     public function toCSVString($content, $params = null)
     {
         if (is_array($content) && isset( $content['value'] )) {
-            return $content['value'];
+            $locale = \eZLocale::instance();
+            return $locale->formatCleanCurrency($content['value']);
         }
 
         return '';
