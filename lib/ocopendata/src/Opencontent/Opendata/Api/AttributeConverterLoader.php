@@ -66,6 +66,7 @@ class AttributeConverterLoader
     public static function attributeConverters()
     {
         $converters = array(
+            'ezselection' => '\Opencontent\Opendata\Api\AttributeConverter\Selection',
             'ezprice' => '\Opencontent\Opendata\Api\AttributeConverter\Price',
             'ezkeyword' => '\Opencontent\Opendata\Api\AttributeConverter\Keywords',
             'eztags' => '\Opencontent\Opendata\Api\AttributeConverter\Tags',

@@ -238,6 +238,10 @@ class MetadataStruct implements \ArrayAccess
 
     protected function validate()
     {
+        if (empty($this)){
+            $this->throwException("No data found");
+        }
+
         // classe
         $this->class = $this->classRepository->load($this->classIdentifier);
         if (!$this->class instanceof ContentClass) {

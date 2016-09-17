@@ -37,6 +37,10 @@ class ContentDataStruct extends \ArrayObject
 
     protected function validate(MetadataStruct $metadata, $update = false)
     {
+        if (empty($this)){
+            $this->throwException("No data found");
+        }
+
         if ($metadata->useDefaultLanguage()) {
             $language = $metadata->languages[0];
             if (!isset( $this[$language] )) {
@@ -69,6 +73,9 @@ class ContentDataStruct extends \ArrayObject
                         $converter->validateOnCreate($identifier, $dataTranslation[$identifier], $attribute);
                     } else {
                         $converter->validateOnUpdate($identifier, $dataTranslation[$identifier], $attribute);
+                    }
+                    if (!$update && $isRequired && empty($dataTranslation[$identifier])){
+                        $this->throwException("Field $identifier is required");
                     }
                 } elseif (!$update && $isRequired) {
                     $this->throwException("Field $identifier is required");
