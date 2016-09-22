@@ -150,8 +150,6 @@ class SolrNamesHelper
                         );
                     }
                 }
-            } else {
-                throw new Exception("Field $subField not allowed as sub field of $field");
             }
         }
         if (empty( $data )) {
