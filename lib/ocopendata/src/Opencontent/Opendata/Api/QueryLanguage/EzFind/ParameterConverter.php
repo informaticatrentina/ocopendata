@@ -73,13 +73,15 @@ class ParameterConverter extends SentenceConverter
             $list[] = trim($item, "'");
         }
 
+        $idList = array();
         foreach ($list as $class) {
             if (!in_array($class, $this->classRepository->listClassIdentifiers())) {
                 throw new Exception("Class $class not found");
             }
+            $idList[] = $this->classRepository->load($class)->getClassId();
         }
         $this->solrNamesHelper->filterAvailableFieldDefinitionsByClasses($list);
-        $this->convertedQuery['SearchContentClassID'] = $list;
+        $this->convertedQuery['SearchContentClassID'] = $idList;
     }
 
     protected function convertSortBy($value)

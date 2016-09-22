@@ -13,6 +13,8 @@ class Metadata implements \ArrayAccess
 {
     public $id;
 
+    public $currentVersion;
+
     public $remoteId;
 
     public $classIdentifier;
@@ -63,7 +65,7 @@ class Metadata implements \ArrayAccess
 
     public function jsonSerialize()
     {
-        return $this;
+        return (array)$this;
     }
 
     /**
@@ -78,6 +80,7 @@ class Metadata implements \ArrayAccess
         $availableLanguages = array_keys( $contentObject->allLanguages() );
         $metadata = new Metadata();
         $metadata->id = (int)$contentObject->attribute( 'id' );
+        $metadata->currentVersion = (int)$contentObject->attribute( 'current_version' );
         $names = array();
         foreach ( $languages as $language )
         {

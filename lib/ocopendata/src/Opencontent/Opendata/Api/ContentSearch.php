@@ -17,6 +17,9 @@ use ArrayObject;
 
 class ContentSearch
 {
+    /**
+     * @var string
+     */
     protected $query;
 
     /**
@@ -29,8 +32,10 @@ class ContentSearch
         $this->currentEnvironmentSettings = $environmentSettings;
     }
 
-    public function search( $query )
+    public function search( $query, array $limitation = null )
     {
+        $this->query = $query;
+
         $builder = new EzFindQueryBuilder();
         $queryObject = $builder->instanceQuery( $query );
         $ezFindQueryObject = $queryObject->convert();
@@ -44,6 +49,7 @@ class ContentSearch
         $ezFindQuery = $ezFindQueryObject->getArrayCopy();
 
         //$ezFindQuery['Filter'][] = ezfSolrDocumentFieldBase::generateMetaFieldName('installation_id') . ':' . eZSolr::installationID();
+        $ezFindQuery['Limitation'] = $limitation;
         $ezFindQuery['AsObjects'] = false;
         $ezFindQuery['FieldsToReturn'] = array( SolrStorage::getSolrIdentifier() );
 
@@ -52,7 +58,6 @@ class ContentSearch
             $ezFindQuery['_query'],
             $ezFindQuery
         );
-
         if ( $rawResults['SearchExtras'] instanceof ezfSearchResultInfo )
         {
             if ( $rawResults['SearchExtras']->attribute( 'hasError' ) )
@@ -152,4 +157,38 @@ class ContentSearch
 
         return $this->currentEnvironmentSettings->filterSearchResult( $searchResults, $ezFindQueryObject, $builder );
     }
+
+    /**
+     * @return string
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
+
+    /**
+     * @param string $query
+     */
+    public function setQuery($query)
+    {
+        $this->query = $query;
+    }
+
+    /**
+     * @return EnvironmentSettings
+     */
+    public function getCurrentEnvironmentSettings()
+    {
+        return $this->currentEnvironmentSettings;
+    }
+
+    /**
+     * @param EnvironmentSettings $currentEnvironmentSettings
+     */
+    public function setCurrentEnvironmentSettings($currentEnvironmentSettings)
+    {
+        $this->currentEnvironmentSettings = $currentEnvironmentSettings;
+    }
+
+
 }

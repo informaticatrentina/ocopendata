@@ -53,7 +53,14 @@ class OCOpenDataOperators
                 $classRepository = new ClassRepository();
                 try
                 {
-                    $data = (array)$classRepository->load( $identifier );
+                    if (is_array($identifier)){
+                        $data = array();
+                        foreach($identifier as $id){
+                            $data[] = (array)$classRepository->load($id);
+                        }
+                    }else {
+                        $data = (array)$classRepository->load($identifier);
+                    }
                 }
                 catch( Exception $e )
                 {

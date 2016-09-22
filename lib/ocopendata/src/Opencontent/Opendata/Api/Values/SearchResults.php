@@ -33,5 +33,21 @@ class SearchResults
      */
     public $facets = array();
 
+    public function jsonSerialize()
+    {
+        $searchHits = array_map(function($value){
+            if ($value instanceof Content){
+                $value = $value->jsonSerialize();
+            }
+            return $value;
+        }, $this->searchHits);
 
+        return array(
+          'query' => $this->query,
+          'nextPageQuery' => $this->nextPageQuery,
+          'totalCount' => $this->totalCount,
+          'searchHits' => $searchHits,
+          'facets' => $this->facets,
+        );
+    }
 }

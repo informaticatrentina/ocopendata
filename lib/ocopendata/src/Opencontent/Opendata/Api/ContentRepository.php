@@ -2,15 +2,9 @@
 
 namespace Opencontent\Opendata\Api;
 
-use eZContentObject;
-use Opencontent\Opendata\Api\Exception\CreateContentException;
 use Opencontent\Opendata\Api\Exception\DuplicateRemoteIdException;
 use Opencontent\Opendata\Api\Gateway\FileSystem;
-use Opencontent\Opendata\Api\Gateway\Database;
-use Opencontent\Opendata\Api\Gateway\SolrStorage;
 use Opencontent\Opendata\Api\Exception\ForbiddenException;
-use Opencontent\Opendata\Api\Structs\ContentCreateStruct;
-use Opencontent\Opendata\Api\Structs\ContentUpdateStruct;
 use Opencontent\Opendata\Api\Values\Content;
 
 class ContentRepository
@@ -19,6 +13,11 @@ class ContentRepository
      * @var EnvironmentSettings
      */
     protected $currentEnvironmentSettings;
+
+    /**
+     * @var Gateway
+     */
+    protected $gateway;
 
     public function __construct()
     {
@@ -99,4 +98,38 @@ class ContentRepository
     {
         return 'todo';
     }
+
+    /**
+     * @return EnvironmentSettings
+     */
+    public function getCurrentEnvironmentSettings()
+    {
+        return $this->currentEnvironmentSettings;
+    }
+
+    /**
+     * @param EnvironmentSettings $currentEnvironmentSettings
+     */
+    public function setCurrentEnvironmentSettings($currentEnvironmentSettings)
+    {
+        $this->currentEnvironmentSettings = $currentEnvironmentSettings;
+    }
+
+    /**
+     * @return Gateway
+     */
+    public function getGateway()
+    {
+        return $this->gateway;
+    }
+
+    /**
+     * @param Gateway $gateway
+     */
+    public function setGateway($gateway)
+    {
+        $this->gateway = $gateway;
+    }
+
+
 }

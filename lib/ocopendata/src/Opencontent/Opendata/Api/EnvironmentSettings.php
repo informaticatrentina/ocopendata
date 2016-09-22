@@ -148,4 +148,45 @@ class EnvironmentSettings
     {
     }
 
+    /**
+     * @return int
+     */
+    public function getMaxSearchLimit()
+    {
+        return $this->maxSearchLimit;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIdentifier()
+    {
+        return $this->identifier;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDefaultSearchLimit()
+    {
+        return $this->defaultSearchLimit;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRequestBaseUri()
+    {
+        return $this->requestBaseUri;
+    }
+
+    /**
+     * @return \ezpRestRequest
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+
 }
