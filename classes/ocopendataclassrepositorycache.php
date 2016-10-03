@@ -1,12 +1,12 @@
 <?php
 
+use Opencontent\Opendata\Api\StateRepository;
+
 class OCOpenDataClassRepositoryCache
 {
     public static function clearCache()
     {
-        $commonPath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata' ) );
-        $fileHandler = eZClusterFileHandler::instance();
-        $commonSuffix = '';
-        $fileHandler->fileDeleteByDirList( array('class'), $commonPath, $commonSuffix );
+        $repository = new \Opencontent\Opendata\Api\ClassRepository();
+        $repository->clearAllCache();
     }
 }
