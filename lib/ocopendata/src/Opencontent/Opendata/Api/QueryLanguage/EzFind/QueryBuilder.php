@@ -31,7 +31,10 @@ class QueryBuilder extends BaseQueryBuilder
         'offset',
         'classes',
         'subtree',
-        'facets'
+        'facets',
+        'select',
+        'where',
+        'language'
     );
 
     public $operators = array(
