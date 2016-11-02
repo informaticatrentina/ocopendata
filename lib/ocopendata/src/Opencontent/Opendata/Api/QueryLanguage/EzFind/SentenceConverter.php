@@ -71,7 +71,7 @@ class SentenceConverter
 
         if ( $field == 'q' )
         {
-            $this->convertedQuery['_query'] = $sentence->stringValue();
+            $this->convertedQuery['_query'] = $this->cleanValue($sentence->stringValue());
             return null;
         }
 
