@@ -94,7 +94,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
     {
         $this->uniqueClassIdentifier = $item['metadata']['classIdentifier'];
         $class = $this->classRepository->load($this->uniqueClassIdentifier);
-        $this->CSVheaders = array();
+        $this->CSVheaders = $this->csvMetaHeaders();
         foreach ($class->fields as $field) {
 
             $header = $this->csvHeader($field);
@@ -108,6 +108,15 @@ class SearchQueryCSVExporter extends AbstarctExporter
         }
 
         return $this->CSVheaders;
+    }
+
+    protected function csvMetaHeaders()
+    {
+        return array(
+            'remoteId',
+            'published',
+            'modified'
+        );
     }
 
     protected function csvHeader($field)
@@ -151,6 +160,11 @@ class SearchQueryCSVExporter extends AbstarctExporter
         }
 
         $stringData = array();
+
+        foreach ($this->csvMetaHeaders() as $meta) {
+            $stringData[$meta] = $item['metadata'][$meta];
+        }
+
         foreach (array_keys($this->classFields) as $key) {
             $field = $data[$key];
             list( $classIdentifier, $identifier ) = explode('/', $field['identifier']);
@@ -194,7 +208,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
                 }
                     break;
             }
-        }        
+        }
         return $stringData;
     }
 
@@ -299,7 +313,7 @@ class SearchQueryCSVExporter extends AbstarctExporter
     {
         $fileHandler = $this->tempFile($this->filename);
 
-        $tempFilename = eZSys::cacheDirectory() . '/' . uniqid('exportaspaginate_') . '.temp';
+        $tempFilename = eZSys::cacheDirectory() . '/tmp/' . uniqid('exportaspaginate_') . '.temp';
         eZFile::create($tempFilename, false, $fileHandler->fetchContents());
 
         $output = fopen($tempFilename, 'a');
@@ -308,10 +322,11 @@ class SearchQueryCSVExporter extends AbstarctExporter
         $makeHeaders = $this->iteration == 0;
 
         foreach ($result->searchHits as $item) {
+            $headers = $this->csvHeaders($item);
             if ($makeHeaders) {
                 fputcsv(
                     $output,
-                    $this->csvHeaders($item),
+                    $headers,
                     $this->options['CSVDelimiter'],
                     $this->options['CSVEnclosure']
                 );

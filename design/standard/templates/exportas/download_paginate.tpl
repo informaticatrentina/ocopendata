@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>OCQL Console</title>
+    <title>Exporting CSV</title>
 
     <link href="//getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="//code.jquery.com/jquery-1.12.0.min.js" type="application/javascript"></script>
