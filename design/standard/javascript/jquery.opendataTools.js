@@ -424,64 +424,7 @@
             },
 
             buildFilterInput: function (facets, facet, datatable, cb, context) {
-                for (var i = 0, len = facets.length; i < len; i++) {
-                    var currentFilters = datatable.settings.builder.filters;
-                    var facetDefinition = facets[i];
-
-                    if (facetDefinition.field === facet.name && !facetDefinition.hidden) {
-
-                        var select = $('<select id="' + facetDefinition.field + '" data-field="' + facetDefinition.field + '" data-placeholder="Seleziona" name="' + facetDefinition.field + '">');
-
-                        if (facetDefinition.multiple) {
-                            select.attr('multiple', 'multiple');
-                        } else {
-                            select.append($('<option value=""></option>'));
-                        }
-
-                        facetDefinition.data = facet.data;
-
-                        $.each(facetDefinition.data, function (value, count) {
-                            if (value.length > 0) {
-                                var quotedValue = facetDefinition.field.search("extra_") > -1 ? encodeURIComponent('"' + value + '"') : value;
-                                var option = $('<option value="' + quotedValue + '">' + value + ' (' + count + ')</option>');
-                                if (currentFilters[facetDefinition.field]
-                                    && currentFilters[facetDefinition.field].value
-                                    && $.inArray(quotedValue, currentFilters[facetDefinition.field].value) > -1) {
-                                    option.attr('selected', 'selected');
-                                }
-                                select.append(option);
-                            }
-                        });
-
-                        var selectContainer = $('<div class="form-group" style="margin-bottom: 10px"></div>');
-                        var label = $('<label for="' + facetDefinition.field + '">' + facetDefinition.name + '</label>');
-
-                        selectContainer.append(label);
-                        selectContainer.append(select);
-
-                        select.show().chosen({width: '100%', allow_single_deselect: true}).on('change', function (e) {
-                            var that = $(e.currentTarget);
-                            var values = $(e.currentTarget).val();
-                            if (typeof $(e.currentTarget).attr('multiple') == 'undefined' && values) {
-                                values = [values]
-                            }
-                            if (values != null && values.length > 0) {
-                                currentFilters[that.data('field')] = {
-                                    'field': that.data('field'),
-                                    'operator': 'contains',
-                                    'value': values
-                                };
-                            } else {
-                                currentFilters[that.data('field')] = null;
-                            }
-                            datatable.loadDataTable();
-                        });
-
-                        if ($.isFunction(cb)) {
-                            cb.call(context, selectContainer);
-                        }
-                    }
-                }
+                datatable.buildFilterInput(facets, facet, cb, context);
             },
 
             refreshFilterInput: function (facet, cb, context) {
