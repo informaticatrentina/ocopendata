@@ -231,7 +231,7 @@ class SentenceConverter
         else
         {
             $value = str_replace( "\'", "'", $value );
-            $data[] = trim( $value, "'" );
+            $data = trim( $value, "'" );
         }
         return $data;
     }
