@@ -15,7 +15,7 @@ class Tags extends Base
     public function get( eZContentObjectAttribute $attribute )
     {
         $content = parent::get( $attribute );
-        $content['content'] = $attribute->metaData();
+        $content['content'] = explode(', ', $attribute->metaData() );
         return $content;
     }
 
@@ -63,5 +63,13 @@ class Tags extends Base
     public function toCSVString($content, $params = null)
     {
         return implode(',', $content);
+    }
+
+    public function type(eZContentClassAttribute $attribute)
+    {
+        return array(
+            'identifier' => 'tag',
+            'format' => 'array'
+        );
     }
 }
