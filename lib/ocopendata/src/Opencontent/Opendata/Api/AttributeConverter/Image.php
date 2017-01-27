@@ -21,7 +21,7 @@ class Image extends File
             $attributeContent = $attribute->content();
             $image = $attributeContent->attribute( 'original' );
             $url = $image['full_path'];
-            eZURI::transformURI( $url, true, 'full' );
+            eZURI::transformURI( $url, true );
 
             $content['content'] = array(
                 'filename' => $image['original_filename'],
