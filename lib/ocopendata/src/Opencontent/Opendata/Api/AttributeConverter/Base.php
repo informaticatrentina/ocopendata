@@ -52,10 +52,18 @@ class Base
             'data_int' => $attribute->attribute('data_int'),
             'data_float' => $attribute->attribute('data_float'),
             'is_information_collector' => $attribute->attribute('is_information_collector'),
-            'content' => $attribute->hasContent() ? $attribute->toString() : null
+            'content' => $this->attributeContent($attribute)
         );
 
         return $data;
+    }
+
+    private function attributeContent(eZContentObjectAttribute $attribute)
+    {
+        if ($attribute->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING){
+            return $attribute->toString();
+        }
+        return $attribute->hasContent() ? $attribute->toString() : null;
     }
 
     public function set($data, PublicationProcess $process)
