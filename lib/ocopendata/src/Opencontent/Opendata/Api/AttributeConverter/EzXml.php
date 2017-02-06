@@ -30,4 +30,9 @@ class EzXml extends Base
     {
         return array( 'identifier' => 'html' );
     }
+
+    public function toCSVString($content, $params = null)
+    {
+        return is_string($content) ? strip_tags($content) : '';
+    }
 }
