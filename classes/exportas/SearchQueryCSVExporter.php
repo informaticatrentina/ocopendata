@@ -225,7 +225,8 @@ class SearchQueryCSVExporter extends AbstarctExporter
 
                 $this->handlePaginateDownload();
 
-            } elseif ($this->count > self::MAX_DIRECT_DOWNLOAD_ITEMS) {
+            } elseif ($this->count > self::MAX_DIRECT_DOWNLOAD_ITEMS ||
+                      eZINI::instance('ocopendata.ini')->variable('GeneralSettings', 'ForcePaginateDownload') == 'enabled') {
 
                 $this->startPaginateDownload();
 
