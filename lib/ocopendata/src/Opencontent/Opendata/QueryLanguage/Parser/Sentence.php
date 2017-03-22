@@ -100,20 +100,36 @@ class Sentence
         return $variableValue;
     }
 
+
     protected static function parseArray($variableValue)
     {
         $variableValue = trim($variableValue, '[]');
         if ($variableValue == '') {
             return array();
         } else {
-            $variableValue = explode(',', $variableValue);
-            $variableValue = array_map('trim', $variableValue);
-            foreach ($variableValue as $value) {
+            $arrayValue = array();
+            if (strpos($variableValue, "'") !== false) {
+                $variableValue = str_replace("\'", "$", $variableValue);
+                $parts = explode("'", $variableValue);
+                foreach ($parts as $part) {
+                    if (!empty( $part )) {
+                        $value = trim($part);
+                        if ($value != ',') {
+                            $value = str_replace("$", "'", $value);
+                            $arrayValue[] = "'$value'";
+                        }
+                    }
+                }
+            }else{
+                $arrayValue = explode(",", $variableValue);
+                $arrayValue = array_map('trim', $arrayValue);
+            }
+            foreach ($arrayValue as $value) {
                 if (strpos($value, '=>') !== false) {
-                    return self::parseArrayAsHash($variableValue);
+                    return self::parseArrayAsHash($arrayValue);
                 }
             }
-            return $variableValue;
+            return $arrayValue;
         }
     }
 
